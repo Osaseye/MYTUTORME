@@ -1,3 +1,72 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-body text-slate-800 dark:text-slate-100 bg-background-light dark:bg-background-dark transition-colors duration-300 antialiased selection:bg-primary/20 selection:text-primary-dark;
+  }
+}
+
+@layer utilities {
+  .grid-bg-complex {
+    background-size: 50px 50px;
+    background-image: 
+        linear-gradient(to right, rgba(16, 185, 129, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(16, 185, 129, 0.05) 1px, transparent 1px);
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 70%);
+  }
+  
+  .dark .grid-bg-complex {
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  }
+
+  .glass-card {
+    @apply bg-white/60 dark:bg-slate-800/40 border border-white/50 dark:border-white/5 backdrop-blur-md;
+  }
+
+  /* Custom Scrollbar Utilities */
+  .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+  }
+  .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+  }
+}
+
+
+  .glass-panel {
+     /* Often used for the floating widgets */
+     @apply backdrop-blur-md border border-white/10;
+  }
+
+  .timeline-connector {
+    background: linear-gradient(90deg, transparent 0%, #10B981 50%, transparent 100%);
+  }
+
+  .metallic-border {
+    position: relative;
+    background: linear-gradient(#fff, #fff) padding-box,
+                linear-gradient(135deg, #34d399 0%, #059669 50%, #10b981 100%) border-box;
+    border: 2px solid transparent;
+  }
+
+  .dark .metallic-border {
+    background: linear-gradient(#1E293B, #1E293B) padding-box,
+                linear-gradient(135deg, #34d399 0%, #059669 50%, #10b981 100%) border-box;
+  }
+
+  .floating-dashboard {
+    animation: float-dashboard 6s ease-in-out infinite;
+    perspective: 1000px;
+  }
+
+
+@keyframes float-dashboard {
+    0%, 100% { transform: translateY(0) rotateX(2deg); }
+    50% { transform: translateY(-15px) rotateX(5deg); }
+}

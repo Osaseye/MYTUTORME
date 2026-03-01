@@ -1,25 +1,12 @@
-import { useState } from 'react'
-
+import { AppProvider } from './app/providers/app-provider';
+import { AppRoutes } from './app/routes';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <AppProvider>
+      <AppRoutes />
+    </AppProvider>
+  );
 }
 
-export default App
+export default App;
