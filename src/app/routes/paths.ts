@@ -12,6 +12,7 @@
     dashboard: '/student/dashboard',
     courses: '/student/courses',
     aiTutor: '/student/ai-tutor',
+    assignmentHelper: '/student/assignment-helper',
     gpa: '/student/gpa',
     examPrep: '/student/exam-prep',
     settings: '/student/settings',

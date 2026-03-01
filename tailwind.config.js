@@ -15,6 +15,9 @@ export default {
         "background-dark": "#0B1120",
         "surface-light": "#FFFFFF",
         "surface-dark": "#1E293B",
+        "sidebar-bg": "#0f172a", // Slate 900
+        "card-bg-light": "#ffffff",
+        "card-bg-dark": "#1e293b",
       },
       fontFamily: {
         display: ["Plus Jakarta Sans", "sans-serif"],

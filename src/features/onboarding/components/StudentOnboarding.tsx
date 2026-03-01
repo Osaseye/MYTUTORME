@@ -23,6 +23,7 @@ export const StudentOnboarding = () => {
     institution: '',
     level: '',
     cgpa: '',
+    target_cgpa: '',
     goals: [] as string[]
   });
 
@@ -187,6 +188,20 @@ export const StudentOnboarding = () => {
                     max="5.0"
                     value={formData.cgpa}
                     onChange={(e) => updateField('cgpa', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Target CGPA (Optional)</label>
+                  <Input 
+                    placeholder="e.g. 5.0" 
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="5.0"
+                    // @ts-ignore
+                    value={formData.target_cgpa}
+                    onChange={(e) => updateField('target_cgpa', e.target.value)}
                   />
                 </div>
               </div>

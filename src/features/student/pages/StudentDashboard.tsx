@@ -1,179 +1,253 @@
 ﻿import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { 
   PlayCircle, 
   ArrowRight, 
   BrainCircuit, 
-  BookOpen, 
-  FileText, 
-  MoreVertical,
   Clock,
-  TrendingUp
+  TrendingUp,
+  Target,
+  MoreVertical,
+  BookOpen,
+  Calendar
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { PerformanceChart } from '../components/PerformanceChart';
 
 export const StudentDashboard = () => {
+  // Mock Data (In a real app, this would come from an API/Context)
+  const student = {
+    name: "Alex",
+    currentCGPA: 4.2,
+    targetCGPA: 4.8, // Updated based on onboarding feedback
+    progress: 84, // (4.2/5.0) * 100
+  };
+
+  // Mock Performance Data
+  const performanceData = [65, 72, 68, 75, 82, 88, 85, 92];
+  const performanceLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'];
+
+  const upcomingTasks = [
+    { title: "Calculus Quiz", due: "Today, 2:00 PM", type: "quiz", course: "MTH 201" },
+    { title: "Physics Lab Report", due: "Tomorrow, 11:59 PM", type: "assignment", course: "PHY 101" },
+    { title: "Intro to Python", due: "Wed, 10:00 AM", type: "class", course: "CSC 101" },
+  ];
+
+  const recentCourses = [
+    { title: "Differential Calculus", progress: 65, lastAccessed: "2 hours ago", color: "bg-blue-500", code: "MTH 201" },
+    { title: "Linear Algebra", progress: 32, lastAccessed: "Yesterday", color: "bg-purple-500", code: "MTH 202" },
+  ];
+
   return (
-    <div className="space-y-8">
-      {/* 1. Focus Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-8 sm:p-10 shadow-glow-primary/20">
-         {/* Background Decoration */}
-         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
-         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none" />
+    <div className="space-y-8 pb-10">
+      {/* 1. Header & Quick Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Welcome Card */}
+        <div className="lg:col-span-2 relative overflow-hidden rounded-3xl bg-slate-900 text-white p-8 shadow-glow-primary/20 flex flex-col justify-center min-h-[280px]">
+           {/* Background Decoration */}
+           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+           <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none" />
 
-         <div className="relative z-10 max-w-2xl">
-            <Badge variant="outline" className="mb-4 border-white/20 text-white/80 bg-white/5 backdrop-blur-sm">
-                <BrainCircuit className="w-3 h-3 mr-2 text-primary" /> AI Learning Path
-            </Badge>
-            <h1 className="text-3xl sm:text-4xl font-display font-bold mb-4 leading-tight">
-               Welcome back, Alex. <br/>
-               Ready to ace <span className="text-primary">MTH 201</span>?
-            </h1>
-            <p className="text-slate-300 mb-8 text-lg max-w-lg">
-               You left off at "Introduction to Differential Calculus". 
-               The AI suggests a quick quiz to refresh your memory.
-            </p>
-            <div className="flex flex-wrap gap-4">
-               <Button size="lg" className="bg-primary hover:bg-primary-dark text-white border-0 shadow-lg shadow-primary/20 gap-2">
-                  <PlayCircle className="w-5 h-5 fill-current" /> Resume Lesson
-               </Button>
-               <Button size="lg" variant="outline" className="text-white border-white/20 hover:bg-white/10 gap-2">
-                  Take Quick Quiz <ArrowRight className="w-4 h-4" />
-               </Button>
+           <div className="relative z-10">
+              <div className="flex flex-col items-start mb-6">
+                <Badge variant="outline" className="mb-4 border-white/20 text-white/90 bg-white/10 backdrop-blur-md px-3 py-1">
+                    <BrainCircuit className="w-3.5 h-3.5 mr-2 text-primary" /> AI Learning Path Active
+                </Badge>
+                <h1 className="text-3xl md:text-4xl font-display font-bold leading-tight mb-2">
+                  Welcome back, {student.name}.
+                </h1>
+                <p className="text-slate-300 text-lg max-w-lg leading-relaxed">
+                  You're hitting your strides! Ready for <span className="text-primary font-semibold">MTH 201</span>?
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-4 mt-4">
+                 <Button size="lg" className="bg-primary hover:bg-primary-dark text-white border-0 shadow-lg shadow-primary/20 gap-2 font-medium px-6 h-12 rounded-xl transition-all hover:scale-105 active:scale-95">
+                    <PlayCircle className="w-5 h-5 fill-current" /> Resume Learning
+                 </Button>
+                 <Button size="lg" variant="outline" className="text-white border-white/20 hover:bg-white/10 gap-2 h-12 rounded-xl px-6">
+                    Daily Quiz <ArrowRight className="w-4 h-4" />
+                 </Button>
+              </div>
+           </div>
+        </div>
+
+        {/* Target CGPA Widget */}
+        <div className="bg-white dark:bg-card-bg-dark rounded-3xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between shadow-sm relative overflow-hidden h-full min-h-[280px]">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white font-display">Target CGPA</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Your goal for this semester</p>
+              </div>
+              <div className="p-3 bg-primary/10 rounded-2xl">
+                <Target className="w-6 h-6 text-primary" />
+              </div>
             </div>
-         </div>
+
+            <div className="flex items-end gap-2 mb-4">
+              <span className="text-5xl font-bold text-slate-900 dark:text-white tracking-tight">{student.currentCGPA}</span>
+              <span className="text-lg text-slate-400 mb-2 font-medium">/ 5.0</span>
+            </div>
+            
+            <div className="space-y-3 mt-auto">
+              <div className="flex justify-between text-xs font-semibold uppercase tracking-wider">
+                <span className="text-slate-500">Current Progress</span>
+                <span className="text-primary">{student.progress}% to Target ({student.targetCGPA})</span>
+              </div>
+              <Progress value={student.progress} className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full" indicatorClassName="bg-primary rounded-full" />
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-sm">
+                <span className="flex items-center text-slate-500 font-medium">
+                  <TrendingUp className="w-4 h-4 mr-2 text-emerald-500" /> +0.2 this month
+                </span>
+                <Button variant="ghost" size="sm" className="h-8 text-xs text-primary hover:text-primary-dark hover:bg-primary/5 font-semibold">View Details</Button>
+            </div>
+        </div>
       </div>
 
-      {/* 2. Quick Actions Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-         {[
-            { 
-               title: "Ask AI Tutor", 
-               desc: "Get instant answers", 
-               icon: BrainCircuit, 
-               color: "text-purple-500", 
-               bg: "bg-purple-50 dark:bg-purple-900/10",
-               border: "border-purple-100 dark:border-purple-900/20"
-            },
-            { 
-               title: "Exam Prep", 
-               desc: "Generate a mock test", 
-               icon: FileText, 
-               color: "text-blue-500", 
-               bg: "bg-blue-50 dark:bg-blue-900/10",
-               border: "border-blue-100 dark:border-blue-900/20"
-            },
-            { 
-               title: "Summarize Notes", 
-               desc: "Upload slides for summary", 
-               icon: BookOpen, 
-               color: "text-orange-500", 
-               bg: "bg-orange-50 dark:bg-orange-900/10",
-               border: "border-orange-100 dark:border-orange-900/20"
-            },
-         ].map((action, i) => (
-            <div 
-               key={i} 
-               className={p-5 rounded-2xl border   flex items-center gap-4 cursor-pointer transition-transform hover:-translate-y-1 hover:shadow-sm}
-            >
-               <div className={w-12 h-12 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center shadow-sm }>
-                  <action.icon className="w-6 h-6" />
-               </div>
-               <div>
-                  <h3 className="font-bold text-slate-900 dark:text-white">{action.title}</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{action.desc}</p>
-               </div>
-            </div>
-         ))}
-      </div>
-
+      {/* 2. Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         {/* 3. Continue Learning (2/3 width) */}
-         <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between">
-               <h2 className="text-xl font-bold text-slate-900 dark:text-white">Continue Learning</h2>
-               <Button variant="link" className="text-primary">View All</Button>
-            </div>
-            
-            <div className="space-y-4">
-               {[
-                  { code: "MTH 201", title: "General Mathematics II", progress: 75, next: "Integration by Parts", color: "bg-emerald-500" },
-                  { code: "PHY 102", title: "General Physics II", progress: 45, next: "Wave Motion", color: "bg-blue-500" },
-                  { code: "GST 102", title: "Use of English", progress: 20, next: "Essay Writing", color: "bg-orange-500" }
-               ].map((course, i) => (
-                  <div key={i} className="group p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary/50 transition-all flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                     <div className={w-12 h-12 rounded-lg shrink-0  flex items-center justify-center text-white font-bold text-xs}>
-                        {course.code}
-                     </div>
-                     <div className="flex-1 min-w-0">
-                        <div className="flex justify-between mb-1">
-                           <h4 className="font-bold text-slate-900 dark:text-white truncate">{course.title}</h4>
-                           <span className="text-xs font-medium text-slate-500">{course.progress}%</span>
-                        </div>
-                        <Progress value={course.progress} className="h-2 mb-2" />
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
-                           <PlayCircle className="w-3 h-3 text-primary" />
-                           <span>Next: <span className="text-slate-700 dark:text-slate-300 font-medium">{course.next}</span></span>
-                        </div>
-                     </div>
-                     <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreVertical className="w-4 h-4" />
-                     </Button>
-                  </div>
-               ))}
-            </div>
-         </div>
-
-         {/* 4. Academic Vital Signs (1/3 width) */}
-         <div className="space-y-4">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Performance</h2>
-            
-            <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-6">
+        {/* Left Column: Performance Chart & Recent Courses */}
+        <div className="lg:col-span-2 space-y-8">
+          
+          {/* Chart Section */}
+          <div className="bg-white dark:bg-card-bg-dark border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm">
+             <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
                 <div>
-                   <div className="flex justify-between items-end mb-2">
-                      <span className="text-sm font-medium text-slate-500">Current CGPA</span>
-                      <span className="text-2xl font-bold text-slate-900 dark:text-white">3.45</span>
-                   </div>
-                   <Progress value={69} className="h-3" />
-                   <p className="text-xs text-slate-500 mt-2">Target: 4.50 (First Class)</p>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white font-display">Performance Overview</h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Track your weekly quiz scores</p>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                   <div>
-                      <div className="text-xs text-slate-500 mb-1 flex items-center gap-1">
-                         <Clock className="w-3 h-3" /> Study Time
-                      </div>
-                      <div className="font-bold text-slate-900 dark:text-white">12h 30m</div>
-                   </div>
-                   <div>
-                      <div className="text-xs text-slate-500 mb-1 flex items-center gap-1">
-                         <TrendingUp className="w-3 h-3" /> Quiz Avg
-                      </div>
-                      <div className="font-bold text-emerald-500">82%</div>
-                   </div>
-                </div>
-
-                <Button variant="outline" className="w-full text-xs h-9">View Full Report</Button>
-            </div>
-
-            {/* Daily Goal Widget */}
-             <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10">
-                <div className="flex items-center justify-between mb-3">
-                   <h3 className="font-bold text-slate-900 dark:text-white text-sm">Daily Goal</h3>
-                   <span className="text-xs font-medium text-primary bg-white dark:bg-slate-900 px-2 py-0.5 rounded-full border border-primary/20">2/3 Done</span>
-                </div>
-                <div className="space-y-2">
-                   {['Watch 1 Lesson', 'Complete MTH201 Quiz', 'Read 1 Article'].map((task, i) => (
-                      <div key={i} className="flex items-center gap-3 text-sm">
-                         <div className={w-4 h-4 rounded-full border flex items-center justify-center }>
-                            {i < 2 && <ArrowRight className="w-3 h-3 rotate-45" />}
-                         </div>
-                         <span className={i < 2 ? 'text-slate-400 line-through' : 'text-slate-700 dark:text-slate-300'}>{task}</span>
-                      </div>
-                   ))}
-                </div>
+                <select className="bg-slate-50 dark:bg-slate-800 border-0 text-sm font-medium rounded-xl px-4 py-2 text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                  <option>This Semester</option>
+                  <option>Last Month</option>
+                  <option>All Time</option>
+                </select>
              </div>
-         </div>
+
+             <div className="h-[300px] w-full">
+                <PerformanceChart data={performanceData} labels={performanceLabels} isDark={true} />
+             </div>
+          </div>
+
+          {/* Recent Courses */}
+          <div className="space-y-4">
+             <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white font-display">Pick up where you left off</h2>
+                <Button variant="link" className="text-primary font-medium hover:text-primary-dark">View All Courses</Button>
+             </div>
+             
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {recentCourses.map((course, idx) => (
+                  <div key={idx} className="group p-5 bg-white dark:bg-card-bg-dark border border-slate-200 dark:border-slate-800 rounded-3xl hover:border-primary/50 transition-all shadow-sm hover:shadow-md cursor-pointer relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-transparent to-slate-50 dark:to-slate-800/50 rounded-bl-full pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity" />
+                    
+                    <div className="flex justify-between items-start mb-4 relative z-10">
+                      <div className={`w-12 h-12 rounded-xl ${course.color} bg-opacity-10 flex items-center justify-center`}>
+                        <BookOpen className={`w-6 h-6 text-${course.color.replace('bg-', '')}`} />
+                      </div>
+                      <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 border-0">
+                        {course.code}
+                      </Badge>
+                    </div>
+                    
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors line-clamp-1">{course.title}</h3>
+                    
+                    <div className="flex items-center text-xs text-slate-500 mb-4 font-medium">
+                       <Clock className="w-3.5 h-3.5 mr-1.5" /> Reviewed {course.lastAccessed}
+                    </div>
+                    
+                    <div className="space-y-2">
+                       <div className="flex justify-between text-xs font-semibold">
+                          <span className="text-slate-500 dark:text-slate-400">Progress</span>
+                          <span className="text-primary">{course.progress}%</span>
+                       </div>
+                       <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                          <div className={`h-full ${course.color.replace('bg-', 'bg-')} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${course.progress}%` }} />
+                       </div>
+                    </div>
+                  </div>
+                ))}
+             </div>
+          </div>
+        </div>
+
+        {/* Right Column: Sidebar Widgets */}
+        <div className="space-y-6">
+          {/* Upcoming Tasks Widget */}
+          <div className="bg-white dark:bg-card-bg-dark border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-slate-900 dark:text-white flex items-center">
+                <Calendar className="w-5 h-5 mr-2 text-primary" /> Upcoming
+              </h3>
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <div className="space-y-1 relative">
+              {/* Timeline Line */}
+              <div className="absolute left-[19px] top-2 bottom-4 w-0.5 bg-slate-100 dark:bg-slate-800" />
+              
+              {upcomingTasks.map((task, i) => (
+                <div key={i} className="flex items-start gap-4 py-3 relative z-10 group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl px-2 -mx-2 transition-colors">
+                  <div className={`w-10 h-10 rounded-full border-4 border-white dark:border-card-bg-dark shrink-0 flex items-center justify-center ${
+                    task.type === 'quiz' ? 'bg-red-100 text-red-600' : task.type === 'assignment' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'
+                  }`}>
+                    {task.type === 'quiz' ? (
+                       <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                    ) : task.type === 'assignment' ? (
+                       <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                    ) : (
+                       <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 pt-1">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">{task.title}</h4>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 border-slate-200 text-slate-500">{task.course}</Badge>
+                      <p className="text-xs text-slate-500 truncate">{task.due}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <Button variant="outline" className="w-full mt-4 text-xs font-semibold border-slate-200 dark:border-slate-700 h-10 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
+              View Full Calendar
+            </Button>
+          </div>
+
+          {/* AI Doubt Solver Widget */}
+          <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-6 text-white text-center relative overflow-hidden group">
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+            
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-md border border-white/10 shadow-xl group-hover:scale-110 transition-transform duration-300">
+                <BrainCircuit className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="font-bold text-lg mb-2">Stuck on a problem?</h3>
+              <p className="text-sm text-indigo-100 mb-6 max-w-[200px] leading-relaxed">
+                Snap a photo or type your question. Your AI Tutor is ready.
+              </p>
+              <Button size="lg" className="bg-white text-indigo-700 hover:bg-indigo-50 w-full font-bold shadow-xl border-0 h-11 rounded-xl">
+                Ask AI Tutor
+              </Button>
+            </div>
+          </div>
+
+          {/* Daily Streak Mini-Widget */}
+          <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/20 rounded-3xl p-5 flex items-center gap-4">
+             <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 font-bold text-lg">
+                🔥
+             </div>
+             <div>
+                <h4 className="font-bold text-slate-900 dark:text-white">5 Day Streak!</h4>
+                <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">Keep it up, you're on fire.</p>
+             </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );

@@ -8,7 +8,8 @@ import {
   Award, 
   Settings,
   LogOut,
-  Sparkles
+  Sparkles,
+  FileEdit
 } from 'lucide-react';
 
 export const StudentSidebar = () => {
@@ -17,8 +18,9 @@ export const StudentSidebar = () => {
     const menuItems = [
         { title: 'Dashboard', icon: LayoutDashboard, path: '/student/dashboard' },
         { title: 'AI Tutor', icon: BrainCircuit, path: '/student/ai-tutor', highlight: true },
+        { title: 'Assignment Helper', icon: FileEdit, path: '/student/assignment-helper' },
         { title: 'My Courses', icon: BookOpen, path: '/student/courses' },
-        { title: 'Exam Prep', icon: Award, path: '/student/exam-prep' },
+        { title: 'Exam Prep', icon: Award, path: '/student/exam-prep' },    
         { title: 'GPA Tracker', icon: GraduationCap, path: '/student/gpa' },
     ];
 
@@ -26,9 +28,7 @@ export const StudentSidebar = () => {
         <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 transition-transform">
             <div className="flex h-16 items-center border-b border-slate-200 dark:border-slate-800 px-6">
                  <Link to="/" className="flex items-center gap-2">
-                    <div className="w-8 h-8 flex items-center justify-center bg-primary/10 rounded-lg">
-                        <span className="font-bold text-primary">M</span>
-                    </div>
+                    <img src="/icon.png" alt="MyTutorMe" className="w-8 h-8 rounded-lg" />
                     <span className="font-display font-bold text-lg text-slate-900 dark:text-white tracking-tight">
                         MyTutor<span className="text-primary">Me</span>
                     </span>

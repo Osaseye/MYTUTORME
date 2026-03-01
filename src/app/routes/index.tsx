@@ -6,7 +6,7 @@ import { AuthLayout } from '@/layouts/AuthLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { OnboardingLayout, StudentOnboarding, TeacherOnboarding } from '@/features/onboarding';
-import { StudentLayout, StudentDashboard } from '@/features/student';
+import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, AssignmentHelperPage } from '@/features/student';
 
 // Placeholder layouts
 const TeacherLayout = () => <div>Teacher Layout Wrapper</div>;
@@ -33,8 +33,10 @@ export const AppRoutes = () => {
       <Route element={<ProtectedRoute allowedRoles={['student']} />}>
         <Route element={<StudentLayout />}>
           <Route path={paths.student.dashboard} element={<StudentDashboard />} />
-          <Route path={paths.student.courses} element={<div>My Courses</div>} />
-          <Route path={paths.student.aiTutor} element={<div>AI Tutor Chat</div>} />
+          <Route path={paths.student.courses} element={<MyCoursesPage />} />
+          <Route path={paths.student.courses + '/:courseId'} element={<CourseDetailsPage />} />
+          <Route path={paths.student.aiTutor} element={<AiTutorPage />} />
+          <Route path={paths.student.assignmentHelper} element={<AssignmentHelperPage />} />
           <Route path={paths.student.gpa} element={<div>GPA Calculator</div>} />
           <Route path={paths.student.examPrep} element={<div>Exam Prep Center</div>} />
           <Route path={paths.student.settings} element={<div>Settings</div>} />
