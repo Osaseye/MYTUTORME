@@ -14,6 +14,7 @@
     aiTutor: '/student/ai-tutor',
     assignmentHelper: '/student/assignment-helper',
     gpa: '/student/gpa',
+    certificates: '/student/certificates',
     examPrep: '/student/exam-prep',
     settings: '/student/settings',
   },

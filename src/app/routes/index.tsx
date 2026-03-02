@@ -6,7 +6,7 @@ import { AuthLayout } from '@/layouts/AuthLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { OnboardingLayout, StudentOnboarding, TeacherOnboarding } from '@/features/onboarding';
-import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, AssignmentHelperPage } from '@/features/student';
+import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, AssignmentHelperPage, GpaTrackerPage, CertificatePage, MyCertificatesPage, SettingsPage, ExamPrepPage, ExamConfigPage, ExamResultsPage, ExamTakingPage } from '@/features/student';
 
 // Placeholder layouts
 const TeacherLayout = () => <div>Teacher Layout Wrapper</div>;
@@ -37,9 +37,14 @@ export const AppRoutes = () => {
           <Route path={paths.student.courses + '/:courseId'} element={<CourseDetailsPage />} />
           <Route path={paths.student.aiTutor} element={<AiTutorPage />} />
           <Route path={paths.student.assignmentHelper} element={<AssignmentHelperPage />} />
-          <Route path={paths.student.gpa} element={<div>GPA Calculator</div>} />
-          <Route path={paths.student.examPrep} element={<div>Exam Prep Center</div>} />
-          <Route path={paths.student.settings} element={<div>Settings</div>} />
+          <Route path={paths.student.gpa} element={<GpaTrackerPage />} />
+          <Route path={paths.student.certificates} element={<MyCertificatesPage />} />
+          <Route path="/student/certificates/:id" element={<CertificatePage />} />
+          <Route path={paths.student.examPrep} element={<ExamPrepPage />} />
+          <Route path="/student/exam-prep/config" element={<ExamConfigPage />} />
+          <Route path="/student/exam-prep/active" element={<ExamTakingPage />} />
+          <Route path="/student/exam-prep/results" element={<ExamResultsPage />} />
+          <Route path={paths.student.settings} element={<SettingsPage />} />
         </Route>
       </Route>
 

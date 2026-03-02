@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -252,7 +253,14 @@ export const MyCoursesPage = () => {
             </Link>
 
             {/* Course Card 4 */}
-            <Link to="/student/courses/4" className="group bg-white dark:bg-card-bg-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 flex flex-col h-full">
+            <div 
+               className="group bg-white dark:bg-card-bg-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 flex flex-col h-full cursor-pointer"
+               onClick={() => {
+                  toast.success("Enrolled Successfully!", {
+                     description: "Welcome to Machine Learning with PyTorch. Redirecting to course..."
+                  });
+               }}
+            >
               <div className="relative h-48 overflow-hidden">
                 <img 
                   alt="Machine Learning" 
@@ -286,7 +294,7 @@ export const MyCoursesPage = () => {
                   <span className="font-bold text-slate-900 dark:text-white">$65.00</span>
                 </div>
               </div>
-            </Link>
+            </div>
 
             {/* Course Card 5 */}
             <Link to="/student/courses/5" className="group bg-white dark:bg-card-bg-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 flex flex-col h-full">

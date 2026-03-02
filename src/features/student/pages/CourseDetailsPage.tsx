@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { 
   PlayCircle, 
@@ -13,11 +15,85 @@ import {
   ChevronDown, 
   Share2, 
   ArrowRight,
-  School
+  School,
+  Lock,
+  Play
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { QuizRunner, QuizResults } from '../components/QuizRunner';
+import type { Quiz, QuizStats } from '../types/quiz';
+
+const MOCK_QUIZ: Quiz = {
+  id: 'quiz-1',
+  title: 'Derivatives & Applications Checkpoint',
+  description: 'Test your knowledge on basic derivative rules and their real-world applications.',
+  courseId: 'course-1',
+  passingScore: 70,
+  timeLimit: 15,
+  questions: [
+    {
+      id: 'q1',
+      text: 'What is the derivative of f(x) = 3x² + 2x?',
+      type: 'multiple-choice',
+      options: ['6x + 2', '3x + 2', '6x', 'x³ + x²'],
+      correctAnswer: '6x + 2',
+      explanation: 'Using the power rule: d/dx(3x²) = 6x and d/dx(2x) = 2.',
+      points: 10
+    },
+    {
+      id: 'q2',
+      text: 'The derivative of a constant is always 1.',
+      type: 'true-false',
+      options: ['True', 'False'],
+      correctAnswer: 'False',
+      explanation: 'The derivative of a constant is always 0, because a constant value does not change.',
+      points: 10
+    },
+    {
+      id: 'q3',
+      text: 'Which rule is used to find the derivative of a product of two functions?',
+      type: 'multiple-choice',
+      options: ['Chain Rule', 'Quotient Rule', 'Product Rule', 'Power Rule'],
+      correctAnswer: 'Product Rule',
+      explanation: 'The Product Rule is used for f(x)g(x).',
+      points: 10
+    }
+  ]
+};
 
 export const CourseDetailsPage = () => {
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'curriculum' | 'quizzes' | 'certificate'>('overview');
+  const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+  const [quizStats, setQuizStats] = useState<QuizStats | null>(null);
+
+  const handleEnroll = () => {
+    setIsEnrolled(true);
+    setActiveTab('curriculum');
+  };
+
+  const startQuiz = () => {
+    setActiveQuiz(MOCK_QUIZ);
+    setQuizStats(null);
+  };
+
+  const handleQuizComplete = (stats: QuizStats) => {
+    setQuizStats(stats);
+    setActiveQuiz(null);
+  };
+
+  if (activeQuiz) {
+    return (
+      <div className="max-w-4xl mx-auto py-8 px-4 h-screen">
+         <QuizRunner 
+            quiz={activeQuiz} 
+            onComplete={handleQuizComplete} 
+            onExit={() => setActiveQuiz(null)} 
+         />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
@@ -35,14 +111,27 @@ export const CourseDetailsPage = () => {
         </ol>
       </nav>
 
+      {/* Quiz Results Modal / Overlay */}
+      {quizStats && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+           <QuizResults 
+              stats={quizStats} 
+              onRetry={() => { setQuizStats(null); startQuiz(); }} 
+              onContinue={() => setQuizStats(null)} 
+           />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Main Content Column */}
-        <div className="lg:col-span-2 space-y-12">
+        <div className="lg:col-span-2 space-y-8">
           
           {/* Header Section */}
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
-              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
+              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-pointer" onClick={() => {
+                toast.info("Certification Available", { description: "Complete all modules to earn your verified certificate." });
+              }}>
                 <CheckCircle className="w-3 h-3 mr-1" /> CERTIFIED COURSE
               </Badge>
               <Badge variant="outline" className="text-slate-600 dark:text-slate-300">
@@ -81,31 +170,174 @@ export const CourseDetailsPage = () => {
             </div>
           </div>
 
-          {/* Video/Image Preview Area */}
-          <div className="rounded-2xl overflow-hidden shadow-2xl ring-1 ring-slate-900/5 dark:ring-white/10 relative group aspect-video bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-             {/* Using placeholder icon as requested */}
-             <div className="relative w-full h-full flex items-center justify-center bg-slate-900">
-                <img 
-                  src="/icon.png" 
-                  alt="Course Preview" 
-                  className="w-32 h-32 object-contain opacity-80"
-                  onError={(e) => {
-                    // Fallback if icon.png doesn't exist or load
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement?.classList.add('bg-gradient-to-br', 'from-slate-800', 'to-slate-900');
-                  }}
-                />
-                 {/* Play Button Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/30 transition-colors cursor-pointer">
-                  <button className="w-20 h-20 bg-primary hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110">
-                    <PlayCircle className="w-10 h-10 ml-1" />
-                  </button>
+          {/* Enrolled Tabs */}
+          {isEnrolled ? (
+             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden min-h-[500px]">
+                <div className="flex border-b border-gray-200 dark:border-gray-700">
+                   <button 
+                      onClick={() => setActiveTab('overview')}
+                      className={`flex-1 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'overview' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                   >
+                      Overview
+                   </button>
+                   <button 
+                      onClick={() => setActiveTab('curriculum')}
+                      className={`flex-1 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'curriculum' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                   >
+                      Curriculum
+                   </button>
+                   <button 
+                      onClick={() => setActiveTab('quizzes')}
+                      className={`flex-1 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'quizzes' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                   >
+                      Practice & Quizzes
+                   </button>
+                   <button 
+                      onClick={() => setActiveTab('certificate')}
+                      className={`flex-1 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'certificate' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                   >
+                      Certificate
+                   </button>
+                </div>
+
+                <div className="p-6">
+                   {activeTab === 'curriculum' && (
+                      <div className="space-y-6">
+                         {/* Module 1 */}
+                         <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                            <div className="bg-gray-50 dark:bg-slate-800 p-4 font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                               <span>Module 1: Foundations of Limits</span>
+                               <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">Completed</span>
+                            </div>
+                            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                               <div className="p-4 flex gap-3 items-center hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer">
+                                  <CheckCircle className="w-5 h-5 text-green-500" />
+                                  <span className="text-gray-700 dark:text-gray-300 text-sm">Introduction to Limits</span>
+                                  <span className="ml-auto text-xs text-gray-400">10:45</span>
+                               </div>
+                               <div className="p-4 flex gap-3 items-center hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer">
+                                  <CheckCircle className="w-5 h-5 text-green-500" />
+                                  <span className="text-gray-700 dark:text-gray-300 text-sm">Evaluating Limits Algebraically</span>
+                                  <span className="ml-auto text-xs text-gray-400">15:20</span>
+                               </div>
+                            </div>
+                         </div>
+                         
+                         {/* Module 2 */}
+                         <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                            <div className="bg-gray-50 dark:bg-slate-800 p-4 font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                               <span>Module 2: Derivatives</span>
+                               <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">In Progress</span>
+                            </div>
+                            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                               <div 
+                                  className="p-4 flex gap-3 items-center hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer bg-primary/5"
+                                  onClick={() => {
+                                     toast.success("Resuming Lecture", {
+                                        description: "Module 2: Power Rule & Chain Rule" 
+                                     });
+                                  }}
+                               >
+                                  <PlayCircle className="w-5 h-5 text-primary" />
+                                  <span className="text-gray-900 dark:text-white font-medium text-sm">Power Rule & Chain Rule</span>
+                                  <span className="ml-auto text-xs text-gray-500">22:15</span>
+                               </div>
+                               <div className="p-4 flex gap-3 items-center hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer opacity-70">
+                                  <Lock className="w-4 h-4 text-gray-400" />
+                                  <span className="text-gray-500 text-sm">Derivatives of Trig Functions</span>
+                                  <span className="ml-auto text-xs text-gray-400">18:30</span>
+                               </div>
+                            </div>
+                         </div>
+                      </div>
+                   )}
+
+                   {activeTab === 'quizzes' && (
+                      <div className="space-y-4">
+                         <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-5 flex items-center justify-between hover:border-primary transition-colors bg-white dark:bg-slate-800 shadow-sm">
+                            <div className="flex gap-4 items-center">
+                               <div className="h-12 w-12 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                                   <FileText className="w-6 h-6" />
+                               </div>
+                               <div>
+                                  <h3 className="font-semibold text-gray-900 dark:text-white">Module 1 Review</h3>
+                                  <p className="text-sm text-gray-500">10 Questions • 15 Minutes</p>
+                               </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                               <Badge className="bg-green-100 text-green-700 hover:bg-green-200">Score: 90%</Badge>
+                               <span className="text-xs text-gray-400">Passed on May 10</span>
+                            </div>
+                         </div>
+
+                         <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-5 flex items-center justify-between hover:border-primary transition-colors bg-white dark:bg-slate-800 shadow-sm">
+                            <div className="flex gap-4 items-center">
+                               <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                                   <Play className="w-6 h-6 ml-1" />
+                               </div>
+                               <div>
+                                  <h3 className="font-semibold text-gray-900 dark:text-white">Derivatives Checkpoint</h3>
+                                  <p className="text-sm text-gray-500">Practice your knowledge of basic rules.</p>
+                               </div>
+                            </div>
+                            <Button onClick={startQuiz}>Start Quiz</Button>
+                         </div>
+                      </div>
+                   )}
+
+                   {activeTab === 'certificate' && (
+                      <div className="text-center py-12 px-4">
+                         <div className="w-20 h-20 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                            <Lock className="w-8 h-8" />
+                         </div>
+                         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">My Certificate</h3>
+                         <p className="text-slate-500 dark:text-gray-400 max-w-md mx-auto mb-6">
+                            Your certificate will be available here once you complete 100% of the course content and pass all quizzes.
+                         </p>
+                         
+                         <div className="w-full max-w-xs mx-auto bg-gray-200 h-2 rounded-full overflow-hidden mb-2">
+                             <div className="bg-primary h-full w-[45%]"></div>
+                         </div>
+                         <p className="text-xs text-slate-500 mb-8">45% Complete</p>
+                         
+                         <Link to="/student/certificates/cert-123">
+                            <Button variant="outline">Preview Certificate (Demo)</Button>
+                         </Link>
+                      </div>
+                   )}
                 </div>
              </div>
-          </div>
+          ) : (
+            <>
+            {/* Video/Image Preview Area */}
+            <div className="rounded-2xl overflow-hidden shadow-2xl ring-1 ring-slate-900/5 dark:ring-white/10 relative group aspect-video bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+              {/* Using placeholder icon as requested */}
+              <div className="relative w-full h-full flex items-center justify-center bg-slate-900">
+                  <img 
+                    src="/icon.png" 
+                    alt="Course Preview" 
+                    className="w-32 h-32 object-contain opacity-80"
+                    onError={(e) => {
+                      // Fallback if icon.png doesn't exist or load
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.parentElement?.classList.add('bg-gradient-to-br', 'from-slate-800', 'to-slate-900');
+                    }}
+                  />
+                  {/* Play Button Overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/30 transition-colors cursor-pointer">
+                    <button onClick={handleEnroll} className="w-20 h-20 bg-primary hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110">
+                      <PlayCircle className="w-10 h-10 ml-1" />
+                    </button>
+                  </div>
+              </div>
+            </div>
+            </>
+          )}
+
 
           {/* About Course */}
-          <section>
+          {(!isEnrolled || activeTab === 'overview') && (
+            <section>
             <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-4">About this course</h2>
             <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-400 space-y-4">
               <p>
@@ -131,8 +363,10 @@ export const CourseDetailsPage = () => {
               </ul>
             </div>
           </section>
+          )}
 
           {/* Course Curriculum */}
+          {(!isEnrolled || activeTab === 'overview') && (
           <section>
             <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-6">Course Curriculum</h2>
             <div className="space-y-4">
@@ -195,6 +429,7 @@ export const CourseDetailsPage = () => {
               </div>
             </div>
           </section>
+          )}
 
           {/* Instructor */}
           <section>

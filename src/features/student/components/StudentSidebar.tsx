@@ -20,8 +20,10 @@ export const StudentSidebar = () => {
         { title: 'AI Tutor', icon: BrainCircuit, path: '/student/ai-tutor', highlight: true },
         { title: 'Assignment Helper', icon: FileEdit, path: '/student/assignment-helper' },
         { title: 'My Courses', icon: BookOpen, path: '/student/courses' },
+        { title: 'Certificates', icon: Award, path: '/student/certificates' },
         { title: 'Exam Prep', icon: Award, path: '/student/exam-prep' },    
         { title: 'GPA Tracker', icon: GraduationCap, path: '/student/gpa' },
+         
     ];
 
     return (

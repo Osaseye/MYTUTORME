@@ -1,4 +1,5 @@
 import React from 'react';
+import { toast } from 'sonner';
 import { 
   FileEdit, 
   Sigma, 
@@ -59,14 +60,28 @@ export const AssignmentHelperPage = () => {
                   <ImageIcon className="w-5 h-5" />
                 </button>
               </div>
-              <button className="bg-primary hover:bg-green-700 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-primary/30 transition-all hover:scale-105 flex items-center gap-2">
+              <button 
+                className="bg-primary hover:bg-green-700 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-primary/30 transition-all hover:scale-105 flex items-center gap-2"
+                onClick={() => {
+                   toast.success('Assignment Analyzed Successfully!', {
+                     description: 'AI has generated a step-by-step solution for your query.',
+                   });
+                }}
+              >
                 <span>Analyze</span>
                 <Send className="w-4 h-4" />
               </button>
             </div>
           </div>
           
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border-2 border-dashed border-gray-300 dark:border-gray-600 p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary dark:hover:border-primary transition-colors group">
+          <div 
+             className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border-2 border-dashed border-gray-300 dark:border-gray-600 p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary dark:hover:border-primary transition-colors group"
+             onClick={() => {
+                toast.success('Document Uploaded', {
+                   description: 'Assignment file has been securely uploaded for processing.',
+                });
+             }}
+          >
             <div className="h-12 w-12 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <CloudUpload className="w-6 h-6 text-gray-500 dark:text-gray-400 group-hover:text-primary transition-colors" />
             </div>
