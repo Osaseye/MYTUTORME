@@ -65,7 +65,7 @@ export const StudentDashboard = () => {
                  <Button size="lg" className="bg-primary hover:bg-primary-dark text-white border-0 shadow-lg shadow-primary/20 gap-2 font-medium px-6 h-12 rounded-xl transition-all hover:scale-105 active:scale-95">
                     <PlayCircle className="w-5 h-5 fill-current" /> Resume Learning
                  </Button>
-                 <Button size="lg" variant="outline" className="text-white border-white/20 hover:bg-white/10 gap-2 h-12 rounded-xl px-6">
+                 <Button size="lg" variant="outline" className="text-black border-white/20 hover:bg-white/10 gap-2 h-12 rounded-xl px-6">
                     Daily Quiz <ArrowRight className="w-4 h-4" />
                  </Button>
               </div>

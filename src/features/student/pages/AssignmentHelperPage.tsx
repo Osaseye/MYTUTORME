@@ -35,10 +35,10 @@ export const AssignmentHelperPage = () => {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-16rem)] min-h-[600px]">
+      <div className="flex flex-col lg:flex-row gap-6 lg:h-[calc(100vh-16rem)] h-auto">
         {/* Left Column: Input */}
-        <div className="w-full lg:w-1/2 flex flex-col gap-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex-grow flex flex-col relative overflow-hidden group">
+        <div className="w-full lg:w-1/2 flex flex-col gap-4 h-full">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex-grow flex flex-col relative overflow-hidden group min-h-[400px] lg:min-h-0">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-green-400"></div>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">

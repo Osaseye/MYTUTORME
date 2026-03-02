@@ -173,7 +173,7 @@ export const MyCoursesPage = () => {
                     </div>
                     <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Dr. A. Smith</span>
                   </div>
-                  <span className="font-bold text-slate-900 dark:text-white">$49.99</span>
+                  <span className="font-bold text-slate-900 dark:text-white">₦49,990</span>
                 </div>
               </div>
             </Link>
@@ -247,7 +247,7 @@ export const MyCoursesPage = () => {
                     </div>
                     <span className="text-xs font-medium text-slate-700 dark:text-slate-300">M. Chen</span>
                   </div>
-                  <span className="font-bold text-slate-900 dark:text-white">$89.99</span>
+                  <span className="font-bold text-slate-900 dark:text-white">₦89,990</span>
                 </div>
               </div>
             </Link>
@@ -291,7 +291,7 @@ export const MyCoursesPage = () => {
                     </div>
                     <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Elena R.</span>
                   </div>
-                  <span className="font-bold text-slate-900 dark:text-white">$65.00</span>
+                  <span className="font-bold text-slate-900 dark:text-white">₦65,000</span>
                 </div>
               </div>
             </div>
@@ -365,7 +365,7 @@ export const MyCoursesPage = () => {
                     </div>
                     <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Amanda L.</span>
                   </div>
-                  <span className="font-bold text-slate-900 dark:text-white">$99.00</span>
+                  <span className="font-bold text-slate-900 dark:text-white">₦99,000</span>
                 </div>
               </div>
             </Link>

@@ -1,5 +1,6 @@
 ﻿import { Outlet } from 'react-router-dom';
 import { StudentSidebar } from '../components/StudentSidebar';
+import { MobileFloatingNav } from '../components/MobileFloatingNav';
 import { Bell, Search, UserCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
@@ -7,11 +8,22 @@ export const StudentLayout = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <StudentSidebar />
+      <MobileFloatingNav />
       
-      <div className="ml-64 min-h-screen flex flex-col">
+      <div className="ml-0 md:ml-64 min-h-screen flex flex-col pb-24 md:pb-0">
         {/* Top Header */}
-        <header className="h-16 px-8 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-30">
-          <div className="max-w-md w-full relative hidden sm:block">
+        <header className="h-16 px-4 md:px-8 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-30">
+          
+          {/* Mobile: Logo & Text */}
+          <div className="flex items-center gap-2 md:hidden">
+              <img src="/icon.png" alt="MyTutorMe" className="w-8 h-8 rounded-lg" />
+              <span className="font-display font-bold text-lg text-slate-900 dark:text-white tracking-tight">
+                  MyTutor<span className="text-primary">Me</span>
+              </span>
+          </div>
+
+          {/* Desktop Search */}
+          <div className="max-w-md w-full relative hidden md:block">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input 
               className="pl-10 h-10 w-full bg-slate-50 dark:bg-slate-900 border-none ring-1 ring-slate-200 dark:ring-slate-800 focus-visible:ring-primary/20" 
@@ -20,7 +32,7 @@ export const StudentLayout = () => {
           </div>
 
           <div className="flex items-center gap-4">
-             <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-full text-xs font-medium border border-orange-100 dark:border-orange-900/30">
+             <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-full text-xs font-medium border border-orange-100 dark:border-orange-900/30 hidden sm:flex">
                 <span className="text-sm">🔥</span> 3 Day Streak
              </div>
              

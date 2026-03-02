@@ -6,10 +6,9 @@ import { AuthLayout } from '@/layouts/AuthLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { OnboardingLayout, StudentOnboarding, TeacherOnboarding } from '@/features/onboarding';
-import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, AssignmentHelperPage, GpaTrackerPage, CertificatePage, MyCertificatesPage, SettingsPage, ExamPrepPage, ExamConfigPage, ExamResultsPage, ExamTakingPage } from '@/features/student';
-
-// Placeholder layouts
-const TeacherLayout = () => <div>Teacher Layout Wrapper</div>;
+import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, AssignmentHelperPage, GpaTrackerPage, CertificatePage, MyCertificatesPage, SettingsPage, ExamPrepPage, ExamConfigPage, ExamResultsPage, ExamTakingPage, CommunityPage } from '@/features/student';
+import { TeacherLayout, TeacherDashboard, TeacherCoursesPage, CourseCreationPage } from '@/features/teacher';
+import { AdminLayout, AdminDashboard, UserManagementPage } from '@/features/admin';
 
 export const AppRoutes = () => {
   return (
@@ -37,6 +36,7 @@ export const AppRoutes = () => {
           <Route path={paths.student.courses + '/:courseId'} element={<CourseDetailsPage />} />
           <Route path={paths.student.aiTutor} element={<AiTutorPage />} />
           <Route path={paths.student.assignmentHelper} element={<AssignmentHelperPage />} />
+          <Route path={paths.student.community} element={<CommunityPage />} />
           <Route path={paths.student.gpa} element={<GpaTrackerPage />} />
           <Route path={paths.student.certificates} element={<MyCertificatesPage />} />
           <Route path="/student/certificates/:id" element={<CertificatePage />} />
@@ -51,14 +51,19 @@ export const AppRoutes = () => {
       {/* Teacher Protected Routes */}
       <Route element={<ProtectedRoute allowedRoles={['teacher']} />}>
         <Route element={<TeacherLayout />}>
-          <Route path={paths.teacher.dashboard} element={<div>Teacher Dashboard</div>} />
-          <Route path={paths.teacher.courses} element={<div>My Courses</div>} />
+          <Route path={paths.teacher.dashboard} element={<TeacherDashboard />} />
+          <Route path={paths.teacher.courses} element={<TeacherCoursesPage />} />
+          <Route path={paths.teacher.coursesNew} element={<CourseCreationPage />} />
+          {/* Add other teacher routes here as we build them */}
         </Route>
       </Route>
 
       {/* Admin Protected Routes */}
       <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-          <Route path={paths.admin.dashboard} element={<div>Admin Dashboard</div>} />
+          <Route element={<AdminLayout />}>
+              <Route path={paths.admin.dashboard} element={<AdminDashboard />} />
+              <Route path={paths.admin.users} element={<UserManagementPage />} />
+          </Route>
       </Route>
 
       {/* Fallback */}

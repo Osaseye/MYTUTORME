@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { QuizRunner, QuizResults } from '../components/QuizRunner';
+import { PurchaseCourseModal } from '../components/PurchaseCourseModal';
+import { LessonPlayer } from '../components/LessonPlayer';
 import type { Quiz, QuizStats } from '../types/quiz';
 
 const MOCK_QUIZ: Quiz = {
@@ -63,14 +65,21 @@ const MOCK_QUIZ: Quiz = {
 
 export const CourseDetailsPage = () => {
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'curriculum' | 'quizzes' | 'certificate'>('overview');
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+  const [activeLesson, setActiveLesson] = useState<string | null>(null);
   const [quizStats, setQuizStats] = useState<QuizStats | null>(null);
 
-  const handleEnroll = () => {
+  const handleEnrollSuccess = () => {
     setIsEnrolled(true);
-    setActiveTab('curriculum');
+    // Add a slight delay before showing curriculum to allow modal to close smoothly
+    setTimeout(() => {
+        setActiveTab('curriculum');
+        toast.success("Welcome aboard!", { description: "You are now enrolled in this course." });
+    }, 500);
   };
+
 
   const startQuiz = () => {
     setActiveQuiz(MOCK_QUIZ);
@@ -94,16 +103,29 @@ export const CourseDetailsPage = () => {
     );
   }
 
+  if (activeLesson) {
+    return (
+      <LessonPlayer 
+        lessonTitle={activeLesson}
+        onExit={() => setActiveLesson(null)}
+        onComplete={() => {
+          toast.success("Lesson Completed!");
+          setActiveLesson(null);
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Breadcrumb */}
-      <nav className="flex mb-8 text-sm text-slate-500 dark:text-slate-400">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
-          <li className="inline-flex items-center">
-            <Link to="/student/dashboard" className="hover:text-primary transition-colors">Home</Link>
+    <div className="min-h-screen bg-white dark:bg-slate-950 pb-20">
+      {/* Breadcrumb Navigation */}
+      <nav className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-slate-900/50 px-4 py-3">
+        <ol className="flex items-center text-sm text-gray-500 dark:text-gray-400 container mx-auto max-w-7xl">
+          <li>
+            <Link to="/student" className="hover:text-primary transition-colors">Home</Link>
           </li>
           <li><span className="mx-2">/</span></li>
-          <li className="inline-flex items-center">
+          <li>
             <Link to="/student/courses" className="hover:text-primary transition-colors">My Courses</Link>
           </li>
           <li><span className="mx-2">/</span></li>
@@ -122,6 +144,15 @@ export const CourseDetailsPage = () => {
         </div>
       )}
 
+      {/* Purchase Modal */}
+      <PurchaseCourseModal 
+         isOpen={isPurchaseModalOpen}
+         onClose={() => setIsPurchaseModalOpen(false)}
+         courseTitle="Advanced Calculus & Linear Algebra"
+         price="₦49,000"
+         onSuccess={handleEnrollSuccess}
+      />
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Main Content Column */}
         <div className="lg:col-span-2 space-y-8">
@@ -210,12 +241,18 @@ export const CourseDetailsPage = () => {
                                <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">Completed</span>
                             </div>
                             <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                               <div className="p-4 flex gap-3 items-center hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer">
+                               <div 
+                                  onClick={() => setActiveLesson("Introduction to Limits")}
+                                  className="p-4 flex gap-3 items-center hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer"
+                               >
                                   <CheckCircle className="w-5 h-5 text-green-500" />
                                   <span className="text-gray-700 dark:text-gray-300 text-sm">Introduction to Limits</span>
                                   <span className="ml-auto text-xs text-gray-400">10:45</span>
                                </div>
-                               <div className="p-4 flex gap-3 items-center hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer">
+                               <div 
+                                  onClick={() => setActiveLesson("Evaluating Limits Algebraically")}
+                                  className="p-4 flex gap-3 items-center hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer"
+                               >
                                   <CheckCircle className="w-5 h-5 text-green-500" />
                                   <span className="text-gray-700 dark:text-gray-300 text-sm">Evaluating Limits Algebraically</span>
                                   <span className="ml-auto text-xs text-gray-400">15:20</span>
@@ -232,17 +269,16 @@ export const CourseDetailsPage = () => {
                             <div className="divide-y divide-gray-100 dark:divide-gray-700">
                                <div 
                                   className="p-4 flex gap-3 items-center hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer bg-primary/5"
-                                  onClick={() => {
-                                     toast.success("Resuming Lecture", {
-                                        description: "Module 2: Power Rule & Chain Rule" 
-                                     });
-                                  }}
+                                  onClick={() => setActiveLesson("Power Rule & Chain Rule")}
                                >
                                   <PlayCircle className="w-5 h-5 text-primary" />
                                   <span className="text-gray-900 dark:text-white font-medium text-sm">Power Rule & Chain Rule</span>
                                   <span className="ml-auto text-xs text-gray-500">22:15</span>
                                </div>
-                               <div className="p-4 flex gap-3 items-center hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer opacity-70">
+                               <div 
+                                  onClick={() => toast.error("Lesson Locked", { description: "Please complete previous lessons to unlock." })}
+                                  className="p-4 flex gap-3 items-center hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer opacity-70"
+                               >
                                   <Lock className="w-4 h-4 text-gray-400" />
                                   <span className="text-gray-500 text-sm">Derivatives of Trig Functions</span>
                                   <span className="ml-auto text-xs text-gray-400">18:30</span>
@@ -324,8 +360,8 @@ export const CourseDetailsPage = () => {
                     }}
                   />
                   {/* Play Button Overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/30 transition-colors cursor-pointer">
-                    <button onClick={handleEnroll} className="w-20 h-20 bg-primary hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/30 transition-colors cursor-pointer" onClick={() => setIsPurchaseModalOpen(true)}>
+                    <button className="w-20 h-20 bg-primary hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110">
                       <PlayCircle className="w-10 h-10 ml-1" />
                     </button>
                   </div>
@@ -532,12 +568,26 @@ export const CourseDetailsPage = () => {
               </div>
               
               <div className="space-y-3 mb-6">
-                <Button className="w-full h-12 text-base font-bold bg-primary hover:bg-green-700 shadow-lg shadow-primary/30">
-                  Enroll Now <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-                <Button variant="outline" className="w-full h-12 text-base font-bold border-2">
-                  Add to Cart
-                </Button>
+                 {isEnrolled ? (
+                   <Button 
+                      className="w-full h-12 text-base font-bold bg-green-600 hover:bg-green-700 shadow-lg shadow-green-600/30"
+                      onClick={() => setActiveTab('curriculum')}
+                   >
+                     Continue Learning <PlayCircle className="w-5 h-5 ml-2" />
+                   </Button>
+                 ) : (
+                   <>
+                      <Button 
+                          className="w-full h-12 text-base font-bold bg-primary hover:bg-green-700 shadow-lg shadow-primary/30"
+                          onClick={() => setIsPurchaseModalOpen(true)}
+                      >
+                        Enroll Now <ArrowRight className="w-5 h-5 ml-2" />
+                      </Button>
+                      <Button variant="outline" className="w-full h-12 text-base font-bold border-2">
+                        Add to Cart
+                      </Button>
+                   </>
+                 )}
               </div>
               
               <p className="text-center text-xs text-slate-500 mb-6">30-Day Money-Back Guarantee</p>
@@ -564,7 +614,7 @@ export const CourseDetailsPage = () => {
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -mr-16 -mt-16"></div>
               <h3 className="font-bold text-lg mb-2 relative z-10">Training 5 or more people?</h3>
               <p className="text-slate-300 text-sm mb-4 relative z-10">Get your team access to TutorMe's top 5,000+ courses anytime, anywhere.</p>
-              <Button variant="outline" className="w-full bg-white/10 hover:bg-white/20 border-white/20 text-white border-transparent relative z-10">
+              <Button variant="outline" className="w-full bg-white/10 hover:bg-white/20 border-white/20 text-white relative z-10">
                 Get TutorMe Business
               </Button>
             </div>
@@ -572,6 +622,14 @@ export const CourseDetailsPage = () => {
           </div>
         </div>
       </div>
+
+      <PurchaseCourseModal 
+        isOpen={isPurchaseModalOpen}
+        onClose={() => setIsPurchaseModalOpen(false)}
+        onSuccess={handleEnrollSuccess}
+        price="₦49,000"
+        courseTitle="Calculus 1: Limits & Derivatives"
+      />
     </div>
   );
 };

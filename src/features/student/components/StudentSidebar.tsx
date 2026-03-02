@@ -9,7 +9,9 @@ import {
   Settings,
   LogOut,
   Sparkles,
-  FileEdit
+  FileEdit,
+  MessageSquare,
+  Users
 } from 'lucide-react';
 
 export const StudentSidebar = () => {
@@ -20,6 +22,7 @@ export const StudentSidebar = () => {
         { title: 'AI Tutor', icon: BrainCircuit, path: '/student/ai-tutor', highlight: true },
         { title: 'Assignment Helper', icon: FileEdit, path: '/student/assignment-helper' },
         { title: 'My Courses', icon: BookOpen, path: '/student/courses' },
+        { title: 'Community', icon: Users, path: '/student/community' },
         { title: 'Certificates', icon: Award, path: '/student/certificates' },
         { title: 'Exam Prep', icon: Award, path: '/student/exam-prep' },    
         { title: 'GPA Tracker', icon: GraduationCap, path: '/student/gpa' },
@@ -27,7 +30,7 @@ export const StudentSidebar = () => {
     ];
 
     return (
-        <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 transition-transform">
+        <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 transition-transform hidden md:block">
             <div className="flex h-16 items-center border-b border-slate-200 dark:border-slate-800 px-6">
                  <Link to="/" className="flex items-center gap-2">
                     <img src="/icon.png" alt="MyTutorMe" className="w-8 h-8 rounded-lg" />

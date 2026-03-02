@@ -16,6 +16,7 @@ import {
   BookOpen,
   PlayCircle,
   HelpCircle,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -51,38 +52,132 @@ export const AiTutorPage = () => {
             timestamp: '10:24 AM'
         }
     ]);
-    const [inputValue, setInputValue] = useState('');
+const [showHistory, setShowHistory] = useState(false);    const [inputValue, setInputValue] = useState('');
+    // Mock subjects data
+    const subjects = [
+        { name: 'Mathematics', icon: Calculator, active: true, color: 'text-primary' },
+        { name: 'Physics', icon: FlaskConical, active: false, color: 'text-slate-600 dark:text-slate-400' },
+        { name: 'Biology', icon: Dna, active: false, color: 'text-slate-600 dark:text-slate-400' },
+        { name: 'History', icon: History, active: false, color: 'text-slate-600 dark:text-slate-400' },
+        { name: 'Comp Sci', icon: Code2, active: false, color: 'text-slate-600 dark:text-slate-400' },
+    ];
+
+    const [activeSubject, setActiveSubject] = useState(subjects[0]);
 
     return (
-        <div className="flex h-[calc(100vh-8rem)] bg-white dark:bg-slate-900 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="flex flex-col md:flex-row h-[calc(100vh-8rem)] gap-0 relative">
             
-            {/* Left Sidebar - Subjects */}
-            <aside className="w-64 bg-slate-50 dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 hidden md:flex flex-col">
+            {/* Mobile Subject & History Header */}
+            <div className="md:hidden flex items-center justify-between p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50 absolute top-0 left-0 right-0 z-20">
+                <button 
+                    onClick={() => setShowHistory(!showHistory)}
+                    className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200"
+                >
+                    <activeSubject.icon className="w-5 h-5 text-primary" />
+                    <span>{activeSubject.name}</span>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Change</Badge>
+                </button>
+                <button className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-600 dark:text-slate-300">
+                    <PlusCircle className="w-5 h-5" />
+                </button>
+            </div>
+
+            {/* Mobile History / Subject Drawer */}
+            {showHistory && (
+                <div className="absolute inset-0 z-30 bg-white dark:bg-slate-900 p-4 animate-in slide-in-from-top-10 md:hidden flex flex-col">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="font-bold text-lg">Menu</h2>
+                        <button onClick={() => setShowHistory(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    <div className="space-y-6 overflow-y-auto pb-20">
+                        <div>
+                            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Subjects</h3>
+                            <div className="grid grid-cols-2 gap-2">
+                                {subjects.map((subject) => (
+                                    <button
+                                        key={subject.name}
+                                        onClick={() => { setActiveSubject(subject); setShowHistory(false); }}
+                                        className={cn(
+                                            "flex items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all",
+                                            activeSubject.name === subject.name
+                                                ? "bg-primary/5 border-primary text-primary"
+                                                : "bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700 hover:border-primary/50"
+                                        )}
+                                    >
+                                        <subject.icon className="w-4 h-4" />
+                                        {subject.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center justify-between">
+                                Recent Chats
+                                <button className="text-primary text-[10px] font-bold flex items-center gap-1">
+                                    <PlusCircle className="w-3 h-3" /> New Chat
+                                </button>
+                            </h3>
+                            <div className="space-y-2">
+                                {['Calculus Derivatives', 'Photosynthesis Process', 'World War II Timeline'].map((chat) => (
+                                    <button key={chat} className="w-full text-left p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 group">
+                                        <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:bg-primary group-hover:text-white transition-colors">
+                                            <Bot className="w-4 h-4" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{chat}</p>
+                                            <p className="text-[10px] text-slate-400">2 hours ago</p>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {/* Left Sidebar - Subjects (Desktop Only) */}
+            <aside className="w-64 hidden md:flex flex-col border-r border-slate-200/50 dark:border-slate-800/50">
                 <div className="p-4">
-                    <h2 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Subjects</h2>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Subjects</h2>
+                        <button className="text-xs flex items-center gap-1 text-primary hover:underline">
+                            <PlusCircle className="w-3 h-3" /> New Chat
+                        </button>
+                    </div>
                     <nav className="space-y-1">
-                        {[
-                            { name: 'Mathematics', icon: Calculator, active: true, color: 'text-primary' },
-                            { name: 'Physics', icon: FlaskConical, active: false, color: 'text-slate-600 dark:text-slate-400' },
-                            { name: 'Biology', icon: Dna, active: false, color: 'text-slate-600 dark:text-slate-400' },
-                            { name: 'History', icon: History, active: false, color: 'text-slate-600 dark:text-slate-400' },
-                            { name: 'Comp Sci', icon: Code2, active: false, color: 'text-slate-600 dark:text-slate-400' },
-                        ].map((subject) => (
+                        {subjects.map((subject) => (
                             <a 
                                 key={subject.name}
                                 href="#" 
+                                onClick={() => setActiveSubject(subject)}
                                 className={cn(
                                     "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
-                                    subject.active 
+                                    activeSubject.name === subject.name
                                         ? "bg-green-100 dark:bg-green-900/20 text-primary font-medium" 
                                         : "hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
                                 )}
                             >
-                                <subject.icon className={cn("w-5 h-5", subject.active ? "text-primary" : "text-slate-500")} />
+                                <subject.icon className={cn("w-5 h-5", activeSubject.name === subject.name ? "text-primary" : "text-slate-500")} />
                                 {subject.name}
                             </a>
                         ))}
                     </nav>
+
+                    <div className="mt-8">
+                        <h2 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Recent History</h2>
+                        <div className="space-y-1">
+                            {['Calculus Derivatives', 'History Essay Help', 'Physics Laws'].map(chat => (
+                                <a href="#" key={chat} className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-md truncate">
+                                    <History className="w-3 h-3 flex-shrink-0 opacity-50" />
+                                    <span className="truncate">{chat}</span>
+                                </a>
+                            ))}
+                        </div>
+                    </div>
                 </div>
                 
                 <div className="mt-auto p-4 border-t border-slate-200 dark:border-slate-800">
@@ -98,7 +193,7 @@ export const AiTutorPage = () => {
             </aside>
 
             {/* Main Chat Area */}
-            <main className="flex-1 flex flex-col relative bg-white dark:bg-slate-900">
+            <main className="flex-1 flex flex-col relative">
                 {/* Messages Area */}
                 <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scrollbar-hide">
                     <div className="flex justify-center">
@@ -178,12 +273,12 @@ export const AiTutorPage = () => {
                 </div>
 
                 {/* Input Area */}
-                <div className="p-4 md:p-6 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 z-10">
+                <div className="p-4 md:p-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200/50 dark:border-slate-800/50 z-10 rounded-b-2xl md:rounded-b-none sticky bottom-0 mb-20 md:mb-0 transition-all duration-300">
                     <div className="max-w-4xl mx-auto relative">
                         {/* Suggestions */}
-                        <div className="absolute -top-12 left-0 flex gap-2 overflow-x-auto w-full pb-2 scrollbar-hide">
+                        <div className="absolute -top-12 left-0 flex gap-2 overflow-x-auto w-full pb-2 scrollbar-hide mask-fade-right">
                             {["Explain the Quotient Rule", "Give me a practice problem", "Visualize the graph"].map((text) => (
-                                <button key={text} className="whitespace-nowrap bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs px-3 py-1.5 rounded-full hover:border-primary hover:text-primary dark:hover:border-primary transition-all shadow-sm">
+                                <button key={text} className="whitespace-nowrap bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200 dark:border-slate-700 text-xs px-3 py-1.5 rounded-full hover:border-primary hover:text-primary dark:hover:border-primary transition-all shadow-sm">
                                     {text}
                                 </button>
                             ))}
@@ -216,18 +311,18 @@ export const AiTutorPage = () => {
             </main>
 
             {/* Right Sidebar - Resources */}
-            <aside className="w-80 bg-slate-50 dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 hidden lg:flex flex-col p-6 overflow-y-auto">
+            <aside className="w-80 border-l border-slate-200/50 dark:border-slate-800/50 hidden lg:flex flex-col p-6 overflow-y-auto">
                 <div className="mb-8">
                     <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-4">
                         <Lightbulb className="w-5 h-5 text-primary" />
                         Suggested Follow-up
                     </h3>
                     <div className="space-y-3">
-                        <div className="group p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary/50 cursor-pointer transition-all shadow-sm">
+                        <div className="group p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800 cursor-pointer transition-all">
                             <p className="text-sm text-slate-700 dark:text-slate-300 font-medium mb-1 group-hover:text-primary transition-colors">Chain Rule Application</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">How do I combine product rule with chain rule for complex functions?</p>
                         </div>
-                        <div className="group p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary/50 cursor-pointer transition-all shadow-sm">
+                        <div className="group p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800 cursor-pointer transition-all">
                             <p className="text-sm text-slate-700 dark:text-slate-300 font-medium mb-1 group-hover:text-primary transition-colors">Trig Identities</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">List common derivatives for tan(x), sec(x), and cot(x).</p>
                         </div>

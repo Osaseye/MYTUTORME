@@ -1,4 +1,4 @@
-﻿export * from './layouts/StudentLayout';
+export * from './layouts/StudentLayout';
 export * from './pages/StudentDashboard';
 export * from './pages/AiTutorPage';
 export * from './pages/MyCoursesPage';
@@ -12,7 +12,5 @@ export * from './pages/ExamPrepPage';
 export * from './pages/ExamConfigPage';
 export * from './pages/ExamResultsPage';
 export * from './pages/ExamTakingPage';
+export * from './pages/CommunityPage';
 export * from './components/QuizRunner';
-
-
-
