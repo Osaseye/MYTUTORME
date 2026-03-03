@@ -6,13 +6,13 @@ import { getFunctions } from 'firebase/functions';
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCmIjIZ0N5Ea6w6Wee-Bimy0of3SOVvFwA",
-  authDomain: "mytutorme-1f7cb.firebaseapp.com",
-  projectId: "mytutorme-1f7cb",
-  storageBucket: "mytutorme-1f7cb.firebasestorage.app",
-  messagingSenderId: "166334865796",
-  appId: "1:166334865796:web:1d83f0f5d98dceec5d7dd1",
-  measurementId: "G-0CNMYEKVWF"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);
