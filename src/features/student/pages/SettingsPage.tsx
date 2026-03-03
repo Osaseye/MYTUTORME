@@ -1,233 +1,368 @@
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { 
-  User, 
-  Bell, 
-  Shield, 
-  CreditCard, 
-  LogOut,
-  Camera,
-  Mail,
-  Lock
-} from 'lucide-react';
+import { useState } from "react";
 
 export const SettingsPage = () => {
-  const [activeTab, setActiveTab] = useState<'profile' | 'account' | 'notifications' | 'billing'>('profile');
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Mock form state
-  const [formData, setFormData] = useState({
-    name: 'Alex Morgan',
-    email: 'alex.morgan@university.edu',
-    bio: 'Computer Science Major | AI Enthusiast',
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-
-  const handleSave = () => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success('Settings saved successfully!');
-    }, 1000);
-  };
-
-  const navItems = [
-    { id: 'profile', label: 'Edit Profile', icon: User },
-    { id: 'account', label: 'Account Security', icon: Shield },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'billing', label: 'Billing & Plans', icon: CreditCard },
-  ];
+  const [activeTab, setActiveTab] = useState("profile");
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col md:flex-row gap-8">
-        
-        {/* Sidebar Navigation */}
-        <div className="w-full md:w-64 space-y-2">
-            <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-6 px-2">Settings</h1>
-            
-            <nav className="space-y-1">
-                {navItems.map((item) => (
-                    <button
-                        key={item.id}
-                        onClick={() => setActiveTab(item.id as any)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-colors ${
-                            activeTab === item.id 
-                            ? 'bg-primary/10 text-primary' 
-                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-                        }`}
-                    >
-                        <item.icon className="w-5 h-5" />
-                        {item.label}
-                    </button>
-                ))}
-            </nav>
-
-            <div className="pt-8 mt-8 border-t border-slate-200 dark:border-slate-800">
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-colors">
-                    <LogOut className="w-5 h-5" />
-                    Sign Out
-                </button>
+    <div className="bg-background-light dark:bg-background-dark font-body text-slate-800 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col">
+      <main className="pt-28 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <aside className="w-full lg:w-64 flex-shrink-0">
+            <div className="sticky top-28 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+                <h2 className="text-lg font-display font-bold text-slate-900 dark:text-white">
+                  Settings
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  Manage your account preferences
+                </p>
+              </div>
+              <nav className="p-4 space-y-1">
+                <a
+                  href="#"
+                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-colors ${
+                    activeTab === "profile"
+                      ? "bg-primary/10 text-primary"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                  onClick={() => setActiveTab("profile")}
+                >
+                  <span className="material-symbols-outlined">person</span>
+                  Personal Info
+                </a>
+                <a
+                  href="#"
+                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-colors ${
+                    activeTab === "academic"
+                      ? "bg-primary/10 text-primary"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                  onClick={() => setActiveTab("academic")}
+                >
+                  <span className="material-symbols-outlined">school</span>
+                  Academic Level
+                </a>
+                <a
+                  href="#"
+                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-colors ${
+                    activeTab === "subscription"
+                      ? "bg-primary/10 text-primary"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                  onClick={() => setActiveTab("subscription")}
+                >
+                  <span className="material-symbols-outlined">credit_card</span>
+                  Subscription
+                </a>
+                <a
+                  href="#"
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
+                >
+                  <span className="material-symbols-outlined">
+                    notifications
+                  </span>
+                  Notifications
+                </a>
+                <a
+                  href="#"
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
+                >
+                  <span className="material-symbols-outlined">security</span>
+                  Security
+                </a>
+              </nav>
             </div>
+          </aside>
+          <div className="flex-1 space-y-8">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-8 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-primary/20 to-secondary/20"></div>
+              <div className="relative flex flex-col sm:flex-row items-end sm:items-center gap-6 mt-8">
+                <div className="relative group">
+                  <img
+                    alt="Profile"
+                    className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white dark:border-slate-900 shadow-md object-cover"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDV481tCcfzktfvCFd_UkzJt3f0wlu0qg3hkvgGLKR134CXxHf_CJ-U0iKYU3pnup_Atpypv9Sp2M0tTBPqk2-16cY5RKLDQRYWGIECEns5vr8kwnoebF-sAsD-vNC42_XyU0c78ds6f-LhAmku7hBv4j6MKT0FX7tbEY3KcwrPVLuDytD4ER2_2RPCxW41AKxEt9MJyxRc7wdDYELwHWF672W40F2LWwiZA94pLtv5uu5LyioDeMM-agFlH7n6lymvTrtOZsCGWLs"
+                  />
+                  <button className="absolute bottom-0 right-0 bg-primary hover:bg-green-700 text-white p-2 rounded-full shadow-lg transition-colors border-2 border-white dark:border-slate-900">
+                    <span className="material-symbols-outlined text-sm">
+                      edit
+                    </span>
+                  </button>
+                </div>
+                <div className="flex-1 pb-2">
+                  <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-white">
+                    Alex Morgan
+                  </h1>
+                  <p className="text-slate-500">
+                    Student • University of Lagos
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <button className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    Cancel
+                  </button>
+                  <button className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-green-700 rounded-lg shadow-sm shadow-primary/30 transition-colors">
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-8">
+              <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">
+                  badge
+                </span>
+                Personal Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                    htmlFor="full-name"
+                  >
+                    Full Name
+                  </label>
+                  <input
+                    className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:border-primary focus:ring-primary"
+                    id="full-name"
+                    name="full-name"
+                    type="text"
+                    defaultValue="Alex Morgan"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                    htmlFor="email"
+                  >
+                    Email Address
+                  </label>
+                  <input
+                    className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:border-primary focus:ring-primary"
+                    id="email"
+                    name="email"
+                    type="email"
+                    defaultValue="alex.morgan@student.edu"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                    htmlFor="phone"
+                  >
+                    Phone Number
+                  </label>
+                  <input
+                    className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:border-primary focus:ring-primary"
+                    id="phone"
+                    name="phone"
+                    placeholder="+234 800 000 0000"
+                    type="tel"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                    htmlFor="timezone"
+                  >
+                    Timezone
+                  </label>
+                  <select
+                    className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:border-primary focus:ring-primary"
+                    id="timezone"
+                    name="timezone"
+                  >
+                    <option>West Africa Time (WAT)</option>
+                    <option>Central Africa Time (CAT)</option>
+                    <option>East Africa Time (EAT)</option>
+                    <option>Greenwich Mean Time (GMT)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span className="material-symbols-outlined text-secondary">
+                    school
+                  </span>
+                  Academic Preferences
+                </h3>
+                <span className="text-xs font-semibold px-2 py-1 rounded bg-secondary/10 text-secondary border border-secondary/20">
+                  Auto-saved
+                </span>
+              </div>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label
+                      className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                      htmlFor="education-level"
+                    >
+                      Current Education Level
+                    </label>
+                    <select
+                      className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:border-primary focus:ring-primary"
+                      id="education-level"
+                    >
+                      <option>Secondary School (Year 10-12)</option>
+                      <option selected>Undergraduate (University)</option>
+                      <option>Postgraduate</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                      htmlFor="major"
+                    >
+                      Major / Field of Study
+                    </label>
+                    <input
+                      className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:border-primary focus:ring-primary"
+                      id="major"
+                      type="text"
+                      defaultValue="Computer Science"
+                    />
+                  </div>
+                </div>
+                <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+                  <label className="block text-sm font-medium text-slate-900 dark:text-white mb-4">
+                    Preferred Grading System
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <label className="relative flex cursor-pointer rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 shadow-sm focus:outline-none ring-offset-2 ring-primary has-[:checked]:ring-2 has-[:checked]:border-primary has-[:checked]:bg-primary/5 transition-all">
+                      <input
+                        className="sr-only"
+                        name="grading-system"
+                        type="radio"
+                        value="4.0"
+                      />
+                      <span className="flex flex-1">
+                        <span className="flex flex-col">
+                          <span className="block text-sm font-bold text-slate-900 dark:text-white">
+                            4.0 Scale
+                          </span>
+                          <span className="mt-1 flex items-center text-xs text-slate-500">
+                            GPA System
+                          </span>
+                        </span>
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="material-symbols-outlined text-primary invisible peer-checked:visible"
+                      >
+                        check_circle
+                      </span>
+                    </label>
+                    <label className="relative flex cursor-pointer rounded-xl border border-primary dark:border-primary bg-primary/5 dark:bg-primary/10 p-4 shadow-sm focus:outline-none ring-2 ring-primary ring-offset-2 transition-all">
+                      <input
+                        className="sr-only"
+                        name="grading-system"
+                        type="radio"
+                        value="5.0"
+                        defaultChecked
+                      />
+                      <span className="flex flex-1">
+                        <span className="flex flex-col">
+                          <span className="block text-sm font-bold text-slate-900 dark:text-white">
+                            5.0 Scale
+                          </span>
+                          <span className="mt-1 flex items-center text-xs text-slate-500">
+                            CGPA System
+                          </span>
+                        </span>
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="material-symbols-outlined text-primary"
+                      >
+                        check_circle
+                      </span>
+                    </label>
+                    <label className="relative flex cursor-pointer rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 shadow-sm focus:outline-none ring-offset-2 ring-primary has-[:checked]:ring-2 has-[:checked]:border-primary has-[:checked]:bg-primary/5 transition-all">
+                      <input
+                        className="sr-only"
+                        name="grading-system"
+                        type="radio"
+                        value="100"
+                      />
+                      <span className="flex flex-1">
+                        <span className="flex flex-col">
+                          <span className="block text-sm font-bold text-slate-900 dark:text-white">
+                            Percentage
+                          </span>
+                          <span className="mt-1 flex items-center text-xs text-slate-500">
+                            0 - 100%
+                          </span>
+                        </span>
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="material-symbols-outlined text-primary invisible peer-checked:visible"
+                      >
+                        check_circle
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-8">
+              <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                <span className="material-symbols-outlined text-blue-500">
+                  workspace_premium
+                </span>
+                Subscription Plan
+              </h3>
+              <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between p-6 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-slate-500">
+                      person
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                      Current Plan
+                    </p>
+                    <h4 className="text-xl font-bold text-slate-900 dark:text-white">
+                      Free Plan
+                    </h4>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-700 px-2.5 py-0.5 text-xs font-medium text-slate-800 dark:text-slate-300">
+                    Valid until Forever
+                  </span>
+                </div>
+              </div>
+              <div className="mt-6 p-6 rounded-xl bg-gradient-to-br from-primary to-green-700 text-white shadow-lg relative overflow-hidden">
+                <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+                <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div>
+                    <h4 className="text-xl font-bold mb-2 flex items-center gap-2">
+                      Upgrade to Premium
+                      <span className="material-symbols-outlined text-yellow-300">
+                        star
+                      </span>
+                    </h4>
+                    <p className="text-green-50 text-sm max-w-md">
+                      Unlock unlimited AI queries, advanced GPA prediction
+                      models, and verified certificates for completed courses.
+                    </p>
+                  </div>
+                  <button className="whitespace-nowrap px-6 py-3 bg-white text-primary font-bold rounded-lg shadow-md hover:bg-green-50 transition-colors">
+                    Upgrade Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* Content Area */}
-        <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden min-h-[600px]">
-            
-            {/* Profile Tab */}
-            {activeTab === 'profile' && (
-                <div className="p-8 max-w-2xl">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Edit Profile</h2>
-                    
-                    {/* Avatar Upload */}
-                    <div className="flex items-center gap-6 mb-8">
-                        <div className="relative group cursor-pointer">
-                            <img 
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzWKEMlFyQL3iGWEyaNiEjPbe6et2EnAqbD9NYZfJNyS3yilfAxLkR1wenCIf84IvBqvnCdDKlcuJ7UZtvXDUWvJzkzy8vzq3exQbxAIp3gcxi-P7oYHkYh_EK9qHs0qd4Q43K3AyzdASDXIhTWP3i62-bDFlIjt3XHZDJFAgmCBDU4qfLpH3HGLVTcm9jjNmuq2qj8Z_h3IBBw-PrD_O_MPai4RbcTYgWDZhzlPYRZYB8GO1A5eW-TcRqrZZUXn-HBy0TeLvteKs" 
-                                alt="Profile" 
-                                className="w-24 h-24 rounded-full object-cover border-4 border-slate-100 dark:border-slate-800"
-                            />
-                            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Camera className="w-8 h-8 text-white" />
-                            </div>
-                        </div>
-                        <div>
-                            <h3 className="font-medium text-slate-900 dark:text-white">Profile Photo</h3>
-                            <p className="text-sm text-slate-500 mb-3">Recommended 300x300px</p>
-                            <div className="flex gap-3">
-                                <Button variant="outline" size="sm">Change</Button>
-                                <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">Remove</Button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">First Name</label>
-                                <Input 
-                                    value={formData.name.split(' ')[0]} 
-                                    onChange={(e) => setFormData({...formData, name: `${e.target.value} ${formData.name.split(' ')[1]}`})} 
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Last Name</label>
-                                <Input 
-                                    value={formData.name.split(' ')[1]} 
-                                    onChange={(e) => setFormData({...formData, name: `${formData.name.split(' ')[0]} ${e.target.value}`})} 
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Headline / Bio</label>
-                            <Input 
-                                value={formData.bio} 
-                                onChange={(e) => setFormData({...formData, bio: e.target.value})} 
-                            />
-                            <p className="text-xs text-slate-500">Brief description for your profile.</p>
-                        </div>
-                        
-                        <div className="pt-4 flex justify-end">
-                            <Button onClick={handleSave} disabled={isLoading} className="bg-primary hover:bg-primary/90">
-                                {isLoading ? 'Saving...' : 'Save Changes'}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Account Tab */}
-            {activeTab === 'account' && (
-                <div className="p-8 max-w-2xl">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Account Security</h2>
-                    
-                    <div className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email Address</label>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
-                                <Input 
-                                    value={formData.email} 
-                                    className="pl-10" 
-                                    onChange={(e) => setFormData({...formData, email: e.target.value})} 
-                                />
-                            </div>
-                        </div>
-
-                        <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
-                             <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">Change Password</h3>
-                             <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Current Password</label>
-                                    <div className="relative">
-                                        <Lock className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
-                                        <Input type="password" className="pl-10" placeholder="••••••••" />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">New Password</label>
-                                    <div className="relative">
-                                        <Lock className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
-                                        <Input type="password" className="pl-10" placeholder="••••••••" />
-                                    </div>
-                                </div>
-                             </div>
-                        </div>
-
-                         <div className="pt-4 flex justify-end">
-                            <Button onClick={handleSave} disabled={isLoading} className="bg-primary hover:bg-primary/90">
-                                {isLoading ? 'Updating...' : 'Update Password'}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Notifications Tab */}
-            {activeTab === 'notifications' && (
-                 <div className="p-8 max-w-2xl">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Notification Preferences</h2>
-                    
-                    <div className="space-y-6">
-                        {[
-                            { title: 'Course Updates', desc: 'Receive emails about new lectures and announcements.', default: true },
-                            { title: 'Assignment Deadlines', desc: 'Reminders 24h before assignments are due.', default: true },
-                            { title: 'Quiz Results', desc: 'Get notified when your quiz is graded.', default: true },
-                            { title: 'Promotional Emails', desc: 'News about discounts and new courses.', default: false }
-                        ].map((item, i) => (
-                             <div key={i} className="flex items-center justify-between py-4 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                                <div>
-                                    <h4 className="font-medium text-slate-900 dark:text-white">{item.title}</h4>
-                                    <p className="text-sm text-slate-500">{item.desc}</p>
-                                </div>
-                                <Switch defaultChecked={item.default} onCheckedChange={() => toast.success('Preference updated')} />
-                             </div>
-                        ))}
-                    </div>
-                 </div>
-            )}
-
-            {/* Billing Tab (Placeholder) */}
-            {activeTab === 'billing' && (
-                <div className="p-8 flex flex-col items-center justify-center text-center h-full">
-                     <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                        <CreditCard className="w-8 h-8 text-slate-400" />
-                     </div>
-                     <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Active Subscription</h2>
-                     <p className="text-slate-500 max-w-md mb-6">You are currently on the free plan. Upgrade to access premium courses and AI features.</p>
-                     <Button className="bg-primary hover:bg-primary/90">Upgrade to Pro</Button>
-                </div>
-            )}
-
-        </div>
-      </div>
+      </main>
     </div>
   );
 };

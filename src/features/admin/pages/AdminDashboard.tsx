@@ -5,165 +5,177 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  LineChart,
-  Line
+  ResponsiveContainer 
 } from 'recharts';
 import { 
   Users, 
   BookOpen, 
   DollarSign, 
-  Activity, 
-  ArrowUpRight,
-  ShieldCheck,
-  AlertTriangle,
-  UserCheck
+  UserCheck,
+  TrendingDown,
+  TrendingUp,
+  MapPin,
+  Calendar
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-const userGrowthData = [
-  { name: 'Jan', students: 400, teachers: 20 },
-  { name: 'Feb', students: 300, teachers: 15 },
-  { name: 'Mar', students: 500, teachers: 25 },
-  { name: 'Apr', students: 450, teachers: 30 },
-  { name: 'May', students: 600, teachers: 40 },
-  { name: 'Jun', students: 700, teachers: 45 },
+const nigeriaUserData = [
+  { name: 'Lagos', students: 1240 },
+  { name: 'Abuja', students: 850 },
+  { name: 'PH', students: 600 },
+  { name: 'Ibadan', students: 450 },
+  { name: 'Kano', students: 380 },
+  { name: 'Enugu', students: 300 },
 ];
 
 export const AdminDashboard = () => {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">System Overview</h1>
-          <p className="text-slate-500 dark:text-slate-400">Platform health and key metrics.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 font-display">
+            Admin Overview 🇳🇬
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400">
+            Monitoring MyTutorMe growth across Nigeria.
+          </p>
         </div>
         <div className="flex items-center gap-2">
-            <Button variant="outline" className="gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                View Alerts (3)
-            </Button>
-            <Button className="gap-2">
-                <ShieldCheck className="h-4 w-4" />
-                Review Queue
-            </Button>
+            <span className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full dark:bg-slate-800 flex items-center">
+                <Calendar className="w-3 h-3 mr-2" />
+                {new Date().toLocaleDateString('en-NG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </span>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="border-l-4 border-l-green-600 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-slate-500" />
+            <CardTitle className="text-sm font-medium text-slate-600">Total Users</CardTitle>
+            <Users className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12,345</div>
-            <p className="text-xs text-slate-500">+12% from last month</p>
+            <div className="text-2xl font-bold font-display">12,345</div>
+            <p className="text-xs text-green-600 flex items-center gap-1 font-medium mt-1">
+               <TrendingUp className="w-3 h-3" />
+               +12% from last month
+            </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-amber-500 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-            <UserCheck className="h-4 w-4 text-slate-500" />
+            <CardTitle className="text-sm font-medium text-slate-600">Pending Verification</CardTitle>
+            <UserCheck className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
-            <p className="text-xs text-slate-500">Teacher applications</p>
+            <div className="text-2xl font-bold font-display">24</div>
+            <p className="text-xs text-slate-500 mt-1">NIN/BVN Verification Queue</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Courses Published</CardTitle>
-            <BookOpen className="h-4 w-4 text-slate-500" />
+            <CardTitle className="text-sm font-medium text-slate-600">Active Courses</CardTitle>
+            <BookOpen className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,203</div>
-            <p className="text-xs text-slate-500">+8% from last month</p>
+            <div className="text-2xl font-bold font-display">1,203</div>
+            <p className="text-xs text-slate-500 mt-1">WAEC, JAMB, Professional</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-slate-500" />
+            <CardTitle className="text-sm font-medium text-slate-600">Total Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$124,592</div>
-            <p className="text-xs text-slate-500">+15% from last month</p>
+            <div className="text-2xl font-bold font-display">₦85.2M</div>
+            <p className="text-xs text-green-600 flex items-center gap-1 font-medium mt-1">
+               <TrendingUp className="w-3 h-3" />
+               +15% this quarter
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        {/* Main Chart */}
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>User Growth</CardTitle>
-            <CardDescription>New student and teacher registrations over time.</CardDescription>
-          </CardHeader>
-          <CardContent className="pl-2">
-            <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={userGrowthData}>
-                    <XAxis 
-                        dataKey="name" 
-                        stroke="#888888" 
-                        fontSize={12} 
-                        tickLine={false} 
-                        axisLine={false} 
-                    />
-                    <YAxis 
-                        stroke="#888888" 
-                        fontSize={12} 
-                        tickLine={false} 
-                        axisLine={false} 
-                        tickFormatter={(value) => `${value}`} 
-                    />
-                    <Tooltip 
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    />
-                    <Line type="monotone" dataKey="students" stroke="#8884d8" strokeWidth={2} />
-                    <Line type="monotone" dataKey="teachers" stroke="#82ca9d" strokeWidth={2} />
-                </LineChart>
-                </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Pending Verifications */}
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Verification Queue</CardTitle>
-            <CardDescription>Recent teacher applications awaiting review.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                  { name: 'Dr. Sarah Connor', subject: 'Physics', date: '2 hrs ago', status: 'Pending' },
-                  { name: 'Prof. John Smith', subject: 'History', date: '5 hrs ago', status: 'Pending' },
-                  { name: 'Alice Johnson', subject: 'Mathematics', date: '1 day ago', status: 'Pending' },
-                  { name: 'Michael Brown', subject: 'Computer Sci', date: '1 day ago', status: 'Pending' },
-                  { name: 'Emily Davis', subject: 'Chemistry', date: '2 days ago', status: 'Pending' },
-              ].map((user, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center font-bold text-blue-700 dark:text-blue-200">
-                            {user.name.charAt(0)}
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium leading-none">{user.name}</p>
-                            <p className="text-xs text-slate-500">{user.subject} • {user.date}</p>
-                        </div>
+      <div className="grid gap-6 md:grid-cols-7">
+        {/* Regional Growth Chart */}
+        <div className="md:col-span-4 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>User Growth by Region</CardTitle>
+                </CardHeader>
+                <CardContent className="pl-0">
+                    <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={nigeriaUserData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                <XAxis 
+                                    dataKey="name" 
+                                    stroke="#64748b" 
+                                    fontSize={12} 
+                                    tickLine={false} 
+                                    axisLine={false} 
+                                />
+                                <YAxis 
+                                    stroke="#64748b" 
+                                    fontSize={12} 
+                                    tickLine={false} 
+                                    axisLine={false}
+                                />
+                                <Tooltip 
+                                    cursor={{fill: '#f1f5f9'}}
+                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                />
+                                <Bar dataKey="students" fill="#16a34a" radius={[4, 4, 0, 0]} barSize={40} />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
-                    <Button size="sm" variant="outline" className="text-xs h-8">Review</Button>
-                  </div>
-              ))}
-              <Button variant="ghost" className="w-full text-sm text-primary">View All Pending</Button>
-            </div>
-          </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+        </div>
+
+        {/* Recent Activity Feed */}
+        <div className="md:col-span-3 space-y-6">
+            <Card className="h-full">
+                <CardHeader>
+                    <CardTitle>Recent Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-6">
+                        {[
+                            { user: 'Chidi Okonkwo', action: 'Verified as Teacher', time: '2 mins ago', location: 'Enugu', initials: 'CO' },
+                            { user: 'Fatima Yusuf', action: 'Published "Intro to WAEC Math"', time: '15 mins ago', location: 'Kano', initials: 'FY' },
+                            { user: 'System', action: 'Payout processed for 120 tutors', time: '1 hour ago', location: 'Lagos HQ', initials: 'SYS' },
+                            { user: 'Bola Adebayo', action: 'Reported a course review', time: '3 hours ago', location: 'Ibadan', initials: 'BA' },
+                            { user: 'Emeka Nnamdi', action: 'Requested refund', time: '5 hours ago', location: 'PH', initials: 'EN' },
+                        ].map((item, i) => (
+                            <div key={i} className="flex items-start gap-4">
+                                <Avatar className="h-9 w-9 border border-slate-200">
+                                    <AvatarFallback className="bg-slate-50 text-slate-600 text-xs font-bold">
+                                        {item.initials}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="space-y-1">
+                                    <p className="text-sm font-medium leading-none text-slate-900 dark:text-slate-200">
+                                        {item.user}
+                                    </p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                        {item.action}
+                                    </p>
+                                    <div className="flex items-center gap-1 text-[10px] text-slate-400 mt-1">
+                                        <MapPin className="w-3 h-3" /> {item.location} • {item.time}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
       </div>
     </div>
   );

@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  DollarSign
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -65,8 +66,8 @@ export const AdminLayout = () => {
     const navItems = [
         { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
         { label: 'User Management', path: '/admin/users', icon: Users },
-        { label: 'Content Review', path: '/admin/content', icon: BookOpen },
-        { label: 'System Health', path: '/admin/system', icon: AlertCircle },
+        { label: 'Content Review', path: '/admin/moderation', icon: BookOpen },
+        { label: 'Finance', path: '/admin/financials', icon: DollarSign },
         { label: 'Settings', path: '/admin/settings', icon: Settings },
     ];
 

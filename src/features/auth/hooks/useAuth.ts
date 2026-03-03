@@ -29,6 +29,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        set({ isLoading: true }); // Ensure loading state while fetching profile
         try {
           // Fetch additional user data from Firestore
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));

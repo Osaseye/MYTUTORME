@@ -90,8 +90,8 @@ export const TeacherLayout = () => {
             >
                 <div className="h-16 flex items-center px-4 border-b border-slate-200 dark:border-slate-800 justify-between">
                     <Link to="/teacher/dashboard" className={cn("flex items-center gap-2 font-bold text-xl text-primary overflow-hidden transition-all", !isSidebarOpen && "w-0 opacity-0")}>
-                        <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center">T</div>
-                        <span>TutorMe</span>
+                        <img src="/icon.png" alt="MyTutorMe" className="w-8 h-8" />
+                        MyTutorMe
                     </Link>
                     <button 
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}

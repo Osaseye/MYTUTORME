@@ -2,3 +2,8 @@ export * from './layouts/TeacherLayout';
 export * from './pages/TeacherDashboard';
 export * from './pages/TeacherCoursesPage';
 export * from './pages/CourseCreationPage';
+export * from './pages/ResourcesPage';
+export * from './pages/EarningsPage';
+export * from './pages/CommunityPage';
+export * from './pages/TeacherSettingsPage';
+export * from './pages/StudentsPage';

@@ -27,10 +27,15 @@
     analytics: '/teacher/analytics',
     resources: '/teacher/resources',
     community: '/teacher/community',
-    settings: '/teacher/settings'
+    settings: '/teacher/settings',
+    earnings: '/teacher/earnings',
   },
   admin: {
+    login: '/admin/login',
     dashboard: '/admin/dashboard',
     users: '/admin/users',
+    moderation: '/admin/moderation',
+    financials: '/admin/financials',
+    settings: '/admin/settings',
   }
 } as const;

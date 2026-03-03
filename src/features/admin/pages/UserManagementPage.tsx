@@ -6,9 +6,12 @@ import {
   Eye, 
   AlertTriangle,
   Mail,
-  Phone
+  Phone,
+  Search,
+  Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { 
   Card, 
   CardContent, 
@@ -22,154 +25,193 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
 export const UserManagementPage = () => {
-    // Mock data for a selected teacher application
+    // Mock data for a selected teacher application (Nigerian context)
     const application = {
         id: '123',
-        name: 'Dr. Sarah Connor',
-        email: 'sarah.connor@university.edu',
-        phone: '+1 (555) 000-1234',
+        name: 'Dr. Chike Obi',
+        email: 'chike.obi@uni-lagos.edu.ng',
+        phone: '+234 803 555 1234',
         role: 'Teacher',
-        appliedDate: 'March 1, 2024',
-        subjects: ['Physics', 'Quantum Mechanics'],
-        bio: 'Ph.D. in Theoretical Physics with 10 years of teaching experience at MIT. Passionate about making complex concepts accessible.',
+        appliedDate: 'March 1, 2026',
+        subjects: ['Mathematics', 'Further Maths'],
+        bio: 'Senior Lecturer at UNILAG with 15 years experience preparing students for WAEC and JAMB. Specialized in Calculus and Algebra.',
         documents: [
             { name: 'PhD_Certificate.pdf', size: '2.4 MB', type: 'Education' },
-            { name: 'ID_Passport_Scan.jpg', size: '1.1 MB', type: 'Identity' },
-            { name: 'Teaching_License.pdf', size: '0.8 MB', type: 'Certification' },
+            { name: 'NIN_Slip.jpg', size: '1.1 MB', type: 'Identity' },
+            { name: 'TRCN_License.pdf', size: '0.8 MB', type: 'Certification' },
         ],
         status: 'Pending Review'
     };
 
     return (
-        <div className="max-w-6xl mx-auto space-y-6">
-            <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">User Verification</h1>
-                    <p className="text-slate-500 dark:text-slate-400">Review and approve teacher applications.</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">User Management</h1>
+                    <p className="text-slate-500 dark:text-slate-400">Verify identities and manage permissions.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline">Back to List</Button>
+                    <Button variant="outline" className="gap-2">
+                        <Download className="w-4 h-4" /> Export CSV
+                    </Button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column: User Profile */}
-                <Card className="lg:col-span-1 h-fit">
-                    <CardHeader className="text-center">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column: User Profile Detail */}
+                <Card className="lg:col-span-1 h-fit shadow-md border-t-4 border-t-slate-500">
+                    <CardHeader className="text-center pb-2">
                         <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-slate-100 dark:border-slate-800">
-                            <AvatarImage src="https://github.com/shadcn.png" />
-                            <AvatarFallback>SC</AvatarFallback>
+                            <AvatarImage src="/placeholder-avatar.jpg" />
+                            <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">CO</AvatarFallback>
                         </Avatar>
                         <CardTitle>{application.name}</CardTitle>
                         <CardDescription>{application.email}</CardDescription>
                         <div className="flex justify-center gap-2 mt-4">
-                            <Badge variant="outline" className="text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">
+                            <Badge variant="outline" className="text-blue-600 bg-blue-50 border-blue-200">
                                 {application.role} Applicant
                             </Badge>
-                            <Badge variant="outline" className="text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300">
+                            <Badge variant="outline" className="text-amber-600 bg-amber-50 border-amber-200">
                                 {application.status}
                             </Badge>
                         </div>
                     </CardHeader>
                     <Separator />
                     <CardContent className="space-y-4 pt-6">
-                        <div className="flex items-center gap-3 text-sm">
-                            <Mail className="h-4 w-4 text-slate-400" />
-                            <span>{application.email}</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-sm">
-                            <Phone className="h-4 w-4 text-slate-400" />
-                            <span>{application.phone}</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-sm">
-                            <FileText className="h-4 w-4 text-slate-400" />
-                            <span>Applied: {application.appliedDate}</span>
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3 text-sm p-2 hover:bg-slate-50 rounded transition-colors">
+                                <Mail className="h-4 w-4 text-slate-400" />
+                                <span className="text-slate-700">{application.email}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm p-2 hover:bg-slate-50 rounded transition-colors">
+                                <Phone className="h-4 w-4 text-slate-400" />
+                                <span className="text-slate-700">{application.phone}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm p-2 hover:bg-slate-50 rounded transition-colors">
+                                <FileText className="h-4 w-4 text-slate-400" />
+                                <span className="text-slate-700">Applied: {application.appliedDate}</span>
+                            </div>
                         </div>
                         
                         <div className="pt-4">
-                            <p className="text-xs font-semibold uppercase text-slate-500 mb-2">Subjects</p>
+                            <p className="text-xs font-semibold uppercase text-slate-500 mb-2">Teaching Subjects</p>
                             <div className="flex flex-wrap gap-2">
                                 {application.subjects.map(sub => (
-                                    <Badge key={sub} variant="secondary">{sub}</Badge>
+                                    <Badge key={sub} variant="secondary" className="bg-slate-100 text-slate-700 hover:bg-slate-200">{sub}</Badge>
                                 ))}
                             </div>
                         </div>
 
                         <div className="pt-4">
                             <p className="text-xs font-semibold uppercase text-slate-500 mb-2">Bio</p>
-                            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                                {application.bio}
+                            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed italic border-l-2 border-slate-200 pl-3">
+                                "{application.bio}"
                             </p>
                         </div>
                     </CardContent>
+                    <CardFooter className="flex gap-2 pt-2 pb-6 px-6">
+                        <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+                            <Check className="w-4 h-4 mr-2" /> Approve
+                        </Button>
+                        <Button variant="outline" className="flex-1 text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200">
+                            <X className="w-4 h-4 mr-2" /> Reject
+                        </Button>
+                    </CardFooter>
                 </Card>
 
-                {/* Right Column: Documents & Actions */}
+                {/* Right Column: Document Verification & List */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* Documents Review */}
+                    {/* Documents Section */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Submitted Documents</CardTitle>
-                            <CardDescription>Verify the authenticity of the uploaded credentials.</CardDescription>
+                            <CardTitle className="text-lg">Submitted Documents</CardTitle>
+                            <CardDescription>Verify the user's credentials for compliance.</CardDescription>
                         </CardHeader>
-                        <CardContent className="grid gap-4">
-                            {application.documents.map((doc, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-10 w-10 bg-red-100 dark:bg-red-900/20 text-red-600 rounded-lg flex items-center justify-center">
+                        <CardContent>
+                             <div className="grid gap-4 sm:grid-cols-2">
+                                {application.documents.map((doc, idx) => (
+                                    <div key={idx} className="flex items-center p-3 border border-slate-200 rounded-lg hover:border-primary/50 transition-colors group cursor-pointer bg-slate-50">
+                                        <div className="h-10 w-10 rounded bg-white border border-slate-200 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
                                             <FileText className="h-5 w-5" />
                                         </div>
-                                        <div>
-                                            <p className="font-medium text-sm">{doc.name}</p>
+                                        <div className="ml-3 flex-1 overflow-hidden">
+                                            <p className="text-sm font-medium text-slate-900 truncate">{doc.name}</p>
                                             <div className="flex items-center gap-2 text-xs text-slate-500">
-                                                <span>{doc.size}</span>
+                                                <span>{doc.type}</span>
                                                 <span>•</span>
-                                                <Badge variant="outline" className="text-[10px] h-5">{doc.type}</Badge>
+                                                <span>{doc.size}</span>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Button size="sm" variant="ghost" className="gap-2">
-                                            <Eye className="h-4 w-4" /> View
-                                        </Button>
-                                        <Button size="sm" variant="ghost" className="gap-2">
-                                            <Download className="h-4 w-4" />
+                                        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-900">
+                                            <Eye className="h-4 w-4" />
                                         </Button>
                                     </div>
-                                </div>
-                            ))}
-                        </CardContent>
-                        <CardFooter className="bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 p-4">
-                            <div className="flex items-center gap-2 text-sm text-slate-500">
-                                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                                <span>Please verify all documents match the applicant's profile details.</span>
-                            </div>
-                        </CardFooter>
-                    </Card>
-
-                    {/* Action Panel */}
-                    <Card className="border-l-4 border-l-blue-500">
-                        <CardHeader>
-                            <CardTitle>Application Decision</CardTitle>
-                            <CardDescription>Approve or reject this teacher application. This action cannot be undone efficiently.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col sm:flex-row gap-4">
-                             <div className="flex-1 space-y-2">
-                                <label className="text-sm font-medium">Rejection Reason (Optional)</label>
-                                <textarea 
-                                    className="w-full min-h-[80px] p-3 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-sm focus:ring-2 focus:ring-slate-200 outline-none resize-none"
-                                    placeholder="If rejecting, please specify why..."
-                                />
+                                ))}
+                             </div>
+                             <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex gap-3 text-sm text-amber-800">
+                                <AlertTriangle className="h-5 w-5 flex-shrink-0 text-amber-600" />
+                                <p>Ensure the <strong>NIN Slip</strong> matches the name on the application exactly. Check TRCN database for license validity.</p>
                              </div>
                         </CardContent>
-                        <CardFooter className="flex justify-between gap-4 pt-0">
-                            <Button variant="destructive" className="flex-1 gap-2">
-                                <X className="h-4 w-4" /> Reject Application
-                            </Button>
-                            <Button className="flex-1 gap-2 bg-green-600 hover:bg-green-700 text-white">
-                                <Check className="h-4 w-4" /> Approve Teacher
-                            </Button>
-                        </CardFooter>
+                    </Card>
+
+                    {/* User List Table Placeholder */}
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-lg">Recent Registrations</CardTitle>
+                                <div className="flex w-full max-w-sm items-center space-x-2">
+                                    <div className="relative flex-1">
+                                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+                                        <Input type="search" placeholder="Search name, email or NIN..." className="pl-9 h-9" />
+                                    </div>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="rounded-md border">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
+                                        <tr>
+                                            <th className="h-10 px-4">Name</th>
+                                            <th className="h-10 px-4">Role</th>
+                                            <th className="h-10 px-4">State</th>
+                                            <th className="h-10 px-4">Status</th>
+                                            <th className="h-10 px-4 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-200">
+                                        {[
+                                            { name: 'Amina Bello', role: 'Student', state: 'Kaduna', status: 'Active' },
+                                            { name: 'David Okafor', role: 'Teacher', state: 'Abuja', status: 'Pending' },
+                                            { name: 'Sarah Jones', role: 'Student', state: 'Lagos', status: 'Active' },
+                                            { name: 'Ibrahim Musa', role: 'Teacher', state: 'Kano', status: 'Rejected' },
+                                        ].map((user, i) => (
+                                            <tr key={i} className="hover:bg-slate-50 transition-colors">
+                                                <td className="p-4 font-medium">{user.name}</td>
+                                                <td className="p-4">{user.role}</td>
+                                                <td className="p-4">{user.state}</td>
+                                                <td className="p-4">
+                                                    <Badge variant="outline" className={
+                                                        user.status === 'Active' ? 'text-green-600 bg-green-50 border-green-200' :
+                                                        user.status === 'Pending' ? 'text-amber-600 bg-amber-50 border-amber-200' :
+                                                        'text-red-600 bg-red-50 border-red-200'
+                                                    }>
+                                                        {user.status}
+                                                    </Badge>
+                                                </td>
+                                                <td className="p-4 text-right">
+                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                        <span className="sr-only">Open menu</span>
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </CardContent>
                     </Card>
                 </div>
             </div>

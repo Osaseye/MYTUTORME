@@ -7,148 +7,171 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from 'recharts';
-import { 
-  Users, 
-  BookOpen, 
-  DollarSign, 
-  TrendingUp, 
-  ArrowUpRight 
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const data = [
-  { name: 'Jan', students: 400 },
-  { name: 'Feb', students: 300 },
-  { name: 'Mar', students: 200 },
-  { name: 'Apr', students: 278 },
-  { name: 'May', students: 189 },
-  { name: 'Jun', students: 239 },
-  { name: 'Jul', students: 349 },
+  { name: 'Mon', revenue: 4000 },
+  { name: 'Tue', revenue: 3000 },
+  { name: 'Wed', revenue: 5000 },
+  { name: 'Thu', revenue: 2780 },
+  { name: 'Fri', revenue: 6890 },
+  { name: 'Sat', revenue: 8390 },
+  { name: 'Sun', revenue: 7490 },
 ];
 
 export const TeacherDashboard = () => {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Dashboard</h1>
-          <p className="text-slate-500 dark:text-slate-400">Overview of your teaching performance.</p>
-        </div>
-        <div className="flex items-center gap-2">
-            <Button>Create New Course</Button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-slate-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
-            <p className="text-xs text-slate-500">+20.1% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Students</CardTitle>
-            <Users className="h-4 w-4 text-slate-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">+2350</div>
-            <p className="text-xs text-slate-500">+180.1% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Course Sales</CardTitle>
-            <BookOpen className="h-4 w-4 text-slate-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">+12,234</div>
-            <p className="text-xs text-slate-500">+19% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Rating</CardTitle>
-            <TrendingUp className="h-4 w-4 text-slate-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">4.8</div>
-            <p className="text-xs text-slate-500">+2% from last month</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        {/* Main Chart */}
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Student Enrollment Overview</CardTitle>
-          </CardHeader>
-          <CardContent className="pl-2">
-            <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data}>
-                    <XAxis 
-                        dataKey="name" 
-                        stroke="#888888" 
-                        fontSize={12} 
-                        tickLine={false} 
-                        axisLine={false} 
-                    />
-                    <YAxis 
-                        stroke="#888888" 
-                        fontSize={12} 
-                        tickLine={false} 
-                        axisLine={false} 
-                        tickFormatter={(value) => `${value}`} 
-                    />
-                    <Tooltip 
-                        cursor={{fill: 'transparent'}}
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    />
-                    <Bar dataKey="students" fill="#adfa1d" radius={[4, 4, 0, 0]} className="fill-primary" />
-                </BarChart>
-                </ResponsiveContainer>
+    return (
+        <div className="bg-background-light dark:bg-background-dark font-body text-slate-800 dark:text-slate-100 transition-colors duration-300">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                <div>
+                    <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-white">Instructor Dashboard</h1>
+                    <p className="mt-2 text-slate-500 dark:text-slate-400">Welcome back, Dr. Smith. Here's what's happening today.</p>
+                </div>
+                <div className="flex gap-4">
+                     <Link to="/teacher/courses/new">
+                        <Button className="inline-flex items-center justify-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 font-bold py-6 px-6 rounded-lg transition-all shadow-lg">
+                            <span className="material-symbols-outlined text-sm">add</span>
+                            New Course
+                        </Button>
+                     </Link>
+                </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Recent Activity */}
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Recent Sales</CardTitle>
-            <CardDescription>You made 265 sales this month.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-8">
-              {[
-                  { name: 'Olivia Martin', email: 'olivia.martin@email.com', amount: '+$1,999.00' },
-                  { name: 'Jackson Lee', email: 'jackson.lee@email.com', amount: '+$39.00' },
-                  { name: 'Isabella Nguyen', email: 'isabella.nguyen@email.com', amount: '+$299.00' },
-                  { name: 'William Kim', email: 'will@email.com', amount: '+$99.00' },
-                  { name: 'Sofia Davis', email: 'sofia.davis@email.com', amount: '+$39.00' },
-              ].map((sale, i) => (
-                  <div key={i} className="flex items-center">
-                    <div className="h-9 w-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200">
-                        {sale.name.charAt(0)}
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {/* Revenue Card */}
+                <div className="bg-gradient-to-br from-primary to-secondary rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
+                    <div className="relative z-10 flex flex-col justify-between h-full">
+                        <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4">
+                            <span className="material-symbols-outlined text-2xl">payments</span>
+                        </div>
+                        <div>
+                            <p className="text-primary-100 text-sm font-medium mb-1">Total Earnings</p>
+                            <h3 className="text-3xl font-display font-bold">₦450,230</h3>
+                            <div className="flex items-center gap-1 mt-2 text-emerald-100 text-xs bg-white/10 w-fit px-2 py-1 rounded-full">
+                                <span className="material-symbols-outlined text-xs">trending_up</span>
+                                <span>+12.5% this month</span>
+                            </div>
+                        </div>
                     </div>
-                    <div className="ml-4 space-y-1">
-                      <p className="text-sm font-medium leading-none">{sale.name}</p>
-                      <p className="text-xs text-slate-500">{sale.email}</p>
-                    </div>
-                    <div className="ml-auto font-medium">{sale.amount}</div>
-                  </div>
-              ))}
+                </div>
+
+                {/* Students Card */}
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group hover:border-primary/50 transition-colors">
+                     <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                     <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400">
+                             <span className="material-symbols-outlined text-2xl">school</span>
+                        </div>
+                        <span className="text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded-full">+24 new</span>
+                     </div>
+                     <div>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Active Students</p>
+                        <h3 className="text-3xl font-display font-bold text-slate-900 dark:text-white">2,350</h3>
+                        <p className="text-xs text-slate-400 mt-2">Across 4 published courses</p>
+                     </div>
+                </div>
+
+                {/* Rating Card */}
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group hover:border-yellow-500/50 transition-colors">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                     <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl flex items-center justify-center text-yellow-600 dark:text-yellow-400">
+                             <span className="material-symbols-outlined text-2xl">kid_star</span>
+                        </div>
+                        <span className="text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 px-2 py-1 rounded-full">Top Rated</span>
+                     </div>
+                     <div>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Instructor Rating</p>
+                        <div className="flex items-baseline gap-2">
+                            <h3 className="text-3xl font-display font-bold text-slate-900 dark:text-white">4.9</h3>
+                            <span className="text-sm text-slate-400">/ 5.0</span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-2">Based on 842 reviews</p>
+                     </div>
+                </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                 {/* Chart Section */}
+                <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white">Revenue Analytics</h3>
+                        <select className="bg-slate-50 dark:bg-slate-800 border-none text-xs font-medium text-slate-600 dark:text-slate-400 rounded-md py-1 px-2 focus:ring-0">
+                            <option>Last 7 Days</option>
+                            <option>Last Month</option>
+                            <option>This Year</option>
+                        </select>
+                    </div>
+                    <div className="h-80 w-full">
+                         <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                <XAxis 
+                                    dataKey="name" 
+                                    stroke="#94A3B8" 
+                                    fontSize={12} 
+                                    tickLine={false} 
+                                    axisLine={false} 
+                                    dy={10}
+                                />
+                                <YAxis 
+                                    stroke="#94A3B8" 
+                                    fontSize={12} 
+                                    tickLine={false} 
+                                    axisLine={false} 
+                                    tickFormatter={(value) => `₦${value}`} 
+                                />
+                                <Tooltip 
+                                    cursor={{ fill: '#F1F5F9' }}
+                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
+                                />
+                                <Bar dataKey="revenue" fill="#16A34A" radius={[4, 4, 0, 0]} barSize={40} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Recent Activity / Tasks */}
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white mb-6">Recent Activity</h3>
+                    <div className="space-y-6">
+                        <div className="flex gap-4">
+                             <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                                <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-sm">person_add</span>
+                             </div>
+                             <div>
+                                <p className="text-sm font-medium text-slate-900 dark:text-white">New student enrolled</p>
+                                <p className="text-xs text-slate-500">Sarah J. joined "Advanced Calculus"</p>
+                                <p className="text-[10px] text-slate-400 mt-1">2 mins ago</p>
+                             </div>
+                        </div>
+                        <div className="flex gap-4">
+                             <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0">
+                                <span className="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-sm">reviews</span>
+                             </div>
+                             <div>
+                                <p className="text-sm font-medium text-slate-900 dark:text-white">New 5-star review</p>
+                                <p className="text-xs text-slate-500">"Best course on Python I've taken..."</p>
+                                <p className="text-[10px] text-slate-400 mt-1">1 hour ago</p>
+                             </div>
+                        </div>
+                        <div className="flex gap-4">
+                             <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                                <span className="material-symbols-outlined text-green-600 dark:text-green-400 text-sm">payments</span>
+                             </div>
+                             <div>
+                                <p className="text-sm font-medium text-slate-900 dark:text-white">Payout Processed</p>
+                                <p className="text-xs text-slate-500">₦125,000 sent to your bank account</p>
+                                <p className="text-[10px] text-slate-400 mt-1">Yesterday</p>
+                             </div>
+                        </div>
+                    </div>
+                    <Button variant="outline" className="w-full mt-6 text-xs h-10 border-dashed">View All Activity</Button>
+                </div>
+            </div>
+        </div>
+    );
 };

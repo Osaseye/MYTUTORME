@@ -1,8 +1,9 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export const ProtectedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const { user, isLoading, isAuthenticated } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -13,6 +14,9 @@ export const ProtectedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => 
   }
 
   if (!isAuthenticated || !user) {
+    if (location.pathname.startsWith('/admin')) {
+      return <Navigate to="/admin/login" replace />;
+    }
     return <Navigate to="/login" replace />;
   }
 
@@ -23,7 +27,7 @@ export const ProtectedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => 
       teacher: '/teacher/dashboard',
       admin: '/admin/dashboard',
     };
-    return <Navigate to={dashboardMap[user.role]} replace />;
+    return <Navigate to={dashboardMap[user.role as keyof typeof dashboardMap] || '/'} replace />;
   }
 
   return <Outlet />;
