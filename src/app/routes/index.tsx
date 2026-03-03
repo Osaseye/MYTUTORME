@@ -1,4 +1,5 @@
 ﻿import { Routes, Route, Navigate } from 'react-router-dom';
+import { ScrollToTop } from '@/components/ScrollToTop';
 import { ProtectedRoute } from './protected-route';
 import { paths } from './paths';
 import LandingPage from '@/features/landing/LandingPage';
@@ -12,14 +13,16 @@ import { AdminLayout, AdminDashboard, UserManagementPage, AdminLoginPage, Course
 
 export const AppRoutes = () => {
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path={paths.admin.login} element={<AdminLoginPage />} />
-      <Route element={<AuthLayout />}>
-        <Route path={paths.auth.login} element={<LoginPage />} />
-        <Route path={paths.auth.register} element={<RegisterPage />} />
-      </Route>
+    <>
+      <ScrollToTop />
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path={paths.admin.login} element={<AdminLoginPage />} />
+        <Route element={<AuthLayout />}>
+          <Route path={paths.auth.login} element={<LoginPage />} />
+          <Route path={paths.auth.register} element={<RegisterPage />} />
+        </Route>
 
       {/* Onboarding Routes (Protected) */}
       <Route element={<ProtectedRoute allowedRoles={['student', 'teacher'] as ('student' | 'teacher' | 'admin')[]} />}>
@@ -77,5 +80,6 @@ export const AppRoutes = () => {
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 };

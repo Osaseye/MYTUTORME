@@ -17,9 +17,11 @@ import {
   PlayCircle,
   HelpCircle,
   X,
+  MessageSquarePlus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { ScrollToTop } from '@/components/ui/scroll-to-top';
 
 // Types for our chat
 interface Message {
@@ -63,6 +65,16 @@ const [showHistory, setShowHistory] = useState(false);    const [inputValue, set
     ];
 
     const [activeSubject, setActiveSubject] = useState(subjects[0]);
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Auto-resize textarea
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto'; // Reset height
+            textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+        }
+    }, [inputValue]);
 
     return (
         <div className="flex flex-col md:flex-row h-[calc(100vh-8rem)] gap-0 relative">
@@ -77,9 +89,12 @@ const [showHistory, setShowHistory] = useState(false);    const [inputValue, set
                     <span>{activeSubject.name}</span>
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Change</Badge>
                 </button>
-                <button className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-600 dark:text-slate-300">
-                    <PlusCircle className="w-5 h-5" />
-                </button>
+                <div className="flex gap-2">
+                    <button className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 mx-1">
+                        <MessageSquarePlus className="w-5 h-5" />
+                        <span className="sr-only">New Chat</span>
+                    </button>
+                </div>
             </div>
 
             {/* Mobile History / Subject Drawer */}
@@ -193,9 +208,15 @@ const [showHistory, setShowHistory] = useState(false);    const [inputValue, set
             </aside>
 
             {/* Main Chat Area */}
-            <main className="flex-1 flex flex-col relative">
+            <main className="flex-1 flex flex-col relative h-full">
+                {/* Scroll To Top Button */}
+                <ScrollToTop scrollableRef={scrollRef} className="bottom-24 right-4 md:bottom-28 md:right-8" />
+
                 {/* Messages Area */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scrollbar-hide">
+                <div 
+                    ref={scrollRef}
+                    className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scrollbar-hide pt-20 md:pt-8 pb-32 md:pb-8"
+                >
                     <div className="flex justify-center">
                         <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs px-3 py-1 rounded-full">Today, 10:23 AM</span>
                     </div>
@@ -273,12 +294,12 @@ const [showHistory, setShowHistory] = useState(false);    const [inputValue, set
                 </div>
 
                 {/* Input Area */}
-                <div className="p-4 md:p-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200/50 dark:border-slate-800/50 z-10 rounded-b-2xl md:rounded-b-none sticky bottom-0 mb-20 md:mb-0 transition-all duration-300">
+                <div className="p-4 md:p-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200/50 dark:border-slate-800/50 z-10 rounded-b-2xl md:rounded-b-none sticky bottom-0 transition-all duration-300">
                     <div className="max-w-4xl mx-auto relative">
                         {/* Suggestions */}
-                        <div className="absolute -top-12 left-0 flex gap-2 overflow-x-auto w-full pb-2 scrollbar-hide mask-fade-right">
+                        <div className="absolute -top-14 left-0 right-0 flex gap-2 overflow-x-auto px-1 pb-2 scrollbar-hide mask-fade-right">
                             {["Explain the Quotient Rule", "Give me a practice problem", "Visualize the graph"].map((text) => (
-                                <button key={text} className="whitespace-nowrap bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200 dark:border-slate-700 text-xs px-3 py-1.5 rounded-full hover:border-primary hover:text-primary dark:hover:border-primary transition-all shadow-sm">
+                                <button key={text} className="flex-shrink-0 whitespace-nowrap bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200 dark:border-slate-700 text-xs px-3 py-1.5 rounded-full hover:border-primary hover:text-primary dark:hover:border-primary transition-all shadow-sm">
                                     {text}
                                 </button>
                             ))}
@@ -286,17 +307,19 @@ const [showHistory, setShowHistory] = useState(false);    const [inputValue, set
 
                         {/* Input Box */}
                         <div className="relative flex items-end bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all">
-                            <button className="p-3 text-slate-400 hover:text-primary transition-colors">
+                            <button className="p-3 text-slate-400 hover:text-primary transition-colors flex-shrink-0">
                                 <PlusCircle className="w-6 h-6" />
                             </button>
                             <textarea 
-                                className="w-full bg-transparent border-none focus:ring-0 p-3 pl-0 resize-none max-h-32 text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none" 
+                                ref={textareaRef}
+                                className="w-full bg-transparent border-none focus:ring-0 p-3 pl-0 resize-none min-h-[48px] max-h-[200px] text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none overflow-hidden" 
                                 placeholder="Ask a follow-up question or paste a problem..." 
                                 rows={1}
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
+                                style={{ height: 'auto', minHeight: '48px' }}
                             />
-                            <div className="flex items-center gap-1 p-2">
+                            <div className="flex items-center gap-1 p-2 flex-shrink-0">
                                 <button className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700" title="Upload Image">
                                     <ImageIcon className="w-5 h-5" />
                                 </button>

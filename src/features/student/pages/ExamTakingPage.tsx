@@ -265,9 +265,9 @@ export const ExamTakingPage = () => {
             </aside>
 
             {/* Center: Question */}
-            <section className="lg:col-span-6 order-1 lg:order-2">
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden relative min-h-[600px] flex flex-col">
-                    <div className="p-8 pb-4">
+            <section className="col-span-1 lg:col-span-6 order-1 lg:order-2">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden relative min-h-[400px] md:min-h-[600px] flex flex-col">
+                    <div className="p-4 md:p-8 pb-4">
                         <div className="flex items-start justify-between mb-4">
                             <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wide uppercase">
                                 Multiple Choice
@@ -277,7 +277,7 @@ export const ExamTakingPage = () => {
                                 <span className="text-sm font-mono font-bold">{formatTime(timeLeft)}</span>
                             </div>
                         </div>
-                        <h2 className="text-2xl md:text-3xl font-display font-semibold leading-tight mb-4 text-slate-900 dark:text-white">
+                        <h2 className="text-xl md:text-3xl font-display font-semibold leading-tight mb-4 text-slate-900 dark:text-white">
                             {currentQuestion.text}
                         </h2>
                         {currentQuestion.subtext && (
@@ -289,7 +289,7 @@ export const ExamTakingPage = () => {
 
                     <div className="h-px bg-slate-100 dark:bg-slate-800 w-full"></div>
 
-                    <div className="p-8 pt-6 space-y-4 flex-1">
+                    <div className="p-4 md:p-8 pt-6 space-y-4 flex-1">
                         {currentQuestion.options.map((option) => {
                             const isSelected = answers[currentQuestion.id] === option.id;
                             const isCorrectAnswer = currentQuestion.correctAnswer === option.id;

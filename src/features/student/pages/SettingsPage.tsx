@@ -5,19 +5,21 @@ export const SettingsPage = () => {
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-body text-slate-800 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col">
-      <main className="pt-28 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      <main className="pt-20 pb-12 px-4 sm:px-6 lg:px-8 w-full">
         <div className="flex flex-col lg:flex-row gap-8">
           <aside className="w-full lg:w-64 flex-shrink-0">
-            <div className="sticky top-28 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-              <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-                <h2 className="text-lg font-display font-bold text-slate-900 dark:text-white">
-                  Settings
-                </h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  Manage your account preferences
-                </p>
+            <div className="lg:sticky lg:top-24 rounded-2xl overflow-hidden">
+              <div className="py-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center lg:block">
+                <div>
+                  <h2 className="text-lg font-display font-bold text-slate-900 dark:text-white">
+                    Settings
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Manage your account preferences
+                  </p>
+                </div>
               </div>
-              <nav className="p-4 space-y-1">
+              <nav className="py-4 space-y-1 flex lg:block overflow-x-auto pb-4 lg:pb-4 scrollbar-hide gap-2 lg:gap-0">
                 <a
                   href="#"
                   className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-colors ${
@@ -74,9 +76,8 @@ export const SettingsPage = () => {
             </div>
           </aside>
           <div className="flex-1 space-y-8">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-8 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-primary/20 to-secondary/20"></div>
-              <div className="relative flex flex-col sm:flex-row items-end sm:items-center gap-6 mt-8">
+            <div className="relative overflow-hidden">
+              <div className="relative flex flex-col sm:flex-row items-center gap-6 mt-8">
                 <div className="relative group">
                   <img
                     alt="Profile"
@@ -89,7 +90,7 @@ export const SettingsPage = () => {
                     </span>
                   </button>
                 </div>
-                <div className="flex-1 pb-2">
+                <div className="flex-1 pb-2 text-center sm:text-left">
                   <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-white">
                     Alex Morgan
                   </h1>
@@ -108,7 +109,7 @@ export const SettingsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-8">
+            <div className="">
               <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">
                   badge
@@ -182,7 +183,7 @@ export const SettingsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-8">
+            <div className="">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <span className="material-symbols-outlined text-secondary">
@@ -310,7 +311,7 @@ export const SettingsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-8">
+            <div className="">
               <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                 <span className="material-symbols-outlined text-blue-500">
                   workspace_premium

@@ -135,9 +135,9 @@ export const TeacherLayout = () => {
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Mobile Header */}
                 <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-20 px-4 flex items-center justify-between md:hidden">
-                    <Link to="/teacher/dashboard" className="flex items-center gap-2 font-bold text-xl text-primary">
-                        <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center">T</div>
-                        <span>TutorMe</span>
+                    <Link to="/teacher/dashboard" className="flex items-center gap-2 font-bold text-xl text-primary font-display">
+                        <img src="/icon.png" alt="MyTutorMe" className="w-8 h-8" />
+                        <span><span className="text-slate-900 dark:text-white">MY</span>Tutor</span><span className="text-primary">Me</span>
                     </Link>
                     <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-slate-500">
                         <Menu className="h-6 w-6" />

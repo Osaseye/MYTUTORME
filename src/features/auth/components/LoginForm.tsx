@@ -34,8 +34,21 @@ export const LoginForm = () => {
       
       // Update auth state (mock or real)
       // checkAuth(); 
+
+      // Create a mock user for demonstration purposes
+      const mockUser = {
+        uid: 'mock-student-id',
+        email: data.email,
+        displayName: 'Demo Student',
+        role: 'student' as const,
+        createdAt: Date.now(),
+      };
+      
+      // Set the user in the store
+      useAuthStore.getState().setUser(mockUser);
+      
       toast.success('Welcome back!');
-      navigate('/dashboard'); 
+      navigate('/student/dashboard'); 
     } catch (error: any) {
       console.error(error);
       toast.error(error.message || 'Failed to login. Please check your credentials.');

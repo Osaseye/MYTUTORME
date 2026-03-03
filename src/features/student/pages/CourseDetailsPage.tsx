@@ -204,28 +204,28 @@ export const CourseDetailsPage = () => {
           {/* Enrolled Tabs */}
           {isEnrolled ? (
              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden min-h-[500px]">
-                <div className="flex border-b border-gray-200 dark:border-gray-700">
+                <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto scrollbar-hide">
                    <button 
                       onClick={() => setActiveTab('overview')}
-                      className={`flex-1 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'overview' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                      className={`whitespace-nowrap px-6 py-4 text-sm font-medium border-b-2 transition-colors flex-shrink-0 ${activeTab === 'overview' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                    >
                       Overview
                    </button>
                    <button 
                       onClick={() => setActiveTab('curriculum')}
-                      className={`flex-1 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'curriculum' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                      className={`whitespace-nowrap px-6 py-4 text-sm font-medium border-b-2 transition-colors flex-shrink-0 ${activeTab === 'curriculum' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                    >
                       Curriculum
                    </button>
                    <button 
                       onClick={() => setActiveTab('quizzes')}
-                      className={`flex-1 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'quizzes' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                      className={`whitespace-nowrap px-6 py-4 text-sm font-medium border-b-2 transition-colors flex-shrink-0 ${activeTab === 'quizzes' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                    >
                       Practice & Quizzes
                    </button>
                    <button 
                       onClick={() => setActiveTab('certificate')}
-                      className={`flex-1 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'certificate' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                      className={`whitespace-nowrap px-6 py-4 text-sm font-medium border-b-2 transition-colors flex-shrink-0 ${activeTab === 'certificate' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                    >
                       Certificate
                    </button>

@@ -37,7 +37,7 @@ export const AuthLayout = () => {
       <div className="flex flex-col justify-center px-4 sm:px-6 lg:px-8 xl:px-12 bg-surface-light dark:bg-[#0f172a] py-12 relative lg:overflow-y-auto scrollbar-hide">
         <div className="w-full max-w-[450px] mx-auto">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 mb-10 group">
+          <Link to="/" className="flex items-center justify-center gap-3 mb-10 group">
             <div className="w-10 h-10 flex items-center justify-center transition-transform group-hover:scale-105">
                <img src="/icon.png" alt="MyTutorMe Logo" className="w-full h-full object-contain" />
             </div>

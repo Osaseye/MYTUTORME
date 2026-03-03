@@ -109,16 +109,16 @@ export const QuizRunner: React.FC<QuizRunnerProps> = ({ quiz, onComplete, onExit
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col h-full max-h-[800px]">
+    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col h-full w-full">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-slate-800/50">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-50 dark:bg-slate-800/50">
         <div>
-           <h2 className="text-lg font-bold text-gray-900 dark:text-white">{quiz.title}</h2>
+           <h2 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">{quiz.title}</h2>
            <div className="flex items-center gap-2 text-sm text-gray-500">
              <span className="font-medium text-primary">Question {currentQuestionIndex + 1}/{quiz.questions.length}</span>
            </div>
         </div>
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-mono font-medium text-sm ${timeLeft < 60 ? 'bg-red-100 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-mono font-medium text-sm self-end sm:self-auto ${timeLeft < 60 ? 'bg-red-100 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
            <Clock className="w-4 h-4" />
            {formatTime(timeLeft)}
         </div>

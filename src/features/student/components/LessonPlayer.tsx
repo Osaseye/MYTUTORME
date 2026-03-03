@@ -41,33 +41,33 @@ export const LessonPlayer = ({ lessonTitle, onExit, onComplete }: LessonPlayerPr
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
          {/* Video Area (Center) */}
-         <div className="flex-1 bg-black flex flex-col relative group">
+         <div className="w-full lg:flex-1 bg-black flex flex-col relative group min-h-[30vh] lg:min-h-0">
             {/* Mock Video Placeholder */}
             <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 relative overflow-hidden">
                 <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80')] bg-cover bg-center"></div>
                 
                 <button 
                     onClick={togglePlay}
-                    className="w-20 h-20 bg-primary/90 hover:bg-primary rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl z-10"
+                    className="w-16 h-16 md:w-20 md:h-20 bg-primary/90 hover:bg-primary rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl z-10"
                 >
-                    {isPlaying ? <PauseCircle className="w-10 h-10 text-white" /> : <PlayCircle className="w-10 h-10 text-white ml-1" />}
+                    {isPlaying ? <PauseCircle className="w-8 h-8 md:w-10 md:h-10 text-white" /> : <PlayCircle className="w-8 h-8 md:w-10 md:h-10 text-white ml-1" />}
                 </button>
             </div>
 
             {/* Controls Bar */}
-            <div className="h-20 bg-gradient-to-t from-black/80 to-transparent absolute bottom-0 left-0 right-0 p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="w-full bg-slate-700 h-1.5 rounded-full mb-4 cursor-pointer">
+            <div className="h-16 md:h-20 bg-gradient-to-t from-black/80 to-transparent absolute bottom-0 left-0 right-0 p-4 md:p-6 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="w-full bg-slate-700 h-1.5 rounded-full mb-3 md:mb-4 cursor-pointer">
                     <div className="bg-primary h-full w-[35%] rounded-full relative">
                         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-sm scale-0 group-hover:scale-100 transition-transform"></div>
                     </div>
                 </div>
-                <div className="flex justify-between items-center text-sm font-medium">
+                <div className="flex justify-between items-center text-xs md:text-sm font-medium">
                     <span>08:45 / 22:15</span>
                     <div className="flex gap-4">
                         <button className="hover:text-primary">CC</button>
-                        <button className="hover:text-primary">HD</button>
+                        <button className="hover:text-primary hidden md:block">HD</button>
                         <button className="hover:text-primary">1x</button>
                     </div>
                 </div>
@@ -75,10 +75,10 @@ export const LessonPlayer = ({ lessonTitle, onExit, onComplete }: LessonPlayerPr
          </div>
 
          {/* Sidebar (Right) */}
-         <div className="w-96 bg-slate-900 border-l border-slate-800 flex flex-col">
-            <div className="flex border-b border-slate-800">
-                <button className="flex-1 py-4 text-sm font-bold text-center border-b-2 border-primary text-white">Transcript</button>
-                <button className="flex-1 py-4 text-sm font-bold text-center border-b-2 border-transparent text-slate-500 hover:text-slate-300">Notes</button>
+         <div className="w-full lg:w-96 bg-slate-900 border-t lg:border-t-0 lg:border-l border-slate-800 flex flex-col flex-1 lg:flex-none h-[50vh] lg:h-auto">
+            <div className="flex border-b border-slate-800 flex-shrink-0">
+                <button className="flex-1 py-3 md:py-4 text-sm font-bold text-center border-b-2 border-primary text-white">Transcript</button>
+                <button className="flex-1 py-3 md:py-4 text-sm font-bold text-center border-b-2 border-transparent text-slate-500 hover:text-slate-300">Notes</button>
             </div>
             
             <div className="flex-1 overflow-y-auto p-6 space-y-4">

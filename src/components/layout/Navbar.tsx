@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
+import { Menu, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Handle Navbar background on scroll
   useEffect(() => {
@@ -50,6 +53,7 @@ export const Navbar = () => {
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
+    setIsMobileMenuOpen(false);
     const element = document.getElementById(href.replace('#', ''));
     if (element) {
       const offsetTop = element.getBoundingClientRect().top + window.pageYOffset - 80;
@@ -115,11 +119,50 @@ export const Navbar = () => {
               to="/login"
               className="hidden md:inline-flex items-center justify-center px-6 py-2.5 border border-transparent text-sm font-bold rounded-full text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-200 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
             >
-              Sign In
+              Join Now
             </Link>
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden flex items-center">
+               <Button
+                 variant="ghost"
+                 size="icon"
+                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                 className="text-slate-600 dark:text-slate-300"
+               >
+                 {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+               </Button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden absolute top-full left-0 w-full bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-lg animate-in slide-in-from-top-2">
+            <div className="px-4 py-4 space-y-3">
+                 {navItems.map((item) => (
+                    <a
+                        key={item.name}
+                        href={item.href}
+                        onClick={(e) => handleNavClick(e, item.href)}
+                        className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-primary"
+                    >
+                        {item.name}
+                    </a>
+                 ))}
+                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                     <Link
+                        to="/login"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="block w-full text-center px-4 py-3 rounded-md text-white bg-primary font-bold shadow-md hover:bg-primary-dark transition-colors"
+                     >
+                        Join Now
+                     </Link>
+                 </div>
+            </div>
+        </div>
+      )}
     </nav>
   );
 };
