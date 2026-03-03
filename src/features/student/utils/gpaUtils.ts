@@ -1,5 +1,5 @@
 import { SCALE_4_0, SCALE_5_0 } from '../types/gpa';
-import type { Course, GradePoint, GradeScaleType } from '../types/gpa';
+import type { Course, GradeScaleType } from '../types/gpa';
 
 export const getGradePoints = (grade: string, scale: GradeScaleType = '4.0'): number => {
   const pointsMap = scale === '4.0' ? SCALE_4_0 : SCALE_5_0;

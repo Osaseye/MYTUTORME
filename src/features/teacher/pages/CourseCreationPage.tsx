@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-
 export const CourseCreationPage = () => {
   return (
     <div className="bg-background-light dark:bg-background-dark font-body text-slate-800 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col">

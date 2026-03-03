@@ -11,7 +11,8 @@ export const registerSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
   role: z.enum(['student', 'teacher'], {
-    errorMap: () => ({ message: 'Please select a role' }),
+    // Replaced invalid errorMap usage with direct message params if supported, or rely on default
+    message: 'Please select a role',
   }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",

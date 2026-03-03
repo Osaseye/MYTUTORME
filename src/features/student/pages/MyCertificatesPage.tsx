@@ -10,12 +10,10 @@ import {
   Star,
   Download,
   Share2,
-  Award,
   BookOpen
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 
 const MOCK_CERTIFICATES = [

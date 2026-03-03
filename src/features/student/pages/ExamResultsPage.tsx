@@ -1,15 +1,11 @@
 import { 
   BarChart, 
-  Clock, 
   Map, 
   Target, 
   CheckCircle,
   AlertCircle,
   PlayCircle,
-  ArrowRight,
-  RotateCcw,
-  Flag,
-  ChevronDown
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';

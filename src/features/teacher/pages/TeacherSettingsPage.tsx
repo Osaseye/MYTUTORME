@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, CreditCard, Lock, User, Globe, Mail } from "lucide-react";
+import { Bell, CreditCard, Lock, User, Globe } from "lucide-react";
 
 export const TeacherSettingsPage = () => {
   return (

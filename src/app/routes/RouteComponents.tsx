@@ -1,7 +1,7 @@
 // Placeholder components for critical routes
-import React from 'react';
-
 // --- Layouts ---
+import { Outlet } from 'react-router-dom';
+
 export const PublicLayout = () => {
     return (
         <div className="flex flex-col min-h-screen">

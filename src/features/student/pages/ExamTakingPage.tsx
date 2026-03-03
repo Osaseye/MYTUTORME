@@ -12,7 +12,7 @@ import {
   Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 // Mock Exam Data
@@ -296,13 +296,13 @@ export const ExamTakingPage = () => {
                             const showResult = isChecked;
 
                             let containerClass = "border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:border-primary/50 hover:shadow-md";
-                            let circleClass = "text-slate-400 border-slate-300 dark:border-slate-600";
+                            // Circle class unused
                             let textClass = "text-slate-400 group-hover:text-primary";
                             let valueClass = "text-slate-900 dark:text-slate-200";
 
                             if (isSelected) {
                                 containerClass = "border-2 border-primary bg-primary/5 dark:bg-primary/10 shadow-sm";
-                                circleClass = "text-primary border-primary";
+                                // circleClass updated locally if needed
                                 textClass = "text-primary";
                                 valueClass = "text-primary font-bold";
                             }

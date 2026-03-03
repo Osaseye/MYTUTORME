@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Award, Download, Share2, CheckCircle } from 'lucide-react';
+import { useRef } from 'react';
+import { Download, Share2, CheckCircle } from 'lucide-react';
 import type { Certificate } from '../types/quiz';
 import { Link, useParams } from 'react-router-dom';
 
@@ -15,7 +15,7 @@ const MOCK_CERTIFICATE: Certificate = {
 };
 
 export const CertificatePage = () => {
-  const { id } = useParams();
+  useParams();
   const certificateRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = () => {

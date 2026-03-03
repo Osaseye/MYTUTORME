@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 interface ScrollToTopProps {
-  scrollableRef?: React.RefObject<HTMLDivElement>;
+  scrollableRef?: React.RefObject<HTMLDivElement> | React.MutableRefObject<HTMLDivElement | null>;
   threshold?: number;
   className?: string;
 }

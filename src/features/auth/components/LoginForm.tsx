@@ -7,14 +7,12 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { loginSchema, type LoginCredentials } from '../types';
-import { loginUser } from '../api/auth';
 import { useAuthStore } from '../hooks/useAuth';
 
 export const LoginForm = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const checkAuth = useAuthStore((state) => state.checkAuth);
 
   const {
     register,

@@ -1,12 +1,6 @@
 import { 
-  User, 
-  Bell, 
   Shield, 
-  Globe, 
-  Smartphone, 
-  Moon, 
-  Sun,
-  LogOut 
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 

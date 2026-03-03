@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   Calculator, 
   Plus, 
@@ -6,10 +6,7 @@ import {
   Target, 
   TrendingUp, 
   BookOpen,
-  GraduationCap,
-  AlertCircle,
-  Save,
-  RotateCcw
+  GraduationCap
 } from 'lucide-react';
 import { 
   SCALE_4_0, 

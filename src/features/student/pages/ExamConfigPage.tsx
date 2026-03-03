@@ -9,14 +9,12 @@ import {
   CheckCircle,
   HelpCircle,
   Settings,
-  ArrowRight,
   Sparkles,
   ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';

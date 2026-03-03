@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { 
   Search, 
   LayoutGrid, 
@@ -10,10 +8,8 @@ import {
   PlayCircle, 
   ChevronLeft, 
   ChevronRight,
-  Filter,
   Check
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 
 export const MyCoursesPage = () => {
   return (

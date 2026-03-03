@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, PlayCircle, PauseCircle, ChevronLeft, ChevronRight, FileText, MessageSquare } from 'lucide-react';
+import { X, PlayCircle, PauseCircle, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
 
 interface LessonPlayerProps {
   lessonTitle: string;
@@ -11,7 +11,6 @@ interface LessonPlayerProps {
 
 export const LessonPlayer = ({ lessonTitle, onExit, onComplete }: LessonPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
 
   // Mock video progress
   const togglePlay = () => {

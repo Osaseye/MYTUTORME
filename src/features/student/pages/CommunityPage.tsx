@@ -1,15 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   MessageSquare, 
   Search, 
   Plus, 
-  Filter, 
   ThumbsUp, 
-  MessageCircle, 
   Share2, 
-  MoreHorizontal,
-  Hash,
-  User 
+  MoreHorizontal
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';

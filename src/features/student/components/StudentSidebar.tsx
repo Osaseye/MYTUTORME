@@ -10,7 +10,6 @@ import {
   LogOut,
   Sparkles,
   FileEdit,
-  MessageSquare,
   Users
 } from 'lucide-react';
 

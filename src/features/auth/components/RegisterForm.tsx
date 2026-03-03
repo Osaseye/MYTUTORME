@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { registerSchema, type RegisterCredentials } from '../types';
-import { registerUser } from '../api/auth';
 import { useAuthStore } from '../hooks/useAuth';
 
 export const RegisterForm = () => {
@@ -15,7 +14,6 @@ export const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const checkAuth = useAuthStore((state) => state.checkAuth);
 
   const {
     register,

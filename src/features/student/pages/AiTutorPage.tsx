@@ -32,7 +32,7 @@ interface Message {
 }
 
 export const AiTutorPage = () => {
-    const [messages, setMessages] = useState<Message[]>([
+    const [messages] = useState<Message[]>([
         {
             id: '1',
             role: 'assistant',
