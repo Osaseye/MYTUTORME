@@ -32,13 +32,8 @@ export const StudentLayout = () => {
           </div>
 
           <div className="flex items-center gap-4">
-             <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-full text-xs font-medium border border-orange-100 dark:border-orange-900/30 hidden sm:flex">
-                <span className="text-sm">🔥</span> 3 Day Streak
-             </div>
-             
              <button className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-500">
                <Bell className="w-5 h-5" />
-               <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
              </button>
 
              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 cursor-pointer">

@@ -13,20 +13,11 @@ import {
   DollarSign, 
   UserCheck,
   TrendingUp,
-  MapPin,
   Calendar
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
-const nigeriaUserData = [
-  { name: 'Lagos', students: 1240 },
-  { name: 'Abuja', students: 850 },
-  { name: 'PH', students: 600 },
-  { name: 'Ibadan', students: 450 },
-  { name: 'Kano', students: 380 },
-  { name: 'Enugu', students: 300 },
-];
+const nigeriaUserData: Array<{name: string, students: number}> = [];
 
 export const AdminDashboard = () => {
   return (
@@ -142,33 +133,8 @@ export const AdminDashboard = () => {
                     <CardTitle>Recent Actions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-6">
-                        {[
-                            { user: 'Chidi Okonkwo', action: 'Verified as Teacher', time: '2 mins ago', location: 'Enugu', initials: 'CO' },
-                            { user: 'Fatima Yusuf', action: 'Published "Intro to WAEC Math"', time: '15 mins ago', location: 'Kano', initials: 'FY' },
-                            { user: 'System', action: 'Payout processed for 120 tutors', time: '1 hour ago', location: 'Lagos HQ', initials: 'SYS' },
-                            { user: 'Bola Adebayo', action: 'Reported a course review', time: '3 hours ago', location: 'Ibadan', initials: 'BA' },
-                            { user: 'Emeka Nnamdi', action: 'Requested refund', time: '5 hours ago', location: 'PH', initials: 'EN' },
-                        ].map((item, i) => (
-                            <div key={i} className="flex items-start gap-4">
-                                <Avatar className="h-9 w-9 border border-slate-200">
-                                    <AvatarFallback className="bg-slate-50 text-slate-600 text-xs font-bold">
-                                        {item.initials}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="space-y-1">
-                                    <p className="text-sm font-medium leading-none text-slate-900 dark:text-slate-200">
-                                        {item.user}
-                                    </p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                                        {item.action}
-                                    </p>
-                                    <div className="flex items-center gap-1 text-[10px] text-slate-400 mt-1">
-                                        <MapPin className="w-3 h-3" /> {item.location} • {item.time}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="space-y-6 flex flex-col items-center justify-center py-10 text-slate-500">
+                        <p>No recent actions to display.</p>
                     </div>
                 </CardContent>
             </Card>

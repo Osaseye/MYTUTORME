@@ -32,41 +32,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export const CourseModerationPage = () => {
-    const [courses] = useState([
-        {
-            id: 'c1',
-            title: 'Complete WAEC Mathematics Prep 2026',
-            instructor: 'Chinedu Okeke',
-            price: '₦15,000',
-            category: 'Mathematics',
-            status: 'Pending Review',
-            reports: 0,
-            submitted: '2 hours ago',
-            thumbnail: '/placeholder-course.jpg'
-        },
-        {
-            id: 'c2',
-            title: 'IELTS Speaking Masterclass',
-            instructor: 'Funke Akindele',
-            price: '₦25,000',
-            category: 'Languages',
-            status: 'Live',
-            reports: 2,
-            submitted: '1 week ago',
-            thumbnail: '/placeholder-course-2.jpg'
-        },
-        {
-            id: 'c3',
-            title: 'Introduction to Yoruba History',
-            instructor: 'Prof. Wole Soyinka (Fan Account)',
-            price: '₦5,000',
-            category: 'History',
-            status: 'Flagged',
-            reports: 15,
-            submitted: '3 days ago',
-            thumbnail: '/placeholder-course-3.jpg'
-        }
-    ]);
+    const [courses] = useState<Array<{
+        id: string;
+        title: string;
+        instructor: string;
+        price: string;
+        category: string;
+        status: string;
+        reports: number;
+        submitted: string;
+        thumbnail: string;
+    }>>([]);
 
     return (
         <div className="space-y-6">
@@ -95,25 +71,43 @@ export const CourseModerationPage = () => {
 
                 <TabsContent value="pending" className="mt-0">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {courses.filter(c => c.status === 'Pending Review').map((course) => (
-                            <CourseCard key={course.id} course={course} />
-                        ))}
+                        {courses.filter(c => c.status === 'Pending Review').length === 0 ? (
+                            <div className="col-span-full text-center py-12 text-slate-500">
+                                No courses pending review.
+                            </div>
+                        ) : (
+                            courses.filter(c => c.status === 'Pending Review').map((course) => (
+                                <CourseCard key={course.id} course={course} />
+                            ))
+                        )}
                     </div>
                 </TabsContent>
                 
                 <TabsContent value="live" className="mt-0">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                         {courses.filter(c => c.status === 'Live').map((course) => (
-                            <CourseCard key={course.id} course={course} />
-                        ))}
+                        {courses.filter(c => c.status === 'Live').length === 0 ? (
+                            <div className="col-span-full text-center py-12 text-slate-500">
+                                No live courses found.
+                            </div>
+                        ) : (
+                            courses.filter(c => c.status === 'Live').map((course) => (
+                                <CourseCard key={course.id} course={course} />
+                            ))
+                        )}
                     </div>
                 </TabsContent>
 
                 <TabsContent value="flagged" className="mt-0">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                         {courses.filter(c => c.status.includes('Flagged') || c.reports > 0).map((course) => (
-                            <CourseCard key={course.id} course={course} />
-                        ))}
+                        {courses.filter(c => c.status.includes('Flagged') || c.reports > 0).length === 0 ? (
+                            <div className="col-span-full text-center py-12 text-slate-500">
+                                No flagged courses or reports.
+                            </div>
+                        ) : (
+                            courses.filter(c => c.status.includes('Flagged') || c.reports > 0).map((course) => (
+                                <CourseCard key={course.id} course={course} />
+                            ))
+                        )}
                     </div>
                 </TabsContent>
             </Tabs>

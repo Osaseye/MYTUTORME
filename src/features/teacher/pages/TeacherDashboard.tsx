@@ -10,15 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
-const data = [
-  { name: 'Mon', revenue: 4000 },
-  { name: 'Tue', revenue: 3000 },
-  { name: 'Wed', revenue: 5000 },
-  { name: 'Thu', revenue: 2780 },
-  { name: 'Fri', revenue: 6890 },
-  { name: 'Sat', revenue: 8390 },
-  { name: 'Sun', revenue: 7490 },
-];
+const data: any[] = [];
 
 export const TeacherDashboard = () => {
     return (
@@ -49,11 +41,7 @@ export const TeacherDashboard = () => {
                         </div>
                         <div>
                             <p className="text-primary-100 text-sm font-medium mb-1">Total Earnings</p>
-                            <h3 className="text-3xl font-display font-bold">₦450,230</h3>
-                            <div className="flex items-center gap-1 mt-2 text-emerald-100 text-xs bg-white/10 w-fit px-2 py-1 rounded-full">
-                                <span className="material-symbols-outlined text-xs">trending_up</span>
-                                <span>+12.5% this month</span>
-                            </div>
+                            <h3 className="text-3xl font-display font-bold">₦0</h3>
                         </div>
                     </div>
                 </div>
@@ -65,12 +53,10 @@ export const TeacherDashboard = () => {
                         <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400">
                              <span className="material-symbols-outlined text-2xl">school</span>
                         </div>
-                        <span className="text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded-full">+24 new</span>
                      </div>
                      <div>
                         <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Active Students</p>
-                        <h3 className="text-3xl font-display font-bold text-slate-900 dark:text-white">2,350</h3>
-                        <p className="text-xs text-slate-400 mt-2">Across 4 published courses</p>
+                        <h3 className="text-3xl font-display font-bold text-slate-900 dark:text-white">0</h3>
                      </div>
                 </div>
 
@@ -81,15 +67,13 @@ export const TeacherDashboard = () => {
                         <div className="w-12 h-12 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl flex items-center justify-center text-yellow-600 dark:text-yellow-400">
                              <span className="material-symbols-outlined text-2xl">kid_star</span>
                         </div>
-                        <span className="text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 px-2 py-1 rounded-full">Top Rated</span>
                      </div>
                      <div>
                         <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Instructor Rating</p>
                         <div className="flex items-baseline gap-2">
-                            <h3 className="text-3xl font-display font-bold text-slate-900 dark:text-white">4.9</h3>
+                            <h3 className="text-3xl font-display font-bold text-slate-900 dark:text-white">0.0</h3>
                             <span className="text-sm text-slate-400">/ 5.0</span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-2">Based on 842 reviews</p>
                      </div>
                 </div>
             </div>
@@ -138,38 +122,11 @@ export const TeacherDashboard = () => {
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
                     <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white mb-6">Recent Activity</h3>
                     <div className="space-y-6">
-                        <div className="flex gap-4">
-                             <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                                <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-sm">person_add</span>
-                             </div>
-                             <div>
-                                <p className="text-sm font-medium text-slate-900 dark:text-white">New student enrolled</p>
-                                <p className="text-xs text-slate-500">Sarah J. joined "Advanced Calculus"</p>
-                                <p className="text-[10px] text-slate-400 mt-1">2 mins ago</p>
-                             </div>
-                        </div>
-                        <div className="flex gap-4">
-                             <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0">
-                                <span className="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-sm">reviews</span>
-                             </div>
-                             <div>
-                                <p className="text-sm font-medium text-slate-900 dark:text-white">New 5-star review</p>
-                                <p className="text-xs text-slate-500">"Best course on Python I've taken..."</p>
-                                <p className="text-[10px] text-slate-400 mt-1">1 hour ago</p>
-                             </div>
-                        </div>
-                        <div className="flex gap-4">
-                             <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-                                <span className="material-symbols-outlined text-green-600 dark:text-green-400 text-sm">payments</span>
-                             </div>
-                             <div>
-                                <p className="text-sm font-medium text-slate-900 dark:text-white">Payout Processed</p>
-                                <p className="text-xs text-slate-500">₦125,000 sent to your bank account</p>
-                                <p className="text-[10px] text-slate-400 mt-1">Yesterday</p>
-                             </div>
+                        <div className="text-center py-6">
+                            <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-4xl mb-2">history</span>
+                            <p className="text-sm text-slate-500">No recent activity.</p>
                         </div>
                     </div>
-                    <Button variant="outline" className="w-full mt-6 text-xs h-10 border-dashed">View All Activity</Button>
                 </div>
             </div>
         </div>

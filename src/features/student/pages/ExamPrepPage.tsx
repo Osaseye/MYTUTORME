@@ -2,7 +2,6 @@ import {
   BarChart, 
   Calendar, 
   Clock, 
-  BookOpen, 
   BrainCircuit, 
   Play, 
   TrendingUp,
@@ -13,51 +12,9 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 
 import { Link } from 'react-router-dom';
-
-const MOCK_EXAMS = [
-  {
-    id: 'exam-1',
-    title: 'Calculus I - Midterm Simulation',
-    difficulty: 'Medium',
-    questions: 25,
-    duration: 90, // mins
-    attempts: 0,
-    status: 'Ready',
-    topic: 'Derivatives & Limits'
-  },
-  {
-    id: 'exam-2',
-    title: 'Linear Algebra Final Prep',
-    difficulty: 'Hard',
-    questions: 40,
-    duration: 120, // mins
-    attempts: 1,
-    lastScore: 78,
-    status: 'Review Needed',
-    topic: 'Matrices & Vectors'
-  },
-  {
-    id: 'exam-3',
-    title: 'Physics Mechanics Quiz',
-    difficulty: 'Easy',
-    questions: 15,
-    duration: 30, // mins
-    attempts: 2,
-    lastScore: 92,
-    status: 'Mastered',
-    topic: 'Kinematics'
-  }
-];
-
-const MOCK_DECKS = [
-  { id: 'deck-1', title: 'Common Derivatives', count: 45, mastery: 80, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-  { id: 'deck-2', title: 'Integration Rules', count: 30, mastery: 45, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' },
-  { id: 'deck-3', title: 'Physics Formulas', count: 60, mastery: 15, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' }
-];
 
 export const ExamPrepPage = () => {
   const [activeTab, setActiveTab] = useState<'exams' | 'flashcards' | 'planner'>('exams');
@@ -74,7 +31,7 @@ export const ExamPrepPage = () => {
         <div className="flex items-center gap-3">
            <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg text-primary font-medium text-sm">
               <BrainCircuit className="w-4 h-4" />
-              <span>AI Study Streak: 5 Days 🔥</span>
+              <span>AI Study Streak: 0 Days</span>
            </div>
            <Link to="/student/exam-prep/config">
              <Button className="bg-primary hover:bg-primary/90">
@@ -93,7 +50,7 @@ export const ExamPrepPage = () => {
            </div>
            <div>
               <p className="text-xs text-slate-500 uppercase font-medium">Study Time</p>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">12h 45m</h3>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">0h 00m</h3>
            </div>
         </div>
         <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
@@ -102,7 +59,7 @@ export const ExamPrepPage = () => {
            </div>
            <div>
               <p className="text-xs text-slate-500 uppercase font-medium">Questions Solved</p>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">842</h3>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">0</h3>
            </div>
         </div>
         <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
@@ -111,7 +68,7 @@ export const ExamPrepPage = () => {
            </div>
            <div>
               <p className="text-xs text-slate-500 uppercase font-medium">Avg. Score</p>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">78%</h3>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">-</h3>
            </div>
         </div>
         <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
@@ -120,7 +77,7 @@ export const ExamPrepPage = () => {
            </div>
            <div>
               <p className="text-xs text-slate-500 uppercase font-medium">Focus Area</p>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white truncate" title="Integral Calculus">Integrals</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white truncate" title="None">None</h3>
            </div>
         </div>
       </div>
@@ -163,64 +120,21 @@ export const ExamPrepPage = () => {
                       <button className="text-sm text-primary font-medium hover:underline">View All History</button>
                    </div>
                    
-                   {MOCK_EXAMS.map((exam) => (
-                      <div key={exam.id} className="group border border-slate-200 dark:border-slate-700 rounded-xl p-5 hover:border-primary/50 hover:shadow-md transition-all">
-                         <div className="flex justify-between items-start mb-3">
-                            <div className="flex gap-3">
-                               <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                  <FileText className="w-5 h-5" />
-                               </div>
-                               <div>
-                                  <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{exam.title}</h4>
-                                  <p className="text-sm text-slate-500">{exam.topic} • {exam.questions} Questions</p>
-                               </div>
-                            </div>
-                            <Badge variant={exam.difficulty === 'Hard' ? 'destructive' : exam.difficulty === 'Medium' ? 'default' : 'secondary'}>
-                               {exam.difficulty}
-                            </Badge>
-                         </div>
-                         
-                         <div className="flex items-center justify-between mt-4 pl-13">
-                            <div className="flex gap-4 text-sm text-slate-500">
-                               <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {exam.duration}m</span>
-                               {exam.lastScore && (
-                                 <span className={`flex items-center gap-1 font-medium ${exam.lastScore >= 80 ? 'text-green-600' : 'text-orange-600'}`}>
-                                    <TrendingUp className="w-4 h-4" /> Last: {exam.lastScore}%
-                                 </span>
-                               )}
-                            </div>
-                            <Button size="sm" variant={exam.status === 'Review Needed' ? 'outline' : 'default'}>
-                               {exam.status === 'Review Needed' ? 'Review Mistakes' : 'Start Exam'}
-                            </Button>
-                         </div>
+                   <div className="text-center py-10">
+                      <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                         <FileText className="w-8 h-8" />
                       </div>
-                   ))}
+                      <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">No Exams Available</h4>
+                      <p className="text-slate-500 max-w-sm mx-auto mb-6">You haven't been assigned any practice exams yet. Try generating a new study plan or creating a custom mock exam.</p>
+                      <Button className="bg-primary hover:bg-primary/90" onClick={() => setActiveTab('planner')}>
+                         Create Study Plan
+                      </Button>
+                   </div>
                 </div>
               )}
 
               {activeTab === 'flashcards' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   {MOCK_DECKS.map((deck) => (
-                      <div key={deck.id} className="border border-slate-200 dark:border-slate-700 rounded-xl p-5 hover:border-primary/50 transition-all cursor-pointer relative overflow-hidden group">
-                         <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-20 ${deck.color} blur-xl group-hover:scale-150 transition-transform`}></div>
-                         
-                         <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2 relative z-10">{deck.title}</h4>
-                         <div className="flex items-center gap-2 text-sm text-slate-500 mb-4 relative z-10">
-                            <BookOpen className="w-4 h-4" />
-                            <span>{deck.count} Cards</span>
-                         </div>
-                         
-                         <div className="space-y-2 relative z-10">
-                            <div className="flex justify-between text-xs font-medium">
-                               <span className="text-slate-500">Mastery</span>
-                               <span className={deck.mastery > 70 ? 'text-green-600' : 'text-orange-600'}>{deck.mastery}%</span>
-                            </div>
-                            <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                               <div className={`h-full rounded-full ${deck.mastery > 70 ? 'bg-green-500' : 'bg-orange-500'}`} style={{ width: `${deck.mastery}%` }}></div>
-                            </div>
-                         </div>
-                      </div>
-                   ))}
                    
                    <div className="border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-5 flex flex-col items-center justify-center text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer min-h-[160px]">
                       <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 mb-3">
@@ -257,28 +171,6 @@ export const ExamPrepPage = () => {
            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
               <h3 className="font-bold text-slate-900 dark:text-white mb-4">Upcoming Exams</h3>
               <div className="space-y-4">
-                 <div className="flex gap-3 items-start">
-                    <div className="flex flex-col items-center bg-red-50 dark:bg-red-900/20 text-red-600 rounded-lg p-2 min-w-[50px]">
-                       <span className="text-xs font-bold uppercase">Mar</span>
-                       <span className="text-xl font-bold">15</span>
-                    </div>
-                    <div>
-                       <h4 className="font-bold text-sm text-slate-900 dark:text-white">Calculus Midterm</h4>
-                       <p className="text-xs text-slate-500">10:00 AM • Room 302</p>
-                       <p className="text-xs font-medium text-red-500 mt-1">12 Days Left</p>
-                    </div>
-                 </div>
-                 
-                 <div className="flex gap-3 items-start">
-                    <div className="flex flex-col items-center bg-slate-100 dark:bg-slate-800 text-slate-600 rounded-lg p-2 min-w-[50px]">
-                       <span className="text-xs font-bold uppercase">Apr</span>
-                       <span className="text-xl font-bold">02</span>
-                    </div>
-                    <div>
-                       <h4 className="font-bold text-sm text-slate-900 dark:text-white">Physics Final</h4>
-                       <p className="text-xs text-slate-500">2:00 PM • Main Hall</p>
-                    </div>
-                 </div>
               </div>
            </div>
 

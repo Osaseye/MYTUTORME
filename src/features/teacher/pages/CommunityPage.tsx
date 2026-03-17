@@ -2,44 +2,18 @@ import { Button } from "@/components/ui/button";
 import { MessageSquare, ThumbsUp, Eye, Clock } from "lucide-react";
 
 export const CommunityPage = () => {
-    const discussions = [
-        {
-            id: 1,
-            title: "How to engage students in online discussions?",
-            author: "Sarah J.",
-            role: "Instructor",
-            replies: 12,
-            views: 340,
-            likes: 45,
-            time: "2 hours ago",
-            tag: "Teaching Tips",
-            color: "blue"
-        },
-         {
-            id: 2,
-            title: "Best microphone for recording lectures under $50?",
-            author: "Mike T.",
-            role: "New Teacher",
-            replies: 24,
-            views: 1200,
-            likes: 89,
-            time: "5 hours ago",
-            tag: "Equipment",
-            color: "purple"
-        },
-         {
-            id: 3,
-            title: "Updates to the Stripe payout schedule for Nigeria",
-            author: "TutorMe Admin",
-            role: "Admin",
-            replies: 5,
-            views: 200,
-            likes: 12,
-            time: "1 day ago",
-            tag: "Announcements",
-            color: "red"
-        }
-    ];
+    const discussions: Array<{
+        id: number;
+        title: string;
+        author: string;
+        role: string;
+        replies: number;
+        views: number;
+        likes: number;
+        time: string;
+        tag: string;
+        color: string;
+    }> = [];
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-body text-slate-800 dark:text-slate-100 transition-colors duration-300 min-h-screen">
@@ -61,41 +35,47 @@ export const CommunityPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-3 space-y-4">
-                {discussions.map((discussion) => (
-                    <div key={discussion.id} className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold bg-${discussion.color}-100 text-${discussion.color}-700 dark:bg-${discussion.color}-900/30 dark:text-${discussion.color}-300`}>
-                                    {discussion.tag}
-                                </span>
-                                <span className="text-xs text-slate-400 flex items-center gap-1">
-                                    <Clock className="w-3 h-3" /> {discussion.time}
-                                </span>
-                            </div>
-                        </div>
-                        <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors">
-                            {discussion.title}
-                        </h3>
-                        <div className="flex items-center justify-between mt-4">
-                            <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700"></div>
-                                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{discussion.author}</span>
-                                <span className="text-xs text-slate-400">• {discussion.role}</span>
-                            </div>
-                             <div className="flex items-center gap-4 text-slate-400 text-sm">
-                                <span className="flex items-center gap-1 hover:text-primary">
-                                    <MessageSquare className="w-4 h-4" /> {discussion.replies}
-                                </span>
-                                <span className="flex items-center gap-1 hover:text-blue-500">
-                                    <ThumbsUp className="w-4 h-4" /> {discussion.likes}
-                                </span>
-                                 <span className="flex items-center gap-1">
-                                    <Eye className="w-4 h-4" /> {discussion.views}
-                                </span>
-                            </div>
-                        </div>
+                {discussions.length === 0 ? (
+                    <div className="text-center py-12 text-slate-500 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                        No discussions found. Be the first to start one!
                     </div>
-                ))}
+                ) : (
+                    discussions.map((discussion) => (
+                        <div key={discussion.id} className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
+                            <div className="flex justify-between items-start mb-2">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold bg-${discussion.color}-100 text-${discussion.color}-700 dark:bg-${discussion.color}-900/30 dark:text-${discussion.color}-300`}>
+                                        {discussion.tag}
+                                    </span>
+                                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                                        <Clock className="w-3 h-3" /> {discussion.time}
+                                    </span>
+                                </div>
+                            </div>
+                            <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors">
+                                {discussion.title}
+                            </h3>
+                            <div className="flex items-center justify-between mt-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{discussion.author}</span>
+                                    <span className="text-xs text-slate-400">• {discussion.role}</span>
+                                </div>
+                                 <div className="flex items-center gap-4 text-slate-400 text-sm">
+                                    <span className="flex items-center gap-1 hover:text-primary">
+                                        <MessageSquare className="w-4 h-4" /> {discussion.replies}
+                                    </span>
+                                    <span className="flex items-center gap-1 hover:text-blue-500">
+                                        <ThumbsUp className="w-4 h-4" /> {discussion.likes}
+                                    </span>
+                                     <span className="flex items-center gap-1">
+                                        <Eye className="w-4 h-4" /> {discussion.views}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
             
             <div className="lg:col-span-1 space-y-6">

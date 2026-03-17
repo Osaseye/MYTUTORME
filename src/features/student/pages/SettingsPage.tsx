@@ -1,80 +1,9 @@
-import { useState } from "react";
-
 export const SettingsPage = () => {
-  const [activeTab, setActiveTab] = useState("profile");
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-body text-slate-800 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col">
       <main className="pt-20 pb-12 px-4 sm:px-6 lg:px-8 w-full">
         <div className="flex flex-col lg:flex-row gap-8">
-          <aside className="w-full lg:w-64 flex-shrink-0">
-            <div className="lg:sticky lg:top-24 rounded-2xl overflow-hidden">
-              <div className="py-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center lg:block">
-                <div>
-                  <h2 className="text-lg font-display font-bold text-slate-900 dark:text-white">
-                    Settings
-                  </h2>
-                  <p className="text-sm text-slate-500 mt-1">
-                    Manage your account preferences
-                  </p>
-                </div>
-              </div>
-              <nav className="py-4 space-y-1 flex lg:block overflow-x-auto pb-4 lg:pb-4 scrollbar-hide gap-2 lg:gap-0">
-                <a
-                  href="#"
-                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-colors ${
-                    activeTab === "profile"
-                      ? "bg-primary/10 text-primary"
-                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                  onClick={() => setActiveTab("profile")}
-                >
-                  <span className="material-symbols-outlined">person</span>
-                  Personal Info
-                </a>
-                <a
-                  href="#"
-                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-colors ${
-                    activeTab === "academic"
-                      ? "bg-primary/10 text-primary"
-                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                  onClick={() => setActiveTab("academic")}
-                >
-                  <span className="material-symbols-outlined">school</span>
-                  Academic Level
-                </a>
-                <a
-                  href="#"
-                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-colors ${
-                    activeTab === "subscription"
-                      ? "bg-primary/10 text-primary"
-                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                  onClick={() => setActiveTab("subscription")}
-                >
-                  <span className="material-symbols-outlined">credit_card</span>
-                  Subscription
-                </a>
-                <a
-                  href="#"
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
-                >
-                  <span className="material-symbols-outlined">
-                    notifications
-                  </span>
-                  Notifications
-                </a>
-                <a
-                  href="#"
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
-                >
-                  <span className="material-symbols-outlined">security</span>
-                  Security
-                </a>
-              </nav>
-            </div>
-          </aside>
           <div className="flex-1 space-y-8">
             <div className="relative overflow-hidden">
               <div className="relative flex flex-col sm:flex-row items-center gap-6 mt-8">
@@ -92,10 +21,10 @@ export const SettingsPage = () => {
                 </div>
                 <div className="flex-1 pb-2 text-center sm:text-left">
                   <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-white">
-                    Alex Morgan
+                    Student Name
                   </h1>
                   <p className="text-slate-500">
-                    Student • University of Lagos
+                    Student
                   </p>
                 </div>
                 <div className="flex gap-3">
@@ -129,7 +58,6 @@ export const SettingsPage = () => {
                     id="full-name"
                     name="full-name"
                     type="text"
-                    defaultValue="Alex Morgan"
                   />
                 </div>
                 <div>
@@ -144,7 +72,6 @@ export const SettingsPage = () => {
                     id="email"
                     name="email"
                     type="email"
-                    defaultValue="alex.morgan@student.edu"
                   />
                 </div>
                 <div>
@@ -209,7 +136,7 @@ export const SettingsPage = () => {
                       id="education-level"
                     >
                       <option>Secondary School (Year 10-12)</option>
-                      <option selected>Undergraduate (University)</option>
+                      <option>Undergraduate (University)</option>
                       <option>Postgraduate</option>
                     </select>
                   </div>
@@ -224,7 +151,6 @@ export const SettingsPage = () => {
                       className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:border-primary focus:ring-primary"
                       id="major"
                       type="text"
-                      defaultValue="Computer Science"
                     />
                   </div>
                 </div>

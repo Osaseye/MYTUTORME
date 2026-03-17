@@ -28,10 +28,10 @@ export const ExamResultsPage = () => {
                    <CheckCircle className="w-4 h-4" /> Exam Completed
                 </div>
                 <h1 className="text-3xl md:text-5xl font-display font-bold text-slate-900 dark:text-white mb-2">
-                   Great Job, Alex!
+                   Exam Finished
                 </h1>
                 <p className="text-slate-600 dark:text-slate-400 text-lg max-w-xl">
-                   You've shown significant improvement in Advanced Mathematics compared to your last mock exam. Keep up the momentum!
+                   Your results are being processed.
                 </p>
              </div>
 
@@ -39,10 +39,10 @@ export const ExamResultsPage = () => {
                 <div className="relative w-40 h-40 flex items-center justify-center">
                    <svg className="w-full h-full transform -rotate-90">
                       <circle className="text-slate-200 dark:text-slate-700" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" strokeWidth="12"></circle>
-                      <circle className="text-primary" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" strokeDasharray="440" strokeDashoffset="66" strokeWidth="12"></circle>
+                      <circle className="text-primary" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" strokeDasharray="440" strokeDashoffset="0" strokeWidth="12"></circle>
                    </svg>
                    <div className="absolute flex flex-col items-center">
-                      <span className="text-4xl font-display font-bold text-slate-900 dark:text-white">85%</span>
+                      <span className="text-4xl font-display font-bold text-slate-900 dark:text-white">0%</span>
                       <span className="text-sm font-medium text-slate-500 uppercase">Score</span>
                    </div>
                 </div>
@@ -50,11 +50,11 @@ export const ExamResultsPage = () => {
                 <div className="hidden sm:flex flex-col gap-2">
                    <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 w-32">
                       <p className="text-xs text-slate-500 uppercase font-bold">Percentile</p>
-                      <p className="text-xl font-bold text-primary">Top 15%</p>
+                      <p className="text-xl font-bold text-primary">-</p>
                    </div>
                    <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 w-32">
                       <p className="text-xs text-slate-500 uppercase font-bold">Time Taken</p>
-                      <p className="text-xl font-bold text-slate-900 dark:text-white">45m 20s</p>
+                      <p className="text-xl font-bold text-slate-900 dark:text-white">0m 0s</p>
                    </div>
                 </div>
              </div>
@@ -74,43 +74,36 @@ export const ExamResultsPage = () => {
               </div>
 
               <div className="space-y-6">
-                 {[
-                    { topic: 'Algebra & Functions', correct: 18, total: 20, score: 90, color: 'bg-primary', text: 'text-primary' },
-                    { topic: 'Trigonometry', correct: 15, total: 20, score: 75, color: 'bg-yellow-500', text: 'text-yellow-500' },
-                    { topic: 'Geometry', correct: 13, total: 20, score: 65, color: 'bg-orange-400', text: 'text-orange-400' },
-                    { topic: 'Calculus', correct: 11, total: 20, score: 55, color: 'bg-red-500', text: 'text-red-500' }
-                 ].map((item, idx) => (
-                    <div key={idx}>
-                       <div className="flex justify-between items-end mb-2">
-                          <div>
-                             <h3 className="font-bold text-slate-900 dark:text-white">{item.topic}</h3>
-                             <p className="text-xs text-slate-500">{item.correct}/{item.total} Questions Correct</p>
-                          </div>
-                          <span className={`text-lg font-bold ${item.text}`}>{item.score}%</span>
-                       </div>
-                       <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3">
-                          <div className={`${item.color} h-3 rounded-full`} style={{ width: `${item.score}%` }}></div>
-                       </div>
-                    </div>
-                 ))}
+                 {(() => {
+                     const breakdowns: Array<{ topic: string; correct: number; total: number; score: number; color: string; text: string; }> = [];
+                     if (breakdowns.length === 0) {
+                         return (
+                             <div className="text-center text-slate-500 py-6">
+                                 No topic breakdown available.
+                             </div>
+                         );
+                     }
+                     return breakdowns.map((item, idx) => (
+                        <div key={idx}>
+                           <div className="flex justify-between items-end mb-2">
+                              <div>
+                                 <h3 className="font-bold text-slate-900 dark:text-white">{item.topic}</h3>
+                                 <p className="text-xs text-slate-500">{item.correct}/{item.total} Questions Correct</p>
+                              </div>
+                              <span className={`text-lg font-bold ${item.text}`}>{item.score}%</span>
+                           </div>
+                           <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3">
+                              <div className={`${item.color} h-3 rounded-full`} style={{ width: `${item.score}%` }}></div>
+                           </div>
+                        </div>
+                     ));
+                 })()}
               </div>
 
               <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
                  <h3 className="font-bold text-slate-900 dark:text-white mb-4">Question Analysis</h3>
-                 <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((q) => {
-                        const status = q === 3 || q === 7 ? 'wrong' : q === 5 ? 'partial' : 'correct';
-                        let colors = 'bg-green-100 text-green-700 border-green-200';
-                        if (status === 'wrong') colors = 'bg-red-100 text-red-700 border-red-200';
-                        if (status === 'partial') colors = 'bg-orange-100 text-orange-700 border-orange-200';
-
-                        return (
-                           <div key={q} className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border cursor-pointer hover:scale-110 transition-transform ${colors}`}>
-                              {q}
-                           </div>
-                        )
-                    })}
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-xs border border-slate-200 cursor-pointer">...</div>
+                 <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide text-center text-slate-500 py-4">
+                    No questions available.
                  </div>
               </div>
            </div>
@@ -131,17 +124,8 @@ export const ExamResultsPage = () => {
                     </div>
                     
                     <div className="space-y-4">
-                       <div className="bg-white/60 dark:bg-slate-800/60 p-3 rounded-xl border border-blue-50 dark:border-slate-700">
-                          <h4 className="text-sm font-bold text-green-600 dark:text-green-400 mb-1 flex items-center gap-1">
-                             <CheckCircle className="w-4 h-4" /> Strong Performance
-                          </h4>
-                          <p className="text-xs text-slate-600 dark:text-slate-300">You mastered quadratic equations! Your speed in solving for X was 20% faster than average.</p>
-                       </div>
-                       <div className="bg-white/60 dark:bg-slate-800/60 p-3 rounded-xl border border-blue-50 dark:border-slate-700">
-                          <h4 className="text-sm font-bold text-orange-500 mb-1 flex items-center gap-1">
-                             <AlertCircle className="w-4 h-4" /> Focus Area
-                          </h4>
-                          <p className="text-xs text-slate-600 dark:text-slate-300">Review Geometric Proofs. You missed 3 concept-based questions related to triangle congruence.</p>
+                       <div className="bg-white/60 dark:bg-slate-800/60 p-3 rounded-xl border border-blue-50 dark:border-slate-700 text-center text-slate-500">
+                           No insights available at this time.
                        </div>
                     </div>
                     
@@ -155,23 +139,30 @@ export const ExamResultsPage = () => {
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-lg border border-slate-200 dark:border-slate-800">
                  <h2 className="font-bold text-slate-900 dark:text-white mb-4">Recommended Review</h2>
                  <div className="space-y-3">
-                    {[
-                        { title: 'Triangle Congruence', type: 'Geometry', time: '15 min', icon: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' },
-                        { title: 'Calculus Limits', type: 'Calculus', time: '22 min', icon: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' }
-                    ].map((item, i) => (
-                        <div key={i} className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group cursor-pointer">
-                           <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${item.icon}`}>
-                              <PlayCircle className="w-6 h-6" />
-                           </div>
-                           <div>
-                              <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{item.title}</h4>
-                              <p className="text-xs text-slate-500 mb-1">{item.type} • {item.time} lesson</p>
-                              <div className="flex items-center text-xs text-primary font-semibold">
-                                 <PlayCircle className="w-3 h-3 mr-1" /> Watch Lesson
-                              </div>
-                           </div>
-                        </div>
-                    ))}
+                    {(() => {
+                        const reviews: Array<{ title: string; type: string; time: string; icon: string; }> = [];
+                        if (reviews.length === 0) {
+                            return (
+                                <div className="text-center text-slate-500 py-4">
+                                    No recommendations at this time.
+                                </div>
+                            );
+                        }
+                        return reviews.map((item, i) => (
+                            <div key={i} className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group cursor-pointer">
+                               <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${item.icon}`}>
+                                  <PlayCircle className="w-6 h-6" />
+                               </div>
+                               <div>
+                                  <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{item.title}</h4>
+                                  <p className="text-xs text-slate-500 mb-1">{item.type} • {item.time} lesson</p>
+                                  <div className="flex items-center text-xs text-primary font-semibold">
+                                     <PlayCircle className="w-3 h-3 mr-1" /> Watch Lesson
+                                  </div>
+                               </div>
+                            </div>
+                        ));
+                    })()}
                  </div>
                  
                  <Button variant="outline" className="w-full mt-4">

@@ -1,81 +1,25 @@
 import { useState, useEffect } from 'react';
 import { 
-  ArrowLeft, 
-  ArrowRight, 
-  Clock, 
-  Flag, 
-  CheckCircle, 
+  CheckCircle,
+  Flag,
+  BrainCircuit,
+  Clock,
+  Check,
+  ArrowLeft,
+  ArrowRight,
   AlertCircle,
   PlayCircle,
-  FileText,
-  BrainCircuit,
-  Check
+  FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 
 // Mock Exam Data
 const EXAM_DATA = {
-  title: "Thermodynamics & Heat Transfer",
-  subtitle: "Physics 101",
-  totalTime: 45 * 60, // 45 minutes
-  questions: [
-    {
-      id: 1,
-      text: "If 500g of water at 20°C is mixed with 300g of water at 80°C in an isolated system, what is the final equilibrium temperature?",
-      subtext: "Assume the specific heat capacity of water is constant and neglect the heat capacity of the container.",
-      correctAnswer: 'b',
-      explanation: {
-        intro: "Using the principle of calorimetry:",
-        formula: "m1·c·ΔT1 = m2·c·ΔT2",
-        steps: [
-            "(500)(Tf - 20) = (300)(80 - Tf)",
-            "500Tf - 10000 = 24000 - 300Tf",
-            "800Tf = 34000"
-        ],
-        final: "Tf = 42.5°C"
-      },
-      options: [
-        { id: 'a', text: "35.5°C" },
-        { id: 'b', text: "42.5°C" },
-        { id: 'c', text: "50.0°C" },
-        { id: 'd', text: "60.0°C" }
-      ]
-    },
-    {
-      id: 2,
-      text: "Which law of thermodynamics states that entropy of an isolated system always increases?",
-      subtext: null,
-      correctAnswer: 'b',
-      explanation: {
-        intro: "The Second Law of Thermodynamics specifically addresses the direction of natural processes.",
-        formula: "ΔS ≥ 0",
-        steps: ["The First Law is conservation of energy.", "The Zeroth Law defines temperature.", "The Third Law concerns absolute zero."],
-        final: "Second Law"
-      },
-      options: [
-        { id: 'a', text: "First Law" },
-        { id: 'b', text: "Second Law" },
-        { id: 'c', text: "Third Law" },
-        { id: 'd', text: "Zeroth Law" }
-      ]
-    },
-    // ... placeholders for 3-20
-    ...Array.from({ length: 18 }).map((_, i) => ({
-        id: i + 3,
-        text: `Question ${i + 3} placeholder text regarding physics concepts.`,
-        subtext: "Select the best answer from the options below.",
-        correctAnswer: 'a',
-        explanation: { intro: "Basic physics principle applies here.", formula: "F=ma", steps: [], final: "Answer A" },
-        options: [
-            { id: 'a', text: "Option A" },
-            { id: 'b', text: "Option B" },
-            { id: 'c', text: "Option C" },
-            { id: 'd', text: "Option D" }
-        ]
-    }))
-  ]
+  title: "Mock Exam",
+  subtitle: "Subject Placeholder",
+  totalTime: 0, // 0 minutes
+  questions: [] as any[]
 };
 
 export const ExamTakingPage = () => {
@@ -83,7 +27,7 @@ export const ExamTakingPage = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<number[]>([]);
-  const [checkedAnswers, setCheckedAnswers] = useState<number[]>([]); // Track questions where "Check Answer" was clicked
+  const [checkedAnswers] = useState<number[]>([]); // Track questions where "Check Answer" was clicked
   const [timeLeft, setTimeLeft] = useState(EXAM_DATA.totalTime);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
 
@@ -127,27 +71,19 @@ export const ExamTakingPage = () => {
   };
 
   const handleCheckAnswer = () => {
-      const currentId = EXAM_DATA.questions[currentQuestionIndex].id;
-      if (!answers[currentId]) {
-          toast.warning("Please select an answer first.");
-          return;
-      }
-      setCheckedAnswers(prev => [...prev, currentId]);
+      // noop
   };
 
   const handleSubmit = () => {
-    toast.success("Exam submitted successfully!", {
-        description: "Your results are being calculated..."
-    });
     setTimeout(() => {
         navigate('/student/exam-prep/results');
     }, 1500);
   };
 
   const currentQuestion = EXAM_DATA.questions[currentQuestionIndex];
-  const progressPercent = ((currentQuestionIndex + 1) / EXAM_DATA.questions.length) * 100;
+  const progressPercent = EXAM_DATA.questions.length > 0 ? ((currentQuestionIndex + 1) / EXAM_DATA.questions.length) * 100 : 0;
   
-  const isChecked = checkedAnswers.includes(currentQuestion.id);
+  const isChecked = currentQuestion && checkedAnswers.includes(currentQuestion.id);
   const isCorrect = isChecked && answers[currentQuestion.id] === currentQuestion.correctAnswer;
   
   return (
@@ -175,7 +111,7 @@ export const ExamTakingPage = () => {
         </div>
       </nav>
 
-      {/* Main Content Area */}
+      Main Content Area
       <main className="min-h-[calc(100vh-64px)] w-full flex justify-center p-4 md:p-8 relative">
         {/* Background Grid Pattern */}
         <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05]" 

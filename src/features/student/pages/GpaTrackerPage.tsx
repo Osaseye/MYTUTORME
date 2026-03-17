@@ -6,7 +6,9 @@ import {
   Target, 
   TrendingUp, 
   BookOpen,
-  GraduationCap
+  GraduationCap,
+  AlertCircle,
+  RotateCcw
 } from 'lucide-react';
 import { 
   SCALE_4_0, 
@@ -28,20 +30,8 @@ export const GpaTrackerPage = () => {
   // State
   const [scale, setScale] = useState<GradeScaleType>('4.0');
   const [targetGPA, setTargetGPA] = useState<number>(3.5);
-  const [semesters, setSemesters] = useState<Semester[]>([
-    {
-      id: '1',
-      name: 'Semester 1',
-      courses: [
-        { id: '1', name: 'Mathematics 101', credits: 3, grade: 'A', isCompleted: true },
-        { id: '2', name: 'Physics 101', credits: 4, grade: 'B+', isCompleted: true },
-      ]
-    }
-  ]);
-  const [predictionCourses, setPredictionCourses] = useState<Course[]>([
-    { id: 'p1', name: 'Hypothetical Course 1', credits: 3, grade: 'A', isCompleted: false },
-    { id: 'p2', name: 'Hypothetical Course 2', credits: 3, grade: 'B', isCompleted: false },
-  ]);
+  const [semesters, setSemesters] = useState<Semester[]>([]);
+  const [predictionCourses, setPredictionCourses] = useState<Course[]>([]);
 
   // Derived State
   const currentGPA = calculateCumulativeGPA(semesters, scale);

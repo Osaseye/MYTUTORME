@@ -38,4 +38,4 @@ export const TeacherDashboard = () => <h1 className="text-2xl font-bold">Teacher
 export const AdminDashboard = () => <h1 className="text-2xl font-bold">Admin Dashboard</h1>;
 
 // --- Imports needed for this file ---
-import { Outlet } from 'react-router-dom';
+// removed duplicate Outlet import

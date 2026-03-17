@@ -5,7 +5,6 @@ import {
   ArrowRight, 
   BrainCircuit, 
   Clock,
-  TrendingUp,
   Target,
   MoreVertical,
   BookOpen,
@@ -15,28 +14,20 @@ import { Badge } from '@/components/ui/badge';
 import { PerformanceChart } from '../components/PerformanceChart';
 
 export const StudentDashboard = () => {
-  // Mock Data (In a real app, this would come from an API/Context)
+  // Empty states ready for actual API integration
   const student = {
-    name: "Alex",
-    currentCGPA: 4.2,
-    targetCGPA: 4.8, // Updated based on onboarding feedback
-    progress: 84, // (4.2/5.0) * 100
+    name: "Student",
+    currentCGPA: 0.0,
+    targetCGPA: 0.0,
+    progress: 0,
   };
 
-  // Mock Performance Data
-  const performanceData = [65, 72, 68, 75, 82, 88, 85, 92];
-  const performanceLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'];
+  const performanceData: number[] = [];
+  const performanceLabels: string[] = [];
 
-  const upcomingTasks = [
-    { title: "Calculus Quiz", due: "Today, 2:00 PM", type: "quiz", course: "MTH 201" },
-    { title: "Physics Lab Report", due: "Tomorrow, 11:59 PM", type: "assignment", course: "PHY 101" },
-    { title: "Intro to Python", due: "Wed, 10:00 AM", type: "class", course: "CSC 101" },
-  ];
+  const upcomingTasks: Array<{ title: string; due: string; type: string; course: string; }> = [];
 
-  const recentCourses = [
-    { title: "Differential Calculus", progress: 65, lastAccessed: "2 hours ago", color: "bg-blue-500", code: "MTH 201" },
-    { title: "Linear Algebra", progress: 32, lastAccessed: "Yesterday", color: "bg-purple-500", code: "MTH 202" },
-  ];
+  const recentCourses: Array<{ title: string; progress: number; lastAccessed: string; color: string; code: string; }> = [];
 
   return (
     <div className="space-y-8 pb-10">
@@ -57,7 +48,7 @@ export const StudentDashboard = () => {
                   Welcome back, {student.name}.
                 </h1>
                 <p className="text-slate-300 text-lg max-w-lg leading-relaxed">
-                  You're hitting your strides! Ready for <span className="text-primary font-semibold">MTH 201</span>?
+                  You're hitting your strides! Ready to <span className="text-primary font-semibold">Learn</span>?
                 </p>
               </div>
 
@@ -97,12 +88,6 @@ export const StudentDashboard = () => {
               <Progress value={student.progress} className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full" indicatorClassName="bg-primary rounded-full" />
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-sm">
-                <span className="flex items-center text-slate-500 font-medium">
-                  <TrendingUp className="w-4 h-4 mr-2 text-emerald-500" /> +0.2 this month
-                </span>
-                <Button variant="ghost" size="sm" className="h-8 text-xs text-primary hover:text-primary-dark hover:bg-primary/5 font-semibold">View Details</Button>
-            </div>
         </div>
       </div>
 
@@ -125,8 +110,12 @@ export const StudentDashboard = () => {
                 </select>
              </div>
 
-             <div className="h-[300px] w-full">
-                <PerformanceChart data={performanceData} labels={performanceLabels} isDark={true} />
+             <div className="h-[300px] w-full flex items-center justify-center border-t border-slate-100 dark:border-slate-800 mt-4 pt-4">
+                {performanceData.length > 0 ? (
+                  <PerformanceChart data={performanceData} labels={performanceLabels} isDark={true} />
+                ) : (
+                  <p className="text-slate-500">No performance data yet. Take quizzes to see your progress!</p>
+                )}
              </div>
           </div>
 
@@ -138,7 +127,7 @@ export const StudentDashboard = () => {
              </div>
              
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {recentCourses.map((course, idx) => (
+                {recentCourses.length > 0 ? recentCourses.map((course, idx) => (
                   <div key={idx} className="group p-5 bg-white dark:bg-card-bg-dark border border-slate-200 dark:border-slate-800 rounded-3xl hover:border-primary/50 transition-all shadow-sm hover:shadow-md cursor-pointer relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-transparent to-slate-50 dark:to-slate-800/50 rounded-bl-full pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity" />
                     
@@ -167,7 +156,13 @@ export const StudentDashboard = () => {
                        </div>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="col-span-1 sm:col-span-2 py-10 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+                    <BookOpen className="w-10 h-10 text-slate-400 mb-3" />
+                    <p className="text-slate-500 font-medium">You haven't started any courses yet.</p>
+                    <Button variant="link" className="mt-2">Browse Courses</Button>
+                  </div>
+                )}
              </div>
           </div>
         </div>
@@ -186,31 +181,39 @@ export const StudentDashboard = () => {
             </div>
             
             <div className="space-y-1 relative">
-              {/* Timeline Line */}
-              <div className="absolute left-[19px] top-2 bottom-4 w-0.5 bg-slate-100 dark:bg-slate-800" />
-              
-              {upcomingTasks.map((task, i) => (
-                <div key={i} className="flex items-start gap-4 py-3 relative z-10 group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl px-2 -mx-2 transition-colors">
-                  <div className={`w-10 h-10 rounded-full border-4 border-white dark:border-card-bg-dark shrink-0 flex items-center justify-center ${
-                    task.type === 'quiz' ? 'bg-red-100 text-red-600' : task.type === 'assignment' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'
-                  }`}>
-                    {task.type === 'quiz' ? (
-                       <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                    ) : task.type === 'assignment' ? (
-                       <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                    ) : (
-                       <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0 pt-1">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">{task.title}</h4>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 border-slate-200 text-slate-500">{task.course}</Badge>
-                      <p className="text-xs text-slate-500 truncate">{task.due}</p>
+              {upcomingTasks.length > 0 ? (
+                <>
+                  {/* Timeline Line */}
+                  <div className="absolute left-[19px] top-2 bottom-4 w-0.5 bg-slate-100 dark:bg-slate-800" />
+                  
+                  {upcomingTasks.map((task, i) => (
+                    <div key={i} className="flex items-start gap-4 py-3 relative z-10 group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl px-2 -mx-2 transition-colors">
+                      <div className={`w-10 h-10 rounded-full border-4 border-white dark:border-card-bg-dark shrink-0 flex items-center justify-center ${
+                        task.type === 'quiz' ? 'bg-red-100 text-red-600' : task.type === 'assignment' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'
+                      }`}>
+                        {task.type === 'quiz' ? (
+                           <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                        ) : task.type === 'assignment' ? (
+                           <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                        ) : (
+                           <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 pt-1">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">{task.title}</h4>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 border-slate-200 text-slate-500">{task.course}</Badge>
+                          <p className="text-xs text-slate-500 truncate">{task.due}</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ))}
+                </>
+              ) : (
+                <div className="py-6 text-center text-slate-500 text-sm">
+                  No upcoming tasks. Enjoy your free time!
                 </div>
-              ))}
+              )}
             </div>
             
             <Button variant="outline" className="w-full mt-4 text-xs font-semibold border-slate-200 dark:border-slate-700 h-10 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
@@ -234,17 +237,6 @@ export const StudentDashboard = () => {
                 Ask AI Tutor
               </Button>
             </div>
-          </div>
-
-          {/* Daily Streak Mini-Widget */}
-          <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/20 rounded-3xl p-5 flex items-center gap-4">
-             <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 font-bold text-lg">
-                🔥
-             </div>
-             <div>
-                <h4 className="font-bold text-slate-900 dark:text-white">5 Day Streak!</h4>
-                <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">Keep it up, you're on fire.</p>
-             </div>
           </div>
 
         </div>
