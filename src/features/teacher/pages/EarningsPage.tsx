@@ -10,14 +10,7 @@ import {
 import { DollarSign, TrendingUp, Calendar, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const data = [
-  { name: "Jan", revenue: 4000 },
-  { name: "Feb", revenue: 5000 },
-  { name: "Mar", revenue: 4500 },
-  { name: "Apr", revenue: 6000 },
-  { name: "May", revenue: 7890 },
-  { name: "Jun", revenue: 9390 },
-];
+const data: any[] = [];
 
 export const EarningsPage = () => {
   return (
@@ -58,7 +51,7 @@ export const EarningsPage = () => {
                 <p className="text-primary-100 text-sm font-medium mb-1">
                   Available Balance
                 </p>
-                <h3 className="text-3xl font-display font-bold">₦125,450</h3>
+                <h3 className="text-3xl font-display font-bold">₦0</h3>
                 <div className="flex items-center gap-1 mt-2 text-emerald-100 text-xs bg-white/10 w-fit px-2 py-1 rounded-full">
                   <span className="material-symbols-outlined text-xs">
                     verified
@@ -74,11 +67,11 @@ export const EarningsPage = () => {
                 <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <span className="text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded-full">
-                +15%
+                0%
               </span>
             </div>
             <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">
-              ₦450,230
+              ₦0
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Total Revenue (This Year)
@@ -94,7 +87,7 @@ export const EarningsPage = () => {
               </span>
             </div>
             <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">
-              Mar 15, 2026
+              -
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Scheduled Date
@@ -193,42 +186,10 @@ export const EarningsPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900">
-              <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white font-medium">
-                  Mar 02, 2026
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                  Course Sale
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                  Advanced Calculus
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-emerald-600 dark:text-emerald-400 font-bold">
-                  +₦4,500
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                    Completed
-                  </span>
-                </td>
-              </tr>
-              <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white font-medium">
-                  Mar 01, 2026
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                  Withdrawal
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-                  -
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-900 dark:text-white font-bold">
-                  -₦50,000
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                    Processing
-                  </span>
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                  <span className="material-symbols-outlined text-4xl mb-2 text-slate-300">receipt_long</span>
+                  <p>No recent transactions.</p>
                 </td>
               </tr>
             </tbody>

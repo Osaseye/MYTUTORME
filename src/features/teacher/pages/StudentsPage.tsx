@@ -10,44 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export const StudentsPage = () => {
-  const students = [
-    {
-      id: 1,
-      name: "Alice Johnson",
-      email: "alice@example.com",
-      course: "Advanced React Patterns",
-      progress: 75,
-      joined: "Oct 12, 2023",
-      avatar: "/placeholder-1.jpg"
-    },
-    {
-      id: 2,
-      name: "Bob Smith",
-      email: "bob@example.com",
-      course: "UI/UX Design Fundamentals",
-      progress: 45,
-      joined: "Sep 28, 2023",
-      avatar: "/placeholder-2.jpg"
-    },
-    {
-      id: 3,
-      name: "Charlie Brown",
-      email: "charlie@example.com",
-      course: "Advanced React Patterns",
-      progress: 90,
-      joined: "Nov 01, 2023",
-      avatar: "/placeholder-3.jpg"
-    },
-     {
-      id: 4,
-      name: "Diana Prince",
-      email: "diana@example.com",
-      course: "Web Development Bootcamp",
-      progress: 12,
-      joined: "Nov 05, 2023",
-      avatar: "/placeholder-4.jpg"
-    }
-  ];
+  const students: any[] = [];
 
   return (
     <div className="bg-background-light dark:bg-background-dark min-h-screen text-slate-800 dark:text-slate-100 p-8">
@@ -149,10 +112,10 @@ export const StudentsPage = () => {
             </table>
           </div>
           <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-sm text-slate-500">
-            <span>Showing 4 of 128 students</span>
+            <span>Showing 0 of 0 students</span>
             <div className="flex gap-2">
                 <Button variant="outline" size="sm" disabled>Previous</Button>
-                <Button variant="outline" size="sm">Next</Button>
+                <Button variant="outline" size="sm" disabled>Next</Button>
             </div>
           </div>
         </div>

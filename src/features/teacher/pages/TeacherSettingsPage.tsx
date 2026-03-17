@@ -55,17 +55,17 @@ export const TeacherSettingsPage = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">First Name</label>
-                  <Input defaultValue="Jane" />
+                  <Input defaultValue="" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">Last Name</label>
-                  <Input defaultValue="Plane" />
+                  <Input defaultValue="" />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700">Headline</label>
-                <Input defaultValue="Senior Software Engineer & Instructor" placeholder="e.g. Instructor at University" />
+                <Input defaultValue="" placeholder="e.g. Instructor at University" />
                 <p className="text-xs text-slate-500">Add a professional headline like, "Instructor at Udemy" or "Architect."</p>
               </div>
 
@@ -73,7 +73,7 @@ export const TeacherSettingsPage = () => {
                 <label className="text-sm font-medium text-slate-700">Biography</label>
                 <textarea 
                   className="w-full min-h-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  defaultValue="I have been teaching programming for over 10 years..."
+                  defaultValue=""
                 />
                 <p className="text-xs text-slate-500">Links and coupon codes are not permitted in this section.</p>
               </div>
@@ -110,18 +110,10 @@ export const TeacherSettingsPage = () => {
              <p className="text-slate-600 text-sm mb-4">
                 Connect your bank account or PayPal to receive earnings. Payouts are processed monthly.
              </p>
-             <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                <div className="p-2 bg-white rounded-full shadow-sm">
-                    <CreditCard className="h-6 w-6 text-slate-700" /> 
-                </div>
-                <div>
-                     <p className="font-medium text-slate-900">Stripe Connected Account</p>
-                     <p className="text-xs text-slate-500">Connected • ending in 4242</p>
-                </div>
-                <div className="ml-auto">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Active
-                    </span>
+             <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200 border-dashed justify-center">
+                <div className="text-center py-4 text-slate-500">
+                    <span className="material-symbols-outlined text-4xl mb-2 text-slate-300">account_balance</span>
+                    <p>No payout method connected</p>
                 </div>
              </div>
           </section>

@@ -1,37 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Download, FileText, Video, Book } from "lucide-react";
+import { Download } from "lucide-react";
 
 export const ResourcesPage = () => {
-  const resources = [
-    {
-      title: "Course Curriculum Template",
-      type: "PDF",
-      size: "2.4 MB",
-      icon: FileText,
-      color: "text-blue-500 bg-blue-100 dark:bg-blue-900/20",
-    },
-    {
-      title: "Video Recording Guidelines",
-      type: "PDF",
-      size: "1.2 MB",
-      icon: Video,
-      color: "text-red-500 bg-red-100 dark:bg-red-900/20",
-    },
-    {
-      title: "Student Engagement Strategies",
-      type: "E-Book",
-      size: "5.6 MB",
-      icon: Book,
-      color: "text-green-500 bg-green-100 dark:bg-green-900/20",
-    },
-    {
-      title: "Marketing Your Course 101",
-      type: "Slide Deck",
-      size: "12 MB",
-      icon: Download,
-      color: "text-purple-500 bg-purple-100 dark:bg-purple-900/20",
-    },
-  ];
+  const resources: any[] = [];
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-body text-slate-800 dark:text-slate-100 transition-colors duration-300 min-h-screen">
