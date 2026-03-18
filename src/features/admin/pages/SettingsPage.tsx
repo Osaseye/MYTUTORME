@@ -50,11 +50,11 @@ export const SettingsPage = () => {
                             <div className="grid gap-4 py-2">
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="name" className="text-right">Name</Label>
-                                    <Input id="name" defaultValue="Admin User" className="col-span-3" />
+                                    <Input id="name" defaultValue="" className="col-span-3" />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="email" className="text-right">Email</Label>
-                                    <Input id="email" defaultValue="admin@mytutorme.ng" className="col-span-3" />
+                                    <Input id="email" defaultValue="" className="col-span-3" />
                                 </div>
                             </div>
                         </CardContent>

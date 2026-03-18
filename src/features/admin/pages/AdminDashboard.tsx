@@ -47,10 +47,10 @@ export const AdminDashboard = () => {
             <Users className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-display">12,345</div>
+            <div className="text-2xl font-bold font-display">0</div>
             <p className="text-xs text-green-600 flex items-center gap-1 font-medium mt-1">
                <TrendingUp className="w-3 h-3" />
-               +12% from last month
+               0% from last month
             </p>
           </CardContent>
         </Card>
@@ -60,7 +60,7 @@ export const AdminDashboard = () => {
             <UserCheck className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-display">24</div>
+            <div className="text-2xl font-bold font-display">0</div>
             <p className="text-xs text-slate-500 mt-1">NIN/BVN Verification Queue</p>
           </CardContent>
         </Card>
@@ -70,7 +70,7 @@ export const AdminDashboard = () => {
             <BookOpen className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-display">1,203</div>
+            <div className="text-2xl font-bold font-display">0</div>
             <p className="text-xs text-slate-500 mt-1">WAEC, JAMB, Professional</p>
           </CardContent>
         </Card>
@@ -80,10 +80,10 @@ export const AdminDashboard = () => {
             <DollarSign className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-display">₦85.2M</div>
+            <div className="text-2xl font-bold font-display">₦0</div>
             <p className="text-xs text-green-600 flex items-center gap-1 font-medium mt-1">
                <TrendingUp className="w-3 h-3" />
-               +15% this quarter
+               0% this quarter
             </p>
           </CardContent>
         </Card>

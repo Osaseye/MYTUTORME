@@ -41,29 +41,29 @@ export const FinancialsPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <MetricCard 
                     title="Total Revenue" 
-                    value="₦12,450,000" 
-                    change="+15.2%" 
+                    value="₦0" 
+                    change="0%" 
                     icon={DollarSign} 
                     trend="up" 
                 />
                 <MetricCard 
                     title="Teacher Payouts" 
-                    value="₦8,200,500" 
-                    change="+12.1%" 
+                    value="₦0" 
+                    change="0%" 
                     icon={Wallet} 
                     trend="up" 
                 />
                 <MetricCard 
                     title="Net Profit" 
-                    value="₦4,249,500" 
-                    change="+8.4%" 
+                    value="₦0" 
+                    change="0%" 
                     icon={TrendingUp} 
                     trend="up" 
                 />
                 <MetricCard 
                     title="Pending Payouts" 
-                    value="₦1,250,000" 
-                    change="-2.5%" 
+                    value="₦0" 
+                    change="0%" 
                     icon={AlertCircle} 
                     trend="down" 
                 />

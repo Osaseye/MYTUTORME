@@ -180,33 +180,12 @@ export const UserManagementPage = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-200">
-                                        {[
-                                            { name: 'Amina Bello', role: 'Student', state: 'Kaduna', status: 'Active' },
-                                            { name: 'David Okafor', role: 'Teacher', state: 'Abuja', status: 'Pending' },
-                                            { name: 'Sarah Jones', role: 'Student', state: 'Lagos', status: 'Active' },
-                                            { name: 'Ibrahim Musa', role: 'Teacher', state: 'Kano', status: 'Rejected' },
-                                        ].map((user, i) => (
-                                            <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                                <td className="p-4 font-medium">{user.name}</td>
-                                                <td className="p-4">{user.role}</td>
-                                                <td className="p-4">{user.state}</td>
-                                                <td className="p-4">
-                                                    <Badge variant="outline" className={
-                                                        user.status === 'Active' ? 'text-green-600 bg-green-50 border-green-200' :
-                                                        user.status === 'Pending' ? 'text-amber-600 bg-amber-50 border-amber-200' :
-                                                        'text-red-600 bg-red-50 border-red-200'
-                                                    }>
-                                                        {user.status}
-                                                    </Badge>
-                                                </td>
-                                                <td className="p-4 text-right">
-                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                                        <span className="sr-only">Open menu</span>
-                                                        <Eye className="h-4 w-4" />
-                                                    </Button>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        <tr>
+                                            <td colSpan={5} className="p-8 text-center text-slate-500">
+                                                <span className="material-symbols-outlined text-3xl mb-2 text-slate-300">recent_actors</span>
+                                                <p>No recent registrations.</p>
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
