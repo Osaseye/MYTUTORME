@@ -85,10 +85,8 @@ export const AdminLayout = () => {
             >
                 <div className="h-16 flex items-center px-4 border-b border-slate-200 dark:border-slate-800 justify-between">
                     <Link to="/admin/dashboard" className={cn("flex items-center gap-2 font-bold text-xl text-slate-900 dark:text-white overflow-hidden transition-all", !isSidebarOpen && "w-0 opacity-0")}>
-                        <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
-                            <ShieldCheck className="h-5 w-5" />
-                        </div>
-                        <span>Admin</span>
+                        <img src="/icon.png" alt="MyTutorMe" className="w-8 h-8 object-contain" />
+                        <span>MyTutorMe</span>
                     </Link>
                     <button 
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -137,7 +135,7 @@ export const AdminLayout = () => {
                         <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -ml-2 text-slate-500">
                             <Menu className="h-6 w-6" />
                         </button>
-                        <span className="font-bold text-lg">Admin Panel</span>
+                        <span className="font-bold text-lg">MyTutorMe Admin</span>
                    </div>
 
                    <div className="hidden md:block relative w-96">
@@ -192,7 +190,7 @@ export const AdminLayout = () => {
                     <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
                     <div className="absolute right-0 top-0 bottom-0 w-64 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 p-4 shadow-xl flex flex-col animate-in slide-in-from-right">
                         <div className="flex items-center justify-between mb-8">
-                             <h2 className="font-bold text-lg">Admin Menu</h2>
+                             <h2 className="font-bold text-lg">MyTutorMe</h2>
                              <button onClick={() => setIsMobileMenuOpen(false)}><X className="h-6 w-6 text-slate-500" /></button>
                         </div>
                         <nav className="flex-1 space-y-1">
