@@ -12,14 +12,22 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PerformanceChart } from '../components/PerformanceChart';
+import { useAuthStore } from '@/features/auth/hooks/useAuth';
+import type { StudentProfile } from '@/types/user';
 
 export const StudentDashboard = () => {
+  const { user } = useAuthStore();
+  const studentProfile = user as StudentProfile;
+
   // Empty states ready for actual API integration
   const student = {
-    name: "Student",
-    currentCGPA: 0.0,
-    targetCGPA: 0.0,
-    progress: 0,
+    name: studentProfile?.username || studentProfile?.displayName || "Student",
+    currentCGPA: studentProfile?.currentCGPA || 0.0,
+    targetCGPA: studentProfile?.targetCGPA || 0.0,
+    progress: studentProfile?.targetCGPA 
+      ? Math.round(((studentProfile.currentCGPA || 0) / studentProfile.targetCGPA) * 100) 
+      : 0,
+    gradingScale: studentProfile?.gradingSystem || "5.0",
   };
 
   const performanceData: number[] = [];
@@ -77,7 +85,7 @@ export const StudentDashboard = () => {
 
             <div className="flex items-end gap-2 mb-4">
               <span className="text-5xl font-bold text-slate-900 dark:text-white tracking-tight">{student.currentCGPA}</span>
-              <span className="text-lg text-slate-400 mb-2 font-medium">/ 5.0</span>
+              <span className="text-lg text-slate-400 mb-2 font-medium">/ {student.gradingScale}</span>
             </div>
             
             <div className="space-y-3 mt-auto">

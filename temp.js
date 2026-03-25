@@ -1,0 +1,1 @@
+﻿import fs from 'fs'; const txt = fs.readFileSync('src/features/student/pages/ExamPrepPage.tsx', 'utf-8'); const start = txt.indexOf('{activeTab === \'flashcards\' && ('); const end = txt.indexOf('{activeTab === \'planner\' && ('); fs.writeFileSync('out.txt', txt.substring(start, end));

@@ -9,33 +9,78 @@ import {
   ArrowRight,
   AlertCircle,
   PlayCircle,
-  FileText
+  FileText,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-
-// Mock Exam Data
-const EXAM_DATA = {
-  title: "Mock Exam",
-  subtitle: "Subject Placeholder",
-  totalTime: 0, // 0 minutes
-  questions: [] as any[]
-};
+import { useNavigate, useParams } from 'react-router-dom';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { 
+  doc, 
+  getDoc, 
+  collection, 
+  addDoc, 
+  serverTimestamp 
+} from 'firebase/firestore';
+import { toast } from 'sonner';
 
 export const ExamTakingPage = () => {
+  const { quizId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  const [examData, setExamData] = useState<any>(null);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [checkedAnswers, setCheckedAnswers] = useState<string[]>([]);
   const [flaggedQuestions, setFlaggedQuestions] = useState<number[]>([]);
-  const [checkedAnswers] = useState<number[]>([]); // Track questions where "Check Answer" was clicked
-  const [timeLeft, setTimeLeft] = useState(EXAM_DATA.totalTime);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Load Exam Data
+  useEffect(() => {
+    const loadExam = async () => {
+      if (!quizId) return;
+      try {
+        const quizSnap = await getDoc(doc(db, 'quizzes', quizId));
+        if (!quizSnap.exists()) {
+          toast.error("Quiz not found");
+          navigate('/student/exam-prep');
+          return;
+        }
+
+        const data = quizSnap.data();
+        setExamData({ id: quizSnap.id, ...data });
+        setTimeLeft(data.timeLimit * 60);
+
+        // Fetch all questions mapped
+        const qPromises = data.questionIds.map((qId: string) => getDoc(doc(db, 'questions', qId)));
+        const qSnaps = await Promise.all(qPromises);
+        const loadedQuestions = qSnaps.map(snap => ({ id: snap.id, ...snap.data() }));
+
+        setQuestions(loadedQuestions);
+      } catch (err) {
+        console.error("Error loading exam:", err);
+        toast.error("Error loading exam.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadExam();
+  }, [quizId, navigate]);
 
   // Timer Effect
   useEffect(() => {
+    if (isLoading || timeLeft <= 0) return;
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 0) {
+        if (prev <= 1) {
           clearInterval(timer);
           handleSubmit();
           return 0;
@@ -45,7 +90,7 @@ export const ExamTakingPage = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [isLoading, timeLeft]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -53,38 +98,95 @@ export const ExamTakingPage = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleAnswerSelect = (optionId: string) => {
-    if (checkedAnswers.includes(EXAM_DATA.questions[currentQuestionIndex].id)) return; // Prevent changing after checking
+  const handleAnswerSelect = (optionText: string) => {
     setAnswers(prev => ({
       ...prev,
-      [EXAM_DATA.questions[currentQuestionIndex].id]: optionId
+      [questions[currentQuestionIndex].id]: optionText
     }));
   };
 
   const toggleFlag = () => {
-    const currentId = EXAM_DATA.questions[currentQuestionIndex].id;
+    const currentId = questions[currentQuestionIndex].id;
     setFlaggedQuestions(prev => 
       prev.includes(currentId) 
-        ? prev.filter(id => id !== currentId)
+        ? prev.filter((id: string | number) => id !== currentId)
         : [...prev, currentId]
     );
   };
 
-  const handleCheckAnswer = () => {
-      // noop
+  const handleSubmit = async () => {
+    if (!user || !quizId || isSubmitting) return;
+    setIsSubmitting(true);
+    
+    try {
+      // Calculate score
+      let score = 0;
+      const topicBreakdown: Record<string, { correct: number, total: number }> = {};
+      
+      questions.forEach(q => {
+        const studentAnswer = answers[q.id];
+        const isCorrect = studentAnswer === q.correctAnswer;
+        
+        if (isCorrect) score++;
+        
+        if (!topicBreakdown[q.topic]) {
+          topicBreakdown[q.topic] = { correct: 0, total: 0 };
+        }
+        topicBreakdown[q.topic].total++;
+        if (isCorrect) topicBreakdown[q.topic].correct++;
+      });
+
+      const percentScore = (score / questions.length) * 100;
+      const passed = percentScore >= examData.passingScore;
+
+      const attemptDocRef = await addDoc(collection(db, 'quiz_attempts'), {
+        studentId: user.uid,
+        quizId,
+        courseId: null,
+        startedAt: serverTimestamp(), // Ideally we'd log this on mount, but good enough
+        completedAt: serverTimestamp(),
+        score: percentScore,
+        passed,
+        timeTaken: (examData.timeLimit * 60) - timeLeft,
+        answers,
+        topicBreakdown
+      });
+
+      toast.success("Exam submitted successfully!");
+      navigate(`/student/exam-prep/results/${attemptDocRef.id}`);
+
+    } catch (err) {
+      console.error("Error submitting exam:", err);
+      toast.error("Failed to submit exam.");
+      setIsSubmitting(false);
+    }
   };
 
-  const handleSubmit = () => {
-    setTimeout(() => {
-        navigate('/student/exam-prep/results');
-    }, 1500);
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
-  const currentQuestion = EXAM_DATA.questions[currentQuestionIndex];
-  const progressPercent = EXAM_DATA.questions.length > 0 ? ((currentQuestionIndex + 1) / EXAM_DATA.questions.length) * 100 : 0;
+  if (!examData || questions.length === 0) return null;
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const progressPercent = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
   
-  const isChecked = currentQuestion && checkedAnswers.includes(currentQuestion.id);
-  const isCorrect = isChecked && answers[currentQuestion.id] === currentQuestion.correctAnswer;
+  const isChecked = currentQuestion ? checkedAnswers.includes(currentQuestion.id) : false;
+  const isCorrect = currentQuestion && answers[currentQuestion.id] === currentQuestion.correctAnswer;
+
+  const handleCheckAnswer = () => {
+    if (!answers[currentQuestion.id]) {
+        toast.error("Please select an answer first.");
+        return;
+    }
+    if (!checkedAnswers.includes(currentQuestion.id)) {
+        setCheckedAnswers(prev => [...prev, currentQuestion.id]);
+    }
+  };
   
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-body transition-colors duration-200">
@@ -94,18 +196,23 @@ export const ExamTakingPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16 items-center">
                 <div className="flex items-center gap-3">
+                    <span className="font-bold text-lg text-primary">MyTutorMe</span>
                 </div>
                 
                 <div className="hidden md:flex flex-col items-center">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{EXAM_DATA.subtitle}</span>
-                    <span className="font-display font-bold text-lg">{EXAM_DATA.title}</span>
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{examData.subject} - {examData.topic}</span>
+                    <span className="font-display font-bold text-lg">{examData.title}</span>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                        <CheckCircle className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-                    </Button>
-                 
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono font-medium ${
+                        timeLeft < 300 
+                            ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' 
+                            : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                    }`}>
+                      <Clock className="w-4 h-4" />
+                      {formatTime(timeLeft)}
+                    </div>
                 </div>
             </div>
         </div>
@@ -129,14 +236,14 @@ export const ExamTakingPage = () => {
                     <h3 className="font-display font-bold text-lg mb-4">Your Progress</h3>
                     <div className="flex items-end justify-between mb-2">
                         <span className="text-3xl font-bold text-primary">{String(currentQuestionIndex + 1).padStart(2, '0')}</span>
-                        <span className="text-sm text-slate-500 dark:text-slate-400 mb-1 font-medium">of {EXAM_DATA.questions.length} Questions</span>
+                        <span className="text-sm text-slate-500 dark:text-slate-400 mb-1 font-medium">of {questions.length} Questions</span>
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 mb-6 overflow-hidden">
                         <div className="bg-primary h-2.5 rounded-full transition-all duration-300" style={{ width: `${progressPercent}%` }}></div>
                     </div>
                     
                     <div className="grid grid-cols-5 gap-2 mb-6">
-                        {EXAM_DATA.questions.map((q, idx) => {
+                        {questions.map((q, idx) => {
                             const isCurrent = idx === currentQuestionIndex;
                             const isFlagged = flaggedQuestions.includes(q.id);
                             // Only show status for questions we have 'checked' or answered
@@ -195,25 +302,17 @@ export const ExamTakingPage = () => {
                         <span className="font-bold text-green-900 dark:text-green-100">AI Insight</span>
                     </div>
                     <p className="text-sm text-green-800 dark:text-green-200 leading-relaxed font-medium">
-                        You're strong in <span className="font-bold">Thermodynamics</span> but slower on calculation questions. Take your time here!
+                        Focus on the concepts of <span className="font-bold">{examData.subject}</span>. Take your time to analyze each question in the {examData.topic} topic.
                     </p>
                 </div>
             </aside>
 
-            {/* Center: Question */}
-            <section className="col-span-1 lg:col-span-6 order-1 lg:order-2">
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden relative min-h-[400px] md:min-h-[600px] flex flex-col">
-                    <div className="p-4 md:p-8 pb-4">
-                        <div className="flex items-start justify-between mb-4">
-                            <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wide uppercase">
-                                Multiple Choice
-                            </span>
-                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 px-3 py-1 rounded-lg">
-                                <Clock className="w-4 h-4" />
-                                <span className="text-sm font-mono font-bold">{formatTime(timeLeft)}</span>
-                            </div>
-                        </div>
-                        <h2 className="text-xl md:text-3xl font-display font-semibold leading-tight mb-4 text-slate-900 dark:text-white">
+            {/* Main Question Area */}
+            <div className="lg:col-span-6 order-1 lg:order-2">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 h-full flex flex-col relative overflow-hidden">
+                    
+                    <div className="p-4 md:p-8 pb-6">
+                        <h2 className="text-xl md:text-2xl font-bold font-display leading-tight text-slate-900 dark:text-white mb-2">
                             {currentQuestion.text}
                         </h2>
                         {currentQuestion.subtext && (
@@ -226,40 +325,27 @@ export const ExamTakingPage = () => {
                     <div className="h-px bg-slate-100 dark:bg-slate-800 w-full"></div>
 
                     <div className="p-4 md:p-8 pt-6 space-y-4 flex-1">
-                        {currentQuestion.options.map((option) => {
-                            const isSelected = answers[currentQuestion.id] === option.id;
-                            const isCorrectAnswer = currentQuestion.correctAnswer === option.id;
-                            const showResult = isChecked;
+                        {currentQuestion.options.map((optionText: string, idx: number) => {
+                            const isSelected = answers[currentQuestion.id] === optionText;
+                            const isCorrectAnswer = currentQuestion.correctAnswer === optionText;
+                            const showResult = false; // We don't show result during the exam unless explicitly asked
 
                             let containerClass = "border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:border-primary/50 hover:shadow-md";
-                            // Circle class unused
+                            
                             let textClass = "text-slate-400 group-hover:text-primary";
                             let valueClass = "text-slate-900 dark:text-slate-200";
 
                             if (isSelected) {
                                 containerClass = "border-2 border-primary bg-primary/5 dark:bg-primary/10 shadow-sm";
-                                // circleClass updated locally if needed
                                 textClass = "text-primary";
                                 valueClass = "text-primary font-bold";
                             }
 
-                            if (showResult) {
-                                if (isCorrectAnswer) {
-                                    containerClass = "border-2 border-primary bg-green-50/50 dark:bg-green-900/20";
-                                    valueClass = "text-primary dark:text-green-300 font-bold";
-                                    textClass = "text-primary";
-                                } else if (isSelected && !isCorrectAnswer) {
-                                    containerClass = "border-2 border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-900/10";
-                                    valueClass = "text-red-600 dark:text-red-400 font-bold";
-                                    textClass = "text-red-500";
-                                }
-                            }
-
                             return (
                                 <label 
-                                    key={option.id}
+                                    key={idx}
                                     className={`group relative flex items-center p-4 rounded-xl cursor-pointer transition-all duration-200 ${containerClass}`}
-                                    onClick={() => handleAnswerSelect(option.id)}
+                                    onClick={() => handleAnswerSelect(optionText)}
                                 >
                                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4 transition-colors ${
                                         isSelected || (showResult && isCorrectAnswer) ? 'border-primary' : 'border-slate-300 dark:border-slate-600'
@@ -269,10 +355,10 @@ export const ExamTakingPage = () => {
                                     
                                     <div className="flex-1">
                                         <span className={`block text-xs font-bold mb-0.5 uppercase tracking-wider transition-colors ${textClass}`}>
-                                            Option {option.id}
+                                            Option {String.fromCharCode(65 + idx)}
                                         </span>
                                         <span className={`block text-lg font-medium transition-colors ${valueClass}`}>
-                                            {option.text}
+                                            {optionText}
                                         </span>
                                     </div>
 
@@ -296,7 +382,21 @@ export const ExamTakingPage = () => {
                             <ArrowLeft className="w-4 h-4 mr-2" /> Previous
                         </Button>
                         
-                        {!isChecked ? (
+                        {(examData.mode === 'standard') ? (
+                            <Button
+                                onClick={() => {
+                                    if (currentQuestionIndex < questions.length - 1) {
+                                        setCurrentQuestionIndex(prev => prev + 1);
+                                    } else {
+                                        setIsSubmitModalOpen(true);
+                                    }
+                                }}
+                                className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold py-6 px-8 rounded-xl shadow-lg transition-all hover:-translate-y-0.5 flex gap-2"
+                            >
+                                {currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'Finish Exam'} 
+                                <ArrowRight className="w-4 h-4" />
+                            </Button>
+                        ) : !isChecked ? (
                              <Button
                                 onClick={handleCheckAnswer}
                                 className="bg-primary hover:bg-green-700 text-white font-bold py-6 px-8 rounded-xl shadow-lg shadow-primary/30 transition-all hover:-translate-y-0.5"
@@ -306,7 +406,7 @@ export const ExamTakingPage = () => {
                         ) : (
                                 <Button
                                     onClick={() => {
-                                        if (currentQuestionIndex < EXAM_DATA.questions.length - 1) {
+                                        if (currentQuestionIndex < questions.length - 1) {
                                             setCurrentQuestionIndex(prev => prev + 1);
                                         } else {
                                             setIsSubmitModalOpen(true);
@@ -314,17 +414,17 @@ export const ExamTakingPage = () => {
                                     }}
                                     className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold py-6 px-8 rounded-xl shadow-lg transition-all hover:-translate-y-0.5 flex gap-2"
                                 >
-                                    {currentQuestionIndex < EXAM_DATA.questions.length - 1 ? 'Next Question' : 'Finish Exam'} 
+                                    {currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'Finish Exam'} 
                                     <ArrowRight className="w-4 h-4" />
                                 </Button>
                         )}
                     </div>
                 </div>
-            </section>
+            </div>
 
             {/* Right Sidebar: Explanation (Similar to provided HTML's right col) */}
             <aside className="lg:col-span-3 order-3 flex flex-col gap-4">
-                {isChecked ? (
+                {isChecked && examData.mode !== 'standard' ? (
                     <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 h-full flex flex-col relative overflow-hidden animate-in slide-in-from-right duration-300">
                         <div className={`p-4 border-b ${
                             isCorrect 
@@ -356,62 +456,62 @@ export const ExamTakingPage = () => {
                             <p className="text-sm font-bold text-slate-900 dark:text-white mb-2">Detailed Explanation:</p>
                             
                             <div className="space-y-4">
-                                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                                    {currentQuestion.explanation.intro}
-                                </p>
-                                
-                                {currentQuestion.explanation.formula && (
-                                    <div className="bg-slate-100 dark:bg-slate-800 px-3 py-2 rounded-lg font-mono text-xs text-center border border-slate-200 dark:border-slate-700">
-                                        {currentQuestion.explanation.formula}
-                                    </div>
-                                )}
-
-                                <div className="space-y-1">
-                                    {currentQuestion.explanation.steps.map((step, i) => (
-                                        <p key={i} className="text-sm text-slate-600 dark:text-slate-300 font-mono text-xs opacity-90">
-                                            {step}
+                                {typeof currentQuestion.explanation === 'string' ? (
+                                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        {currentQuestion.explanation}
+                                    </p>
+                                ) : (
+                                    <>
+                                        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                            {currentQuestion.explanation?.intro}
                                         </p>
-                                    ))}
-                                </div>
+                                        
+                                        {currentQuestion.explanation?.formula && (
+                                            <div className="bg-slate-100 dark:bg-slate-800 px-3 py-2 rounded-lg font-mono text-xs text-center border border-slate-200 dark:border-slate-700">
+                                                {currentQuestion.explanation.formula}
+                                            </div>
+                                        )}
 
-                                <p className="text-sm font-bold text-primary border-t border-slate-100 dark:border-slate-800 pt-2 mt-2">
-                                    {currentQuestion.explanation.final}
-                                </p>
-                            </div>
+                                        {currentQuestion.explanation?.steps && (
+                                            <div className="space-y-1">
+                                                {currentQuestion.explanation.steps.map((step: string, i: number) => (
+                                                    <p key={i} className="text-sm text-slate-600 dark:text-slate-300 font-mono text-xs opacity-90">
+                                                        {step}
+                                                    </p>
+                                                ))}
+                                            </div>
+                                        )}
 
-                            <div className="mt-8">
-                                <p className="text-xs uppercase font-bold text-slate-400 tracking-wider mb-3">Related Micro-Lessons</p>
-                                <div className="space-y-2">
-                                    <a href="#" className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
-                                        <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                                            <PlayCircle className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <h5 className="text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors">Calorimetry Basics</h5>
-                                            <span className="text-xs text-slate-500">3 min video</span>
-                                        </div>
-                                    </a>
-                                    <a href="#" className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
-                                        <div className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
-                                            <FileText className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <h5 className="text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors">Formulas Sheet</h5>
-                                            <span className="text-xs text-slate-500">PDF Guide</span>
-                                        </div>
-                                    </a>
-                                </div>
+                                        {currentQuestion.explanation?.final && (
+                                            <p className="text-sm font-bold text-primary border-t border-slate-100 dark:border-slate-800 pt-2 mt-2">
+                                                {currentQuestion.explanation.final}
+                                            </p>
+                                        )}
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
                 ) : (
                     /* Placeholder when question is not checked yet */
                     <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 h-full flex flex-col items-center justify-center p-8 text-center opacity-70">
-                        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-4">
-                            <CheckCircle className="w-8 h-8" />
-                        </div>
-                        <h4 className="font-bold text-slate-500 dark:text-slate-400">No Feedback Yet</h4>
-                        <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Select an option and click "Check Answer" to see detailed explanations and AI insights.</p>
+                        {answers[currentQuestion.id] && examData.mode === 'standard' ? (
+                            <>
+                                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-4">
+                                    <CheckCircle className="w-8 h-8 text-primary" />
+                                </div>
+                                <h4 className="font-bold text-slate-500 dark:text-slate-400">Answer Recorded</h4>
+                                <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Focus on the next question. Feedback provided at the end.</p>
+                            </>
+                        ) : (
+                            <>
+                                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-4">
+                                    <CheckCircle className="w-8 h-8" />
+                                </div>
+                                <h4 className="font-bold text-slate-500 dark:text-slate-400">No Feedback Yet</h4>
+                                <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Select an option and click "Check Answer" to see detailed explanations and AI insights.</p>
+                            </>
+                        )}
                     </div>
                 )}
             </aside>

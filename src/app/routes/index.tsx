@@ -7,9 +7,9 @@ import { AuthLayout } from '@/layouts/AuthLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { OnboardingLayout, StudentOnboarding, TeacherOnboarding } from '@/features/onboarding';
-import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, AssignmentHelperPage, GpaTrackerPage, CertificatePage, MyCertificatesPage, SettingsPage, ExamPrepPage, ExamConfigPage, ExamResultsPage, ExamTakingPage, CommunityPage } from '@/features/student';
-import { TeacherLayout, TeacherDashboard, TeacherCoursesPage, CourseCreationPage, ResourcesPage, EarningsPage, CommunityPage as TeacherCommunityPage, TeacherSettingsPage, StudentsPage } from '@/features/teacher';
-import { AdminLayout, AdminDashboard, UserManagementPage, AdminLoginPage, CourseModerationPage, FinancialsPage, SettingsPage as AdminSettingsPage } from '@/features/admin';
+import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, AssignmentHelperPage, GpaTrackerPage, CertificatePage, MyCertificatesPage, SettingsPage, ExamPrepPage, ExamConfigPage, ExamResultsPage, ExamTakingPage, FlashcardConfigPage, FlashcardPlayerPage, CommunityPage, StudyPlannerConfigPage, StudyPlannerViewPage } from '@/features/student';
+import { TeacherLayout, TeacherDashboard, TeacherCoursesPage, TeacherCourseDetailsPage, CourseCreationPage, ResourcesPage, EarningsPage, CommunityPage as TeacherCommunityPage, TeacherSettingsPage, StudentsPage, TeacherPendingPage } from '@/features/teacher';
+import { AdminLayout, AdminDashboard, UserManagementPage, AdminLoginPage, CourseModerationPage, AdminCourseDetailsPage, FinancialsPage, SettingsPage as AdminSettingsPage } from '@/features/admin';
 
 export const AppRoutes = () => {
   return (
@@ -18,10 +18,10 @@ export const AppRoutes = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
-        <Route path={paths.admin.login} element={<AdminLoginPage />} />
         <Route element={<AuthLayout />}>
           <Route path={paths.auth.login} element={<LoginPage />} />
           <Route path={paths.auth.register} element={<RegisterPage />} />
+          <Route path={paths.admin.login} element={<AdminLoginPage />} />       
         </Route>
 
       {/* Onboarding Routes (Protected) */}
@@ -46,19 +46,20 @@ export const AppRoutes = () => {
           <Route path="/student/certificates/:id" element={<CertificatePage />} />
           <Route path={paths.student.examPrep} element={<ExamPrepPage />} />
           <Route path="/student/exam-prep/config" element={<ExamConfigPage />} />
-          <Route path="/student/exam-prep/active" element={<ExamTakingPage />} />
-          <Route path="/student/exam-prep/results" element={<ExamResultsPage />} />
-          <Route path={paths.student.settings} element={<SettingsPage />} />
+          <Route path="/student/exam-prep/active/:quizId" element={<ExamTakingPage />} />
+          <Route path="/student/exam-prep/results/:attemptId" element={<ExamResultsPage />} />            <Route path="/student/exam-prep/flashcards" element={<FlashcardConfigPage />} />
+            <Route path="/student/exam-prep/flashcards/:deckId" element={<FlashcardPlayerPage />} />          <Route path="/student/exam-prep/planner-config" element={<StudyPlannerConfigPage />} />
+          <Route path="/student/exam-prep/planner/:planId" element={<StudyPlannerViewPage />} />          <Route path={paths.student.settings} element={<SettingsPage />} />
         </Route>
       </Route>
 
       {/* Teacher Protected Routes */}
       <Route element={<ProtectedRoute allowedRoles={['teacher'] as ('student' | 'teacher' | 'admin')[]} />}>
+        <Route path={paths.teacher.pending} element={<TeacherPendingPage />} />
         <Route element={<TeacherLayout />}>
           <Route path={paths.teacher.dashboard} element={<TeacherDashboard />} />
           <Route path={paths.teacher.courses} element={<TeacherCoursesPage />} />
-          <Route path={paths.teacher.coursesNew} element={<CourseCreationPage />} />
-          <Route path={paths.teacher.students} element={<StudentsPage />} />
+          <Route path={paths.teacher.coursesNew} element={<CourseCreationPage />} />            <Route path={paths.teacher.courseDetails} element={<TeacherCourseDetailsPage />} />          <Route path={paths.teacher.students} element={<StudentsPage />} />
           <Route path={paths.teacher.resources} element={<ResourcesPage />} />
           <Route path={paths.teacher.earnings} element={<EarningsPage />} />
           <Route path={paths.teacher.community} element={<TeacherCommunityPage />} />
@@ -72,6 +73,7 @@ export const AppRoutes = () => {
           <Route element={<AdminLayout />}>
               <Route path={paths.admin.dashboard} element={<AdminDashboard />} />
               <Route path={paths.admin.users} element={<UserManagementPage />} />              <Route path={paths.admin.moderation} element={<CourseModerationPage />} />
+              <Route path={paths.admin.courseDetails} element={<AdminCourseDetailsPage />} />
               <Route path={paths.admin.financials} element={<FinancialsPage />} />
               <Route path={paths.admin.settings} element={<AdminSettingsPage />} />
           </Route>

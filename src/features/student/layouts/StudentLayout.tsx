@@ -1,10 +1,14 @@
 ﻿import { Outlet } from 'react-router-dom';
 import { StudentSidebar } from '../components/StudentSidebar';
 import { MobileFloatingNav } from '../components/MobileFloatingNav';
-import { Bell, Search, UserCircle } from 'lucide-react';
+import { Bell, Search, UserCircle, Crown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useAuthStore } from "@/features/auth/hooks/useAuth";
+import { Badge } from '@/components/ui/badge';
 
 export const StudentLayout = () => {
+  const { user } = useAuthStore();
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <StudentSidebar />
@@ -32,12 +36,31 @@ export const StudentLayout = () => {
           </div>
 
           <div className="flex items-center gap-4">
+             {user?.plan !== 'free' && (
+                <Badge variant="outline" className="hidden sm:flex border-primary/20 bg-primary/10 text-primary px-3 py-1 items-center gap-1">
+                   <Crown className="w-3.5 h-3.5" /> 
+                   <span className="capitalize">{user?.plan || 'Free'}</span>
+                </Badge>
+             )}
+             
              <button className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-500">
                <Bell className="w-5 h-5" />
              </button>
 
-             <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 cursor-pointer">
-                <UserCircle className="w-5 h-5" />
+             <div className="flex items-center gap-3">
+               <div className="hidden sm:block text-right">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white leading-none mb-1">
+                    {(user as any)?.username || user?.displayName || "Student"}
+                  </p>
+                  <p className="text-xs text-slate-500 capitalize">{user?.plan || 'Free'} Plan</p>
+               </div>
+               <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 cursor-pointer overflow-hidden">
+                  {user?.photoURL ? (
+                    <img src={user.photoURL} alt={user.displayName || "User"} className="w-full h-full object-cover" />
+                  ) : (
+                    <UserCircle className="w-5 h-5" />
+                  )}
+               </div>
              </div>
           </div>
         </header>

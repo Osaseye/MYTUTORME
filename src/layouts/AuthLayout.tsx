@@ -1,7 +1,9 @@
-﻿import { Link, Outlet } from "react-router-dom";
+﻿import { Link, Outlet, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import loginBg from "@/assets/login.png"; 
+import { GlobalLoader } from "@/components/ui/global-loader";
 
 const testimonials = [
   {
@@ -23,6 +25,7 @@ const testimonials = [
 
 export const AuthLayout = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -30,6 +33,23 @@ export const AuthLayout = () => {
     }, 5000); 
     return () => clearInterval(interval);
   }, []);
+
+  if (isLoading) {
+    return <GlobalLoader />;
+  }
+
+  // If the user logs in or registers successfully, redirect them away from Auth screens
+  if (isAuthenticated && user) {
+    if (user.role !== 'admin' && !user.isOnboardingComplete) {
+      return <Navigate to={`/onboarding/${user.role === 'teacher' ? 'teacher' : 'student'}`} replace />;
+    }
+    const dashboardMap = {
+      student: '/student/dashboard',
+      teacher: '/teacher/dashboard',
+      admin: '/admin/dashboard',
+    };
+    return <Navigate to={dashboardMap[user.role as keyof typeof dashboardMap] || '/'} replace />;
+  }
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 lg:h-screen lg:overflow-hidden">

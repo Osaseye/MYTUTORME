@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { registerSchema, type RegisterCredentials } from '../types';
 import { useAuthStore } from '../hooks/useAuth';
+import { registerUser, loginWithGoogle } from '../api/auth';
 
 export const RegisterForm = () => {
   const navigate = useNavigate();
@@ -33,36 +34,26 @@ export const RegisterForm = () => {
   const onSubmit = async (data: RegisterCredentials) => {
     setIsLoading(true);
     try {
-      // await registerUser(data);
-      console.log('Registering with:', data);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update auth state (mock)
-      const mockUser = {
-        uid: 'mock-uid', 
-        email: data.email, 
-        role: data.role as 'student' | 'teacher', 
-        displayName: data.name,
-        createdAt: Date.now(),
-        photoURL: '',
-      };
-      
-      // We need to set the user in the global store so ProtectedRoute sees them as authenticated
-      useAuthStore.getState().setUser(mockUser);
-      
-      toast.success('Account created successfully!');
-      
-      // Redirect to onboarding based on role
-      if (data.role === 'student') {
-        navigate('/onboarding/student');
-      } else {
-        navigate('/onboarding/teacher');
-      }
+      await registerUser(data);
+      toast.success('Account created! Let\'s set up your profile.');
     } catch (error: any) {
-      console.error(error);
-      toast.error(error.message || 'Failed to create account.');
+      const messages: Record<string, string> = {
+        'auth/email-already-in-use': 'This email is already registered.',
+        'auth/invalid-email': 'Invalid email address.',
+        'auth/weak-password': 'Password is too weak.',
+      };
+      toast.error(messages[error.code] ?? 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+      // onAuthStateChanged handles the rest
+    } catch (error) {
+      toast.error('Google login failed.');
     }
   };
 
@@ -76,7 +67,7 @@ export const RegisterForm = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <Button variant="outline" type="button" className="w-full">
+        <Button variant="outline" type="button" className="w-full" onClick={handleGoogleLogin}>
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

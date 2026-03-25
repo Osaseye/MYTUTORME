@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BarChart,
   Bar,
@@ -7,12 +9,77 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { DollarSign, TrendingUp, Calendar, ArrowUpRight } from "lucide-react";
+import { DollarSign, TrendingUp, Calendar, ArrowUpRight, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const data: any[] = [];
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useEffect, useState } from "react";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Link } from "react-router-dom";
 
 export const EarningsPage = () => {
+  const { user } = useAuth();
+  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const hasPremium = user?.teacherSubscriptionPlan === 'premium_tools' || user?.teacherSubscriptionPlan === 'enterprise';
+
+  useEffect(() => {
+    const fetchEarnings = async () => {
+      if (!user?.uid) return;
+      try {
+        const q = query(
+          collection(db, "transactions"),
+          where("teacherId", "==", user.uid)
+        );
+        const querySnapshot = await getDocs(q);
+        let total = 0;
+        const txList: any[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          total += data.amount || 0;
+          txList.push({ id: doc.id, ...data });
+        });
+        setTotalEarnings(total);
+        setTransactions(txList);
+      } catch (error) {
+        console.error("Error fetching earnings:", error);
+      }
+    };
+    fetchEarnings();
+  }, [user]);
+
+  // Calculate real chart data based on transactions
+  const chartData = (() => {
+    const dataByMonth = new Map<string, number>();
+    const today = new Date();
+    // Initialize last 6 months
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        dataByMonth.set(d.toLocaleString("en-US", { month: "short" }), 0);
+    }
+    
+    transactions.forEach(t => {
+      if (t.createdAt) {
+        let date;
+        if (typeof t.createdAt === 'number') date = new Date(t.createdAt);
+        else if (t.createdAt.toDate) date = t.createdAt.toDate();
+        else if (typeof t.createdAt === 'string') date = new Date(t.createdAt);
+        
+        if (date && !isNaN(date.getTime())) {
+          const monthName = date.toLocaleString("en-US", { month: "short" });
+          if (dataByMonth.has(monthName)) {
+            dataByMonth.set(monthName, dataByMonth.get(monthName)! + (t.amount || 0));
+          }
+        }
+      }
+    });
+
+    return Array.from(dataByMonth.entries()).map(([name, revenue]) => ({
+      name,
+      revenue
+    }));
+  })();
+
   return (
     <div className="bg-background-light dark:bg-background-dark font-body text-slate-800 dark:text-slate-100 transition-colors duration-300 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -51,7 +118,7 @@ export const EarningsPage = () => {
                 <p className="text-primary-100 text-sm font-medium mb-1">
                   Available Balance
                 </p>
-                <h3 className="text-3xl font-display font-bold">₦0</h3>
+                <h3 className="text-3xl font-display font-bold">₦{totalEarnings.toLocaleString()}</h3>
                 <div className="flex items-center gap-1 mt-2 text-emerald-100 text-xs bg-white/10 w-fit px-2 py-1 rounded-full">
                   <span className="material-symbols-outlined text-xs">
                     verified
@@ -71,7 +138,7 @@ export const EarningsPage = () => {
               </span>
             </div>
             <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">
-              ₦0
+              ₦{totalEarnings.toLocaleString()}
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Total Revenue (This Year)
@@ -95,14 +162,21 @@ export const EarningsPage = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm mb-8">
-          <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white mb-6">
-            Revenue Trend
-          </h3>
-          <div className="h-80 w-full">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm mb-8 relative overflow-hidden">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white">
+              AI Revenue Insights & Forecast
+            </h3>
+            {!hasPremium && (
+              <span className="text-xs bg-gradient-to-r from-orange-100 to-rose-100 text-orange-700 px-3 py-1 rounded-full font-medium flex items-center gap-1">
+                <Lock className="w-3 h-3" /> Premium Feature
+              </span>
+            )}
+          </div>
+          <div className={`h-80 w-full transition-all ${!hasPremium ? 'blur-sm select-none pointer-events-none opacity-50' : ''}`}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={data}
+                data={chartData}
                 margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
               >
                 <CartesianGrid
@@ -142,6 +216,20 @@ export const EarningsPage = () => {
               </BarChart>
             </ResponsiveContainer>
           </div>
+          {!hasPremium && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-[2px]">
+              <Lock className="w-10 h-10 text-orange-500 mb-3" />
+              <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Unlock AI Revenue Insights</h4>
+              <p className="text-slate-600 dark:text-slate-300 mb-4 max-w-sm text-center text-sm">
+                Get predictable forecasting, optimal pricing suggestions, and student purchasing trends.
+              </p>
+              <Link to="/teacher/settings?tab=billing">
+                <Button className="bg-gradient-to-r from-orange-500 to-rose-500 text-white border-0 hover:from-orange-600 hover:to-rose-600 shadow-lg">
+                  Upgrade to Premium
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">

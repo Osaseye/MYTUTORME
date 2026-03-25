@@ -3,16 +3,19 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { AlertCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { loginSchema, type LoginCredentials } from '../types';
 import { useAuthStore } from '../hooks/useAuth';
+import { loginUser, loginWithGoogle } from '../api/auth';
 
 export const LoginForm = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [suspendedError, setSuspendedError] = useState(false);
 
   const {
     register,
@@ -24,34 +27,39 @@ export const LoginForm = () => {
 
   const onSubmit = async (data: LoginCredentials) => {
     setIsLoading(true);
+    setSuspendedError(false);
     try {
-      // await loginUser(data); // In a real app
-      // Mock login for now or use the real function if it works
-      console.log('Logging in with:', data);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
-      
-      // Update auth state (mock or real)
-      // checkAuth(); 
-
-      // Create a mock user for demonstration purposes
-      const mockUser = {
-        uid: 'mock-student-id',
-        email: data.email,
-        displayName: 'Demo Student',
-        role: 'student' as const,
-        createdAt: Date.now(),
-      };
-      
-      // Set the user in the store
-      useAuthStore.getState().setUser(mockUser);
-      
+      await loginUser(data);
       toast.success('Welcome back!');
-      navigate('/student/dashboard'); 
     } catch (error: any) {
-      console.error(error);
-      toast.error(error.message || 'Failed to login. Please check your credentials.');
+      if (error.code === 'auth/account-suspended') {
+        setSuspendedError(true);
+        toast.error('Account Suspended');
+      } else {
+        const messages: Record<string, string> = {
+          'auth/invalid-credential': 'Invalid email or password.',
+          'auth/user-not-found': 'Account not found. Please sign up.',
+          'auth/wrong-password': 'Incorrect password.',
+        };
+        toast.error(messages[error.code] ?? 'Login failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setSuspendedError(false);
+    try {
+      await loginWithGoogle();
+      // onAuthStateChanged handles the rest
+    } catch (error: any) {
+      if (error?.code === 'auth/account-suspended') {
+        setSuspendedError(true);
+        toast.error('Account Suspended');
+      } else {
+        toast.error('Google login failed.');
+      }
     }
   };
 
@@ -64,8 +72,20 @@ export const LoginForm = () => {
         </p>
       </div>
 
+      {suspendedError && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4 flex gap-3 animate-in fade-in slide-in-from-top-2">
+          <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-500 shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <h4 className="font-semibold text-red-800 dark:text-red-400 mb-1">Account Suspended</h4>
+            <p className="text-red-700/90 dark:text-red-300/90">
+              Your account has been suspended due to severe policy violations. You are no longer able to log in. If you believe this is an error, please contact platform support.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
-        <Button variant="outline" type="button" className="w-full">
+        <Button variant="outline" type="button" className="w-full" onClick={handleGoogleLogin}>
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

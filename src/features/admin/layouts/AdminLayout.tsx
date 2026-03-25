@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -10,7 +10,6 @@ import {
   Search,
   Menu,
   X,
-  ShieldCheck,
   DollarSign
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -23,7 +22,8 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 interface SidebarLinkProps {
   to: string;
@@ -61,6 +61,7 @@ export const AdminLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const navigate = useNavigate();
+    const { user, signOut } = useAuth();
 
     const navItems = [
         { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -70,7 +71,8 @@ export const AdminLayout = () => {
         { label: 'Settings', path: '/admin/settings', icon: Settings },
     ];
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        await signOut();
         navigate('/login');
     };
 
@@ -79,7 +81,7 @@ export const AdminLayout = () => {
             {/* Desktop Sidebar */}
             <aside 
                 className={cn(
-                    "hidden md:flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all duration-300 sticky top-0 h-screen z-30",
+                    "hidden md:flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all duration-300 sticky top-0 h-screen z-30 overflow-x-hidden",
                     isSidebarOpen ? "w-64" : "w-20"
                 )}
             >
@@ -92,11 +94,11 @@ export const AdminLayout = () => {
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                         className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors mx-auto"
                     >
-                        {isSidebarOpen ? <Menu className="h-5 w-5" /> : <ShieldCheck className="h-6 w-6 text-slate-900 dark:text-white" />}
+                        {isSidebarOpen ? <Menu className="h-5 w-5" /> : <img src="/icon.png" alt="MyTutorMe" className="w-8 h-8 pointer-events-none" />}
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1 scrollbar-thin">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 space-y-1 scrollbar-thin">
                     <div className={cn("mb-6 px-3", !isSidebarOpen && "hidden")}>
                         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Platform Admin</p>
                     </div>
@@ -128,17 +130,17 @@ export const AdminLayout = () => {
 
             {/* Content Area */}
             <div className="flex-1 flex flex-col min-w-0">
-                {/* Header */}
-                <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-20 px-6 flex items-center justify-between">
-                    {/* Mobile Menu Toggle */}
-                   <div className="md:hidden flex items-center gap-3">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -ml-2 text-slate-500">
-                            <Menu className="h-6 w-6" />
-                        </button>
-                        <span className="font-bold text-lg">MyTutorMe Admin</span>
-                   </div>
+                {/* Mobile Header */}
+                <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-20 px-4 flex items-center justify-between md:hidden">
+                    <span className="font-bold text-lg">MyTutorMe Admin</span>
+                    <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-slate-500">
+                        <Menu className="h-6 w-6" />
+                    </button>
+                </header>
 
-                   <div className="hidden md:block relative w-96">
+                {/* Desktop Header */}
+                <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-20 px-6 hidden md:flex items-center justify-between">
+                   <div className="relative w-96">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <input 
                             type="text" 
@@ -159,18 +161,19 @@ export const AdminLayout = () => {
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
                                     <Avatar className="h-8 w-8 bg-slate-900 text-white">
-                                        <AvatarFallback>AD</AvatarFallback>
+                                        <AvatarImage src={user?.photoURL || ""} />
+                                        <AvatarFallback>{user?.displayName ? user.displayName.charAt(0).toUpperCase() : 'AD'}</AvatarFallback>
                                     </Avatar>
                                     <div className="text-left hidden lg:block">
-                                        <p className="text-sm font-medium leading-none">System Admin</p>
+                                        <p className="text-sm font-medium leading-none">{user?.displayName || "System Admin"}</p>
                                         <p className="text-xs text-slate-500">Super User</p>
                                     </div>
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
                                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                                <DropdownMenuItem>Profile</DropdownMenuItem>
-                                <DropdownMenuItem>Settings</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate('/admin/settings')}>Profile</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate('/admin/settings')}>Settings</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="text-red-600" onClick={handleLogout}>Log out</DropdownMenuItem>
                             </DropdownMenuContent>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Calculator, 
   Plus, 
@@ -8,8 +8,14 @@ import {
   BookOpen,
   GraduationCap,
   AlertCircle,
-  RotateCcw
+  RotateCcw,
+  Loader2
 } from 'lucide-react';
+import { db } from '@/lib/firebase';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuthStore } from '@/features/auth/hooks/useAuth';
+import type { StudentProfile } from '@/types/user';
+import { toast } from 'sonner';
 import { 
   SCALE_4_0, 
   SCALE_5_0 
@@ -27,16 +33,93 @@ import {
 } from '../utils/gpaUtils';
 
 export const GpaTrackerPage = () => {
+  const { user } = useAuthStore();
+  
   // State
   const [scale, setScale] = useState<GradeScaleType>('4.0');
   const [targetGPA, setTargetGPA] = useState<number>(3.5);
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [predictionCourses, setPredictionCourses] = useState<Course[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const isInitialLoad = useRef(true);
+
+  // Load Data
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user) return;
+
+      const profile = user as StudentProfile;
+
+      // Prioritize student profile setting
+      if (user.role === 'student') {
+        if (profile.gradingSystem) {
+          setScale(profile.gradingSystem as GradeScaleType);
+        }
+        if (profile.targetCGPA) {
+           setTargetGPA(profile.targetCGPA);
+        }
+      }
+
+      try {
+        const docRef = doc(db, 'gpa_records', user.uid);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          // Only fallback to record scale if profile didn't set it
+          if (!(user.role === 'student' && profile.gradingSystem) && data.scale) {
+            setScale(data.scale);
+          }
+          // If profile has target, stick with it, otherwise check record, otherwise 3.5
+          if (!profile.targetCGPA && data.targetGPA) {
+             setTargetGPA(data.targetGPA);
+          }
+           
+          // Load semesters either way
+          if (data.semesters) setSemesters(data.semesters);
+        }
+      } catch (error) {
+        console.error("Error loading GPA data:", error);
+        toast.error("Failed to load your GPA data");
+      } finally {
+        setIsLoading(false);
+        // Small timeout to prevent immediate save trigger on mount
+        setTimeout(() => { isInitialLoad.current = false; }, 500);
+      }
+    };
+    loadData();
+  }, [user]);
+
+  // Auto-Save
+  useEffect(() => {
+    if (isInitialLoad.current || isLoading || !user) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        await setDoc(doc(db, 'gpa_records', user.uid), {
+          userId: user.uid,
+          scale,
+          targetGPA,
+          semesters,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      } catch (error) {
+        console.error("Error saving GPA data:", error);
+      }
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [scale, targetGPA, semesters, user, isLoading]);
 
   // Derived State
-  const currentGPA = calculateCumulativeGPA(semesters, scale);
+  const currentCalculatedGPA = calculateCumulativeGPA(semesters, scale);
   const totalCreditsEarned = semesters.flatMap(s => s.courses).reduce((sum, c) => sum + c.credits, 0);
   
+  // Use profile GPA if no courses entered yet (fallback for display)
+  const displayGPA = totalCreditsEarned > 0 
+    ? currentCalculatedGPA 
+    : ((user as StudentProfile)?.currentCGPA || 0.0);
+
   const activeScale = scale === '4.0' ? SCALE_4_0 : SCALE_5_0;
 
   // Prediction Logic
@@ -47,7 +130,11 @@ export const GpaTrackerPage = () => {
   
   const projectedTotalPoints = currentTotalPoints + predictionPoints;
   const projectedTotalCredits = totalCreditsEarned + predictionCredits;
-  const projectedGPA = projectedTotalCredits > 0 ? (projectedTotalPoints / projectedTotalCredits) : 0;
+  
+  // If no history, projection is just the prediction semester
+  const projectedGPA = projectedTotalCredits > 0 
+     ? (projectedTotalPoints / projectedTotalCredits) 
+     : (predictionCourses.length > 0 ? calculateSemesterGPA(predictionCourses, scale) : displayGPA);
 
   // Handlers
   const addSemester = () => {
@@ -113,9 +200,21 @@ export const GpaTrackerPage = () => {
     setPredictionCourses(predictionCourses.filter(c => c.id !== id));
   };
 
-  // Required GPA Calculation for "What If"
-  const remainingCreditsForTarget = 15; // Assumption for now, or could vary
-  const requiredGPAForTarget = calculateRequiredGPA(currentGPA, totalCreditsEarned, targetGPA, remainingCreditsForTarget);
+  // Required GPA Calculation
+  const remainingCreditsForTarget = 15;
+  const showRequiredGPA = totalCreditsEarned > 0;
+  
+  const requiredGPAForTarget = showRequiredGPA
+    ? calculateRequiredGPA(currentCalculatedGPA, totalCreditsEarned, targetGPA, remainingCreditsForTarget)
+    : targetGPA; // Fallback if no history
+
+  if (isLoading) {
+    return (
+      <div className="flex bg-slate-50 dark:bg-slate-950 items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-10">
@@ -125,16 +224,11 @@ export const GpaTrackerPage = () => {
           <h1 className="text-3xl font-display font-bold text-gray-900 dark:text-white">GPA Tracker & Predictor</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Track your academic progress and simulate future scenarios.</p>
         </div>
-        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-2 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-300 ml-2">Grading Scale:</span>
-          <select 
-            value={scale} 
-            onChange={(e) => setScale(e.target.value as GradeScaleType)}
-            className="bg-gray-100 dark:bg-slate-800 border-none rounded-md text-sm focus:ring-2 focus:ring-primary py-1.5 pl-3 pr-8"
-          >
-            <option value="4.0">4.0 Scale</option>
-            <option value="5.0">5.0 Scale</option>
-          </select>
+        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-2 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm px-4">
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Grading Scale:</span>
+          <span className="text-sm font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-slate-800 px-3 py-1 rounded-md">
+            {scale} Scale
+          </span>
         </div>
       </div>
 
@@ -147,8 +241,8 @@ export const GpaTrackerPage = () => {
           </div>
           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Current GPA</h3>
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold text-gray-900 dark:text-white">{currentGPA.toFixed(2)}</span>
-            <span className="text-sm text-gray-500">/ {scale}</span>
+            <span className="text-4xl font-bold text-gray-900 dark:text-white">{displayGPA.toFixed(2)}</span>
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded ml-1">/ {scale}</span>
           </div>
           <div className="mt-4 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
              <BookOpen className="w-4 h-4" />
@@ -173,17 +267,23 @@ export const GpaTrackerPage = () => {
                 max={scale}
                 className="text-4xl font-bold text-gray-900 dark:text-white bg-transparent border-b-2 border-primary/20 focus:border-primary focus:outline-none w-24"
               />
-              <span className="text-sm text-gray-500">/ {scale}</span>
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded">/ {scale}</span>
            </div>
            
-           {requiredGPAForTarget && requiredGPAForTarget <= parseFloat(scale) ? (
-             <div className="text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/10 p-2 rounded-lg border border-green-100 dark:border-green-900/20">
-               Need avg <strong>{requiredGPAForTarget}</strong> in next 15 credits
-             </div>
+           {showRequiredGPA ? (
+             requiredGPAForTarget && requiredGPAForTarget <= parseFloat(scale) ? (
+               <div className="text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/10 p-2 rounded-lg border border-green-100 dark:border-green-900/20">
+                 Need avg <strong>{requiredGPAForTarget.toFixed(2)}</strong> in next {remainingCreditsForTarget} credits
+               </div>
+             ) : (
+               <div className="text-sm text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/10 p-2 rounded-lg border border-orange-100 dark:border-orange-900/20 flex items-center gap-2">
+                 <AlertCircle className="w-4 h-4" />
+                 <span>Target may be unreachable soon</span>
+               </div>
+             )
            ) : (
-             <div className="text-sm text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/10 p-2 rounded-lg border border-orange-100 dark:border-orange-900/20 flex items-center gap-2">
-               <AlertCircle className="w-4 h-4" />
-               <span>Target may be unreachable soon</span>
+             <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800 p-2 rounded-lg border border-gray-100 dark:border-gray-700">
+               Add semester courses to analyze feasibility
              </div>
            )}
         </div>
@@ -197,17 +297,17 @@ export const GpaTrackerPage = () => {
            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Based on simulated courses below</p>
            
            <div className="flex items-baseline gap-2">
-            <span className={`text-4xl font-bold ${projectedGPA >= currentGPA ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+            <span className={`text-4xl font-bold ${projectedGPA >= displayGPA ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
                 {projectedGPA.toFixed(2)}
             </span>
-            <span className="text-sm text-gray-500">/ {scale}</span>
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded ml-1">/ {scale}</span>
           </div>
 
           <div className="mt-4 text-sm">
-             {projectedGPA > currentGPA ? (
+             {projectedGPA > displayGPA ? (
                 <span className="text-green-600 flex items-center gap-1">
                     <TrendingUp className="w-4 h-4" />
-                    +{(projectedGPA - currentGPA).toFixed(2)} boost
+                    +{(projectedGPA - displayGPA).toFixed(2)} boost
                 </span>
              ) : (
                 <span className="text-gray-500">No change or decrease</span>

@@ -32,13 +32,22 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ isLoading: true }); // Ensure loading state while fetching profile
         try {
           // Fetch additional user data from Firestore
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          let userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           
+          // During registration, the Auth user is created slightly before the Firestore document.
+          // If the document doesn't exist yet, wait and retry a few times.
+          let retries = 0;
+          while (!userDoc.exists() && retries < 4) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+            retries++;
+          }
+
           if (userDoc.exists()) {
             const userData = userDoc.data() as User;
             set({ user: userData, isAuthenticated: true, isLoading: false });
           } else {
-            console.error('User document not found in Firestore');
+            console.error('User document not found in Firestore after retries');
             // If user exists in Auth but not Firestore (edge case), sign them out
              await firebaseSignOut(auth);
              set({ user: null, isAuthenticated: false, isLoading: false });

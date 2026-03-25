@@ -1,5 +1,6 @@
 ﻿import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -15,6 +16,7 @@ import {
 
 export const StudentSidebar = () => {
     const location = useLocation();
+    const { signOut } = useAuth();
     
     const menuItems = [
         { title: 'Dashboard', icon: LayoutDashboard, path: '/student/dashboard' },
@@ -79,6 +81,7 @@ export const StudentSidebar = () => {
                         Settings
                     </Link>
                     <button
+                        onClick={() => signOut()}
                         className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
                     >
                         <LogOut className="h-4 w-4" />
