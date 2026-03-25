@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { Filter, Award, Download } from 'lucide-react';
+import { Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { collection, query, where, getDocs } from 'firebase/firestore';

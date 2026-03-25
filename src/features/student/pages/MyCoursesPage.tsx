@@ -11,7 +11,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { collection, query, where, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 
@@ -118,7 +118,7 @@ export const MyCoursesPage = () => {
         const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                               (course.description && course.description.toLowerCase().includes(searchQuery.toLowerCase()));
         
-        const matchesLevel = levelFilter === 'All' || (course.level && course.level.toLowerCase() === levelFilter.toLowerCase());
+        const matchesLevel = levelFilter === 'All' || ((course as any).level && (course as any).level.toLowerCase() === levelFilter.toLowerCase());
         const matchesSubject = subjectFilter === 'All' || (course.subject && course.subject.toLowerCase() === subjectFilter.toLowerCase());
         const matchesCategory = categoryFilter === 'All' || (course.category && course.category.toLowerCase() === categoryFilter.toLowerCase());
 

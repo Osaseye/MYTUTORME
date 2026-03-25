@@ -8,12 +8,10 @@ import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { loginSchema, type LoginCredentials } from '../types';
-import { useAuthStore } from '../hooks/useAuth';
 import { loginUser, loginWithGoogle } from '../api/auth';
 
 export const LoginForm = () => {
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [suspendedError, setSuspendedError] = useState(false);
 

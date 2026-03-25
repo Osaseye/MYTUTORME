@@ -4,7 +4,7 @@ import { getModel, SUBJECT_PROMPTS } from '@/lib/ai';
 import {
   doc, updateDoc, arrayUnion, getDoc, serverTimestamp,
   setDoc, collection, query, where, orderBy, limit, onSnapshot,
-  Timestamp, increment
+  increment
 } from 'firebase/firestore';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 import { toast } from 'sonner';
@@ -194,7 +194,7 @@ export const useAiTutor = (subject: string, topic?: string, specificSessionId?: 
         timestamp: Date.now() 
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages(prev => [...prev, assistantMessage as any]);
       
       // Update firestore with assistant message
       await updateDoc(sessionRef, {

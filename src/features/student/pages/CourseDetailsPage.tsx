@@ -3,8 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { 
-  PlayCircle, CheckCircle, Clock, FileText, Monitor, Star, Users, Calendar, 
-  ChevronDown, ArrowRight, School, Lock, Play, Share2
+  PlayCircle, CheckCircle, FileText, Monitor, Star, Users, 
+  ChevronDown, ArrowRight, School, Lock, Play
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { QuizRunner, QuizResults } from '../components/QuizRunner';
@@ -12,7 +12,7 @@ import { PurchaseCourseModal } from '../components/PurchaseCourseModal';
 import { LessonPlayer } from '../components/LessonPlayer';
 import type { Quiz, QuizStats } from '../types/quiz';
 
-import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, arrayUnion, writeBatch, increment } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, writeBatch, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 
@@ -399,7 +399,7 @@ export const CourseDetailsPage = () => {
             <section className="pt-8">
                <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-6">Course Curriculum Preview</h2>
                <div className="space-y-4">
-                   {modules.map((mod, i) => (
+                   {modules.map((mod) => (
                       <div key={mod.id} className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
                           <button className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 text-left"><span className="font-semibold text-slate-900 dark:text-white">{mod.title}</span><span className="text-sm text-slate-500">{mod.lessons ? mod.lessons.length : 0} lessons</span></button>
                       </div>

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Edit, FileText, Video, FileQuestion, Users, Star, BrainCircuit } from 'lucide-react';
+import { ChevronLeft, Edit, FileText, Video, FileQuestion, Users, Star } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const TeacherCourseDetailsPage = () => {

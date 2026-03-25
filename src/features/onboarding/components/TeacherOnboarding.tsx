@@ -12,8 +12,7 @@ import {
   FileText,
   Sparkles,
   Zap,
-  TrendingUp,
-  ShieldCheck
+    ShieldCheck
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';

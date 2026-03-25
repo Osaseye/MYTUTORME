@@ -121,7 +121,7 @@ export const AdminDashboard = () => {
   }, []);
 
   if (loading) {
-    return <GlobalLoader fullScreen={false} />;
+    return <GlobalLoader />;
   }
 
   return (

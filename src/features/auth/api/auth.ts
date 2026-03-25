@@ -8,7 +8,6 @@ import {
   signOut
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import type { User } from '@/types/user';
 import type { LoginCredentials, RegisterCredentials } from '../types';
 
 export const loginUser = async ({ email, password }: LoginCredentials) => {

@@ -5,7 +5,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { LogOut, Clock, XCircle, ShieldAlert, BookOpen } from "lucide-react";
 
 export function TeacherPendingPage() {
-  const { user, logout } = useAuth();
+  const { user, signOut: logout } = useAuth();
   const navigate = useNavigate();
 
   // Handle case where user isn't defined

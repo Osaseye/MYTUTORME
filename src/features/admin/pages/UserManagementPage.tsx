@@ -367,7 +367,7 @@ export const UserManagementPage = () => {
                                 <div className="flex flex-col items-center gap-1">
                                     <CardTitle>{selectedUser.displayName || 'Unnamed User'}</CardTitle>
                                     {selectedUser.isSuspended && (
-                                        <Badge variant="destructive" className="mt-1 mb-1">Suspended</Badge>
+                                        <Badge  className="mt-1 mb-1">Suspended</Badge>
                                     )}
                                 </div>
                                 <CardDescription className="flex items-center justify-center mt-1">

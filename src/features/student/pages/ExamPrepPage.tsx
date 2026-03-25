@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 import { Link } from 'react-router-dom';
 

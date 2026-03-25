@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { ArrowLeft, Calendar, CheckCircle2, Circle, Trophy } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Circle, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 

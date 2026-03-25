@@ -21,7 +21,7 @@ import ReactMarkdown from 'react-markdown';
 import { usePlanGate } from '@/hooks/usePlanGate';
 
 // Types for our chat
-interface Message {
+// interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
@@ -36,7 +36,7 @@ export const AiTutorPage = () => {
     const [activeTopic, setActiveTopic] = useState('');
     const [selectedImages, setSelectedImages] = useState<{data: string, mimeType: string}[]>([]);
     
-    const { isFreeTier } = usePlanGate('unlimited_ai');
+    usePlanGate('unlimited_ai');
 
     // Connect to AI useAiTutor Hook
     const {

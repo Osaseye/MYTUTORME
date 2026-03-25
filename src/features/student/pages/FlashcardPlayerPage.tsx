@@ -50,7 +50,7 @@ export const FlashcardPlayerPage = () => {
     fetchCards();
   }, [deckId]);
 
-  if (loading) return <GlobalLoader fullScreen text="Loading flashcards..." />;
+  if (loading) return <GlobalLoader />;
   if (!deck || cards.length === 0) return <div>Deck not found</div>;
 
   const handleNext = () => {

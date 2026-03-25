@@ -33,10 +33,10 @@ export const TeacherSettingsPage = () => {
       setFormData({
         firstName: nameParts[0] || "",
         lastName: nameParts.slice(1).join(" ") || "",
-        headline: user?.headline || "",
-        bio: user?.bio || "",
-        website: user?.website || "",
-        twitter: user?.twitter || ""
+        headline: (user as any)?.headline || "",
+        bio: (user as any)?.bio || "",
+        website: (user as any)?.website || "",
+        twitter: (user as any)?.twitter || ""
       });
     }
   }, [user]);

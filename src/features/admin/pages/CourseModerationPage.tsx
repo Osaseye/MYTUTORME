@@ -211,7 +211,7 @@ export const CourseModerationPage = () => {
                         <TabsTrigger value="flagged" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-red-600 shadow-sm text-red-600 flex-1 sm:flex-none">
                             Flagged
                             {courses.filter(c => c.status === 'flagged' || (c.reports && c.reports > 0)).length > 0 && (
-                                <Badge variant="destructive" className="ml-2">{courses.filter(c => c.status === 'flagged' || (c.reports && c.reports > 0)).length}</Badge>
+                                <Badge  className="ml-2">{courses.filter(c => c.status === 'flagged' || (c.reports && c.reports > 0)).length}</Badge>
                             )}
                         </TabsTrigger>
                     </TabsList>

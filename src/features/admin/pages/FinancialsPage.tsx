@@ -23,7 +23,7 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { collection, query, orderBy, onSnapshot, limit, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Badge } from '@/components/ui/badge';
 

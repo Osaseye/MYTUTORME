@@ -113,7 +113,7 @@ export const CertificatePage = () => {
                </div>
                <div className="text-right flex flex-col items-center">
                    <div className="w-24 h-24 bg-primary/5 rounded-full flex items-center justify-center border-4 border-primary/20 mb-2 shadow-inner">
-                       <Award className="w-10 h-10 text-primary" />
+                       {/* <Award className="w-10 h-10 text-primary" /> */}
                    </div>
                    <p className="text-xs font-sans text-slate-400">ID: {cert.verificationCode}</p>
                    <p className="text-xs font-sans text-slate-400">Issued: {cert.issueDate?.toDate ? cert.issueDate.toDate().toLocaleDateString() : 'Today'}</p>

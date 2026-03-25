@@ -1,4 +1,5 @@
-import { useState, useRef, ChangeEvent, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import type { ChangeEvent } from 'react';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 import type { StudentProfile } from '@/types/user';
 import { db, storage, auth } from '@/lib/firebase';

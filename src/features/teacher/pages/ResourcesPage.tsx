@@ -235,7 +235,7 @@ export const ResourcesPage = () => {
             </p>
             <div className="flex justify-end gap-3">
               <Button disabled={isDeleting} variant="outline" onClick={() => setDeleteConfirmResource(null)}>Cancel</Button>
-              <Button disabled={isDeleting} variant="destructive" className="bg-rose-500 hover:bg-rose-600 text-white" onClick={handleDelete}>
+              <Button disabled={isDeleting}  className="bg-rose-500 hover:bg-rose-600 text-white" onClick={handleDelete}>
                 {isDeleting ? "Deleting..." : "Delete Resource"}
               </Button>
             </div>

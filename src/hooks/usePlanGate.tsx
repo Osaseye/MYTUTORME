@@ -25,7 +25,7 @@ export const UpgradePrompt = ({ feature }: { feature: GatedFeature }) => {
   const navigate = useNavigate();
   return (
     <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl text-center">
-      <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Upgrade to Unlock</h3>
+      <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Upgrade to Unlock {feature.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</h3>
       <p className="text-slate-500 mb-6 max-w-sm">
         This feature requires a premium plan. Upgrade now to enhance your learning experience.
       </p>

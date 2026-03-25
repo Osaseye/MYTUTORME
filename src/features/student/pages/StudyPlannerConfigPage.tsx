@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Target, BrainCircuit, Sparkles, ChevronRight, BookOpen } from 'lucide-react';
+import { Calendar, Target, BrainCircuit, Sparkles, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';

@@ -4,8 +4,7 @@ import {
   Clock, 
   Settings,
   Layers,
-  FileText,
-  Sparkles,
+    Sparkles,
   ChevronRight,
   HelpCircle,
   Loader2
@@ -56,7 +55,7 @@ export const ExamConfigPage = () => {
             const dSnap = await getDocs(dQ);
             const decks = dSnap.docs.map(d => ({ id: d.id, ...d.data() }));
             setUserDecks(decks);
-            if (decks.length > 0) setSelectedDeck(decks[0].title);
+            if (decks.length > 0) setSelectedDeck((decks[0] as any).title);
             
             // Fetch Plans
             const plansRef = collection(db, 'study_plans');

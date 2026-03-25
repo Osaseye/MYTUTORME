@@ -30,7 +30,7 @@ export const TeacherDashboard = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [stats, setStats] = useState({
-        totalEarnings: user?.lifetimeEarnings || 0,
+        totalEarnings: (user as any)?.lifetimeEarnings || 0,
         activeStudents: 0,
         rating: 0.0,
         totalCourses: 0,

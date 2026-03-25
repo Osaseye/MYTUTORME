@@ -5,11 +5,11 @@ import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { 
   ChevronLeft, Check, X, BookOpen, PlayCircle, FileText,
-  Clock, Tag, Banknote, User, GraduationCap, Calendar, BarChart3, AlertCircle 
+  Tag, Banknote, User, GraduationCap, BarChart3, AlertCircle 
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 export const AdminCourseDetailsPage = () => {
@@ -361,7 +361,7 @@ export const AdminCourseDetailsPage = () => {
             
             <div className="flex gap-3 pt-2">
               <Button variant="outline" className="flex-1" onClick={() => setIsRejectModalOpen(false)} disabled={actionLoading}>Cancel</Button>
-              <Button variant="destructive" className="flex-1 bg-rose-600 hover:bg-rose-700" onClick={handleRejectCourse} disabled={actionLoading}>
+              <Button  className="flex-1 bg-rose-600 hover:bg-rose-700" onClick={handleRejectCourse} disabled={actionLoading}>
                 {actionLoading ? 'Rejecting...' : 'Confirm Reject'}
               </Button>
             </div>

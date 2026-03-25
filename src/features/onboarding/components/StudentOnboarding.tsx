@@ -100,7 +100,7 @@ export const StudentOnboarding = () => {
       await updateDoc(doc(db, 'users', user.uid), {
         isOnboardingComplete: true,
         displayName: formData.fullName || user.displayName,
-        username: formData.username,
+        ...({ username: formData.username } as any),
         level: formData.educationLevel,
         institution: formData.institution,
         courseOfStudy: formData.courseOfStudy,

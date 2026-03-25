@@ -7,12 +7,10 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { registerSchema, type RegisterCredentials } from '../types';
-import { useAuthStore } from '../hooks/useAuth';
 import { registerUser, loginWithGoogle } from '../api/auth';
 
 export const RegisterForm = () => {
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
