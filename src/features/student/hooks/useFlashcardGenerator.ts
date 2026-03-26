@@ -13,6 +13,7 @@ import {
   addDoc
 } from 'firebase/firestore';
 import { toast } from 'sonner';
+import { checkAndIncrementUsage } from './useUsageLimits';
 
 interface FlashcardGenerationOptions {
   subject: string;
@@ -30,7 +31,43 @@ export const useFlashcardGenerator = () => {
     try {
       const { subject, topic, difficulty, count } = options;
 
+      if (!user) {
+        toast.error("You must be logged in to generate flashcards.");
+        setIsGenerating(false);
+        return null;
+      }
+
       console.log(`Checking flashcards for ${subject} - ${topic}...`);
+
+      // 0. Check if this user ALREADY has a deck for this topic!
+      if (user) {
+        const userDecksQuery = query(
+          collection(db, 'flashcard_decks'),
+          where('userId', '==', user.uid),
+          where('subject', '==', subject),
+          where('topic', '==', topic)
+        );
+        const existingDecksSnap = await getDocs(userDecksQuery);
+        if (!existingDecksSnap.empty) {
+            // Re-use the existing deck if we already have one!
+            const existingDeck = existingDecksSnap.docs[0];
+            const existingDeckData = existingDeck.data();
+            
+            // Should we add more cards if requested count > existing count?
+            // For now, if the user generates it again, let's just return the existing deck to avoid duplicates.
+            toast.success("Deck already exists! Redirecting...");
+            setIsGenerating(false);
+            return existingDeck.id;
+        }
+      }
+
+      // Check limits before proceeding with actual AI generation
+      const canGenerate = await checkAndIncrementUsage(user.uid, user.plan || 'free', 'flashcards');
+      if (!canGenerate) {
+        toast.error("Daily flashcard generation limit reached. Upgrade to Pro for unlimited decks!");
+        setIsGenerating(false);
+        return null;
+      }
 
       // 1. Check existing flashcards in Firebase
       const flashcardsRef = collection(db, 'flashcards');

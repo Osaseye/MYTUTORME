@@ -26,8 +26,17 @@ export const useStudyPlanGenerator = () => {
   const generatePlan = async (options: StudyPlanGenerationOptions) => {
     setIsGenerating(true);
     try {
-      const { subject, targetExam, durationWeeks, proficiency } = options;
-      console.log(`Checking for existing study plans for ${subject} (${targetExam})...`);
+      // 0. Subscription Constraint Check
+      const isPro = user?.plan === 'pro_monthly' || user?.plan === 'pro_yearly';
+      if (!isPro && user?.uid) {
+        const userPlansQuery = query(collection(db, 'study_plans'), where('userId', '==', user.uid));
+        const userPlansSnap = await getDocs(userPlansQuery);
+        if (userPlansSnap.docs.length >= 2) {
+          toast.error('Free Plan Limit: Maximum of 2 active study plans reached. Upgrade to pro to create more.');
+          setIsGenerating(false);
+          return null;
+        }
+      }
 
       // 1. Smart Pooling: Check for existing templates
       const templatesRef = collection(db, 'study_plan_templates');

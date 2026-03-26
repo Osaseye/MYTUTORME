@@ -47,8 +47,9 @@ export const usePlanGate = (feature: GatedFeature) => {
   const gate = (
     content: React.ReactNode,
     fallback?: React.ReactNode
-  ): React.ReactNode =>
-    hasAccess ? content : (fallback ?? <UpgradePrompt feature={feature} />);
+  ) => {
+    return hasAccess ? content : (fallback ?? <UpgradePrompt feature={feature} />);
+  };
 
   return {
     hasAccess,

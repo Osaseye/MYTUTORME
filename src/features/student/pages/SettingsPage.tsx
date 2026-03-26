@@ -22,6 +22,7 @@ export const SettingsPage = () => {
   const studentProfile = user as StudentProfile;
 
   const [isSaving, setIsSaving] = useState(false);
+  const [showPlans, setShowPlans] = useState(false);
   const [formData, setFormData] = useState({
     displayName: '',
     phone: '',
@@ -182,19 +183,22 @@ export const SettingsPage = () => {
     }
   };
 
-  const handleUpgradeToPro = async () => {
+  const handleChangePlan = async (newPlan: 'free' | 'pro_monthly' | 'pro_yearly') => {
     if (!user) return;
     setIsSaving(true);
     try {
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
-        plan: 'pro_monthly' // default upgrade to pro_monthly for demo
+        plan: newPlan 
       });
-      setUser({ ...user, plan: 'pro_monthly' } as StudentProfile);
-      toast.success('Successfully upgraded to Pro Monthly!');
+      setUser({ ...user, plan: newPlan } as StudentProfile);
+      
+      const planName = newPlan === 'free' ? 'Free Basic' : newPlan === 'pro_monthly' ? 'Pro Monthly' : 'Pro Yearly';
+      toast.success(`Successfully changed plan to ${planName}!`);
+      setShowPlans(false);
     } catch (error: any) {
       console.error(error);
-      toast.error('Failed to upgrade subscription.');
+      toast.error('Failed to change subscription plan.');
     } finally {
       setIsSaving(false);
     }
@@ -497,31 +501,69 @@ export const SettingsPage = () => {
               <CardDescription>Manage your current plan and billing details.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <ShieldCheck className="h-6 w-6 text-primary" />
-                      {studentProfile?.plan === 'pro_monthly' ? 'Pro Monthly Plan' : studentProfile?.plan === 'pro_yearly' ? 'Pro Yearly Plan' : 'Free Basic Plan'}
-                    </h3>
-                    <p className="text-slate-500 mt-1">
-                      {studentProfile?.plan?.includes('pro') 
-                        ? 'You have access to all premium features including GPA Simulator, Unlimited AI, and Priority Support.'
-                        : 'Upgrade to a Pro plan to unlock advanced features and boost your academic performance.'}
-                    </p>
-                  </div>
-                  <div>
-                    {studentProfile?.plan?.includes('pro') ? (
-                      <Button variant="outline">Manage Subscription</Button>
-                    ) : (
-                      <Button onClick={handleUpgradeToPro} disabled={isSaving}>
-                        {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                        Upgrade to Pro
+              {!showPlans ? (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <ShieldCheck className="h-6 w-6 text-primary" />
+                        {studentProfile?.plan === 'pro_monthly' ? 'Pro Monthly Plan' : studentProfile?.plan === 'pro_yearly' ? 'Pro Yearly Plan' : 'Free Basic Plan'}
+                      </h3>
+                      <p className="text-slate-500 mt-1">
+                        {studentProfile?.plan?.includes('pro') 
+                          ? 'You have access to all premium features including GPA Simulator, Unlimited AI, and Priority Support.'
+                          : 'Upgrade to a Pro plan to unlock advanced features and boost your academic performance.'}
+                      </p>
+                    </div>
+                    <div>
+                      <Button onClick={() => setShowPlans(true)}>
+                        Manage Subscription
                       </Button>
-                    )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Select a Plan</h3>
+                    <Button variant="ghost" size="sm" onClick={() => setShowPlans(false)}>Cancel</Button>
+                  </div>
+                  
+                  {/* 3 Columns for Pricing Plans */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Free Plan */}
+                    <div className={`border rounded-xl p-4 flex flex-col ${studentProfile?.plan === 'free' ? 'border-primary bg-primary/5' : 'border-slate-200'}`}>
+                      <h4 className="font-bold">Free Basic</h4>
+                      <span className="text-2xl font-black my-2">₦0</span>
+                      <p className="text-sm text-slate-500 flex-1">Basic access to limited AI queries and free courses.</p>
+                      <Button className="mt-4 w-full" variant={studentProfile?.plan === 'free' ? 'secondary' : 'outline'} onClick={() => handleChangePlan('free')} disabled={isSaving || studentProfile?.plan === 'free'}>
+                        {studentProfile?.plan === 'free' ? 'Current Plan' : 'Downgrade'}
+                      </Button>
+                    </div>
+
+                    {/* Pro Monthly */}
+                    <div className={`border rounded-xl p-4 flex flex-col ${studentProfile?.plan === 'pro_monthly' ? 'border-primary bg-primary/5' : 'border-slate-200'}`}>
+                      <h4 className="font-bold text-primary">Pro Monthly</h4>
+                      <span className="text-2xl font-black my-2">₦4,000<span className="text-sm font-normal text-slate-500">/mo</span></span>
+                      <p className="text-sm text-slate-500 flex-1">Unlimited AI, GPA Simulator, offline downloads, and more.</p>
+                      <Button className="mt-4 w-full" onClick={() => handleChangePlan('pro_monthly')} disabled={isSaving || studentProfile?.plan === 'pro_monthly'}>
+                        {studentProfile?.plan === 'pro_monthly' ? 'Current Plan' : 'Select Monthly'}
+                      </Button>
+                    </div>
+
+                    {/* Pro Yearly */}
+                    <div className={`border rounded-xl p-4 flex flex-col ${studentProfile?.plan === 'pro_yearly' ? 'border-primary bg-primary/5' : 'border-slate-200 shadow-md relative overflow-hidden'}`}>
+                      <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">BEST VALUE</div>
+                      <h4 className="font-bold text-primary">Pro Yearly</h4>
+                      <span className="text-2xl font-black my-2">₦40,000<span className="text-sm font-normal text-slate-500">/yr</span></span>
+                      <p className="text-sm text-slate-500 flex-1">Save ₦8,000 annually. Includes priority support.</p>
+                      <Button className="mt-4 w-full" onClick={() => handleChangePlan('pro_yearly')} disabled={isSaving || studentProfile?.plan === 'pro_yearly'}>
+                        {studentProfile?.plan === 'pro_yearly' ? 'Current Plan' : 'Select Yearly'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

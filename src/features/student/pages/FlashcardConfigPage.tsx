@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Layers, Sparkles, BookOpen, ChevronRight, BrainCircuit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useFlashcardGenerator } from '../hooks/useFlashcardGenerator';
 import { Input } from '@/components/ui/input';
+import { useAuthStore } from '@/features/auth/hooks/useAuth';
 
 export const FlashcardConfigPage = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export const FlashcardConfigPage = () => {
   const [cardCount, setCardCount] = useState([10]);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard' | 'adaptive'>('medium');
   const { generateDeck, isGenerating } = useFlashcardGenerator();
+  const { user } = useAuthStore();
 
   const handleGenerate = async () => {
     if (!subject || !topic) {
@@ -34,8 +36,11 @@ export const FlashcardConfigPage = () => {
   };
 
   return (
-    <div className="bg-slate-50 dark:bg-slate-950 px-4 sm:px-6 lg:px-8 w-full">
+    <div className="bg-slate-50 dark:bg-slate-950 px-4 sm:px-6 lg:px-8 w-full pt-8 pb-12"> 
       <div className="max-w-3xl mx-auto space-y-6 md:space-y-8">
+            <Link to="/student/exam-prep" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 mb-2 transition-colors">
+               &larr; Back to Exam Hub
+            </Link>
 
         <div className="text-center">
            <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl mb-4 text-primary">
@@ -135,6 +140,19 @@ export const FlashcardConfigPage = () => {
                  </>
               )}
            </Button>
+
+           <div className="mt-6 text-center">
+              {(!user?.plan || user.plan === 'free') ? (
+                  <p className="text-sm text-slate-500">
+                    <b>Free Plan Limit:</b> 3 Decks per day. <Link to="/student/settings" className="text-primary font-medium hover:underline">Upgrade to Pro</Link> for unlimited practice!
+                  </p>
+              ) : (
+                  <p className="text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 py-2 px-4 rounded-lg inline-block">
+                    ✨ Pro Plan: Unlimited Flashcards
+                  </p>
+              )}
+           </div>
+
         </div>
       </div>
     </div>

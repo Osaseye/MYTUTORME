@@ -17,11 +17,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { 
-  doc, 
-  getDoc, 
-  collection, 
-  addDoc, 
-  serverTimestamp 
+  doc,
+  getDoc,
+  collection,
+  addDoc,
+  serverTimestamp,
+  updateDoc
 } from 'firebase/firestore';
 import { toast } from 'sonner';
 
@@ -57,6 +58,15 @@ export const ExamTakingPage = () => {
         const data = quizSnap.data();
         setExamData({ id: quizSnap.id, ...data });
         setTimeLeft(data.timeLimit * 60);
+
+        // Record that user has an active exam
+        if (user) {
+          try {
+            await updateDoc(doc(db, 'users', user.uid), { activeExamId: quizId });
+          } catch (e) {
+            console.error("Could not set active exam id", e);
+          }
+        }
 
         // Fetch all questions mapped
         const qPromises = data.questionIds.map((qId: string) => getDoc(doc(db, 'questions', qId)));
@@ -151,7 +161,12 @@ export const ExamTakingPage = () => {
         answers,
         topicBreakdown
       });
-
+        // Clear active exam status
+        try {
+          await updateDoc(doc(db, 'users', user.uid), { activeExamId: null });
+        } catch (e) {
+          console.error("Could not clear active exam id", e);
+        }
       toast.success("Exam submitted successfully!");
       navigate(`/student/exam-prep/results/${attemptDocRef.id}`);
 

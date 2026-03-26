@@ -35,6 +35,8 @@ export function MobileFloatingNav() {
     { label: 'Settings', path: '/student/settings', icon: Settings },
   ];
 
+  if (location.pathname === '/student/ai-tutor') return null;
+
   return (
     <>
       <AnimatePresence>

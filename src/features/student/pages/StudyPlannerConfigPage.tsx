@@ -3,12 +3,14 @@ import { Calendar, Target, BrainCircuit, Sparkles, ChevronRight } from 'lucide-r
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useStudyPlanGenerator } from '../hooks/useStudyPlanGenerator';
+import { useAuthStore } from '@/features/auth/hooks/useAuth';
 
 export const StudyPlannerConfigPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [subject, setSubject] = useState('');
   const [targetExam, setTargetExam] = useState('');
   const [durationWeeks, setDurationWeeks] = useState([4]);
@@ -35,8 +37,11 @@ export const StudyPlannerConfigPage = () => {
   };
 
   return (
-    <div className="bg-slate-50 dark:bg-slate-950 px-4 sm:px-6 lg:px-8 w-full min-h-[80vh] flex flex-col pt-8">
+    <div className="bg-slate-50 dark:bg-slate-950 px-4 sm:px-6 lg:px-8 w-full block pt-8 pb-12">
       <div className="max-w-3xl mx-auto space-y-6 md:space-y-8 w-full">
+            <Link to="/student/exam-prep" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 mb-2 transition-colors">
+               &larr; Back to Exam Hub
+            </Link>
 
         <div className="text-center">
            <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl mb-4 text-primary">
@@ -136,6 +141,19 @@ export const StudyPlannerConfigPage = () => {
                  </>
               )}
            </Button>
+
+           <div className="mt-6 text-center">
+              {(!user?.plan || user.plan === 'free') ? (
+                  <p className="text-sm text-slate-500">
+                    <b>Free Plan Limit:</b> Max 2 Active Plans. <Link to="/student/settings" className="text-primary font-medium hover:underline">Upgrade to Pro</Link> for unlimited plans!
+                  </p>
+              ) : (
+                  <p className="text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 py-2 px-4 rounded-lg inline-block">
+                    ✨ Pro Plan: Unlimited Study Plans
+                  </p>
+              )}
+           </div>
+
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Send, 
   Bot, 
@@ -12,13 +13,14 @@ import {
   MessageSquarePlus,
   PanelLeftClose,
   PanelLeftOpen,
-  Loader2
+  Loader2,
+  ChevronLeft
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollToTop } from '@/components/ui/scroll-to-top';
 import { useAiTutor } from '@/features/ai-tutor/hooks/useAiTutor';
 import ReactMarkdown from 'react-markdown';
-import { usePlanGate, UpgradePrompt } from '@/hooks/usePlanGate';
+import { usePlanGate } from '@/hooks/usePlanGate';
 
 
 
@@ -29,6 +31,7 @@ import { usePlanGate, UpgradePrompt } from '@/hooks/usePlanGate';
 
 
 export const AiTutorPage = () => {
+    const navigate = useNavigate();
     const [showHistory, setShowHistory] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [inputValue, setInputValue] = useState('');
@@ -116,42 +119,44 @@ export const AiTutorPage = () => {
     }, [inputValue]);
 
     return (
-        <div className="flex flex-col md:flex-row h-[calc(100vh-4rem)] md:h-screen w-full bg-slate-50 dark:bg-slate-900 absolute top-0 left-0 z-10 overflow-hidden pt-16 md:pt-0">
+        <div className="flex flex-col md:flex-row h-full w-full bg-slate-50 dark:bg-slate-900 overflow-hidden">
             {/* Mobile Header */}
-            <div className="md:hidden flex flex-col p-4 gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50 absolute top-0 left-0 right-0 z-20">
+            <div className="md:hidden flex flex-col p-4 gap-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50 flex-shrink-0 z-50 shadow-sm">
+                {/* Top Row: Back Button, Title, History */}
                 <div className="flex items-center justify-between">
                     <button 
-                        onClick={() => setShowHistory(!showHistory)}
-                        className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200"
+                        onClick={() => navigate(-1)}
+                        className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900"
                     >
-                        <History className="w-5 h-5 text-primary" />
-                        <span>History</span>
+                        <ChevronLeft className="w-5 h-5 mr-1" />
+                        Back
                     </button>
-                    <div className="flex-1 px-4">
-                        <input
-                            type="text"
-                            placeholder="Subject (e.g. Mathematics)"
-                            value={activeSubject}
-                            onChange={(e) => setActiveSubject(e.target.value)}
-                            className="w-full p-1 text-sm font-medium bg-transparent border-none text-slate-900 dark:text-white focus:outline-none focus:ring-0 text-center"
-                        />
-                    </div>
-                    <button onClick={() => initializeChat()} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">
-                        <MessageSquarePlus className="w-5 h-5" />
+                    <span className="font-bold text-slate-900 dark:text-white">AI Tutor</span>
+                    <button 
+                        onClick={() => setShowHistory(!showHistory)}
+                        className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+                    >
+                        <History className="w-5 h-5" />
                     </button>
                 </div>
+                
+                {/* Bottom Row: Subject & Topic Inputs */}
                 <div className="flex gap-2">
+                    <input
+                        type="text"
+                        placeholder="Subject..."
+                        value={activeSubject}
+                        onChange={(e) => setActiveSubject(e.target.value)}
+                        className="w-1/2 p-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:border-primary shadow-sm"
+                    />
                     <input 
                         type="text"
-                        placeholder="Topic (e.g. Calculus Limits)"
+                        placeholder="Topic..."
                         value={activeTopic}
                         onChange={(e) => setActiveTopic(e.target.value)}
-                        className="p-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm focus:outline-none focus:border-primary w-full"
+                        className="w-1/2 p-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:border-primary shadow-sm"
                     />
                 </div>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 text-center">
-                    Tip: Provide Subject and Topic for better AI accuracy.
-                </span>
             </div>
 
             {/* Mobile History Drawer */}
@@ -290,7 +295,7 @@ export const AiTutorPage = () => {
                 {/* Messages Area */}
                 <div
                     ref={scrollRef}
-                    className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 pt-20 md:pt-16 pb-32 md:pb-8 flex flex-col"
+                    className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 pt-4 md:pt-20 pb-32 md:pb-8 flex flex-col"
                 >
                     {!hasAccess && (
                         <div className="w-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-500 p-3 rounded-lg text-sm flex items-center justify-center gap-2 mt-4 md:mt-0">

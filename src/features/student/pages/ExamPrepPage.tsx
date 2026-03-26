@@ -11,19 +11,23 @@ import {
   Plus,
   
   Layers,
-  ArrowRight
+  ArrowRight,
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { toast } from 'sonner';
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { usePlanGate } from '@/hooks/usePlanGate';
 
 export const ExamPrepPage = () => {
   const { hasAccess } = usePlanGate('premium_mock_exams');
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'exams' | 'flashcards' | 'planner'>('exams');
   
   
@@ -41,7 +45,29 @@ export const ExamPrepPage = () => {
     streak: 0
   });
 
-  const { user } = useAuthStore();
+  useEffect(() => {
+    const fetchDecks = async () => {
+      if (!user) return;
+      setLoadingDecks(true);
+      try {
+        const q = query(
+          collection(db, 'flashcard_decks'),
+          where('userId', '==', user.uid)
+        );
+        const snapshot = await getDocs(q);
+        const deckData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setDecks(deckData.sort((a: any, b: any) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0)));
+      } catch (err) {
+        console.error("Failed to load decks", err);
+      } finally {
+        setLoadingDecks(false);
+      }
+    };
+
+    if (activeTab === 'flashcards') {
+      fetchDecks();
+    }
+  }, [user, activeTab]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -178,6 +204,47 @@ export const ExamPrepPage = () => {
     }
   }, [activeTab, user]);
 
+  const handleCreateClick = (e: React.MouseEvent, path: string, type: 'mockExams' | 'flashcards' | 'studyPlans') => {
+    e.preventDefault();
+    if (user?.plan === 'pro_monthly' || user?.plan === 'pro_yearly') {
+       navigate(path);
+       return;
+    }
+    
+    if (type === 'studyPlans') {
+       if (studyPlans.length >= 2) {
+          toast.error('You need to upgrade your plan to access more study plans.');
+          return;
+       }
+    } else {
+       const today = new Date().toISOString().split('T')[0];
+       const stats = user?.generationStats || { date: '', mockExams: 0, flashcards: 0 };
+       
+       if (stats.date === today) {
+          const limit = type === 'mockExams' ? 1 : 3;
+          if ((stats[type] || 0) >= limit) {
+             toast.error(`You need to upgrade your plan to access more ${type === 'mockExams' ? 'mock exams' : 'flashcards'}.`);
+             return;
+          }
+       }
+    }
+    
+    navigate(path);
+  };
+
+  const handleDeleteDeck = async (e: React.MouseEvent, deckId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to delete this flashcard deck?')) return;
+    try {
+      await deleteDoc(doc(db, 'flashcard_decks', deckId));
+      setDecks(decks.filter(d => d.id !== deckId));
+      toast.success('Deck deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete deck');
+    }
+  };
+
   return (
     <div className="w-full px-4 md:px-8 py-8 space-y-8">
       {!hasAccess && (
@@ -215,12 +282,12 @@ export const ExamPrepPage = () => {
                 New Study Session
              </Button>
            ) : (
-             <Link to="/student/exam-prep/config">
+             <div onClick={(e) => handleCreateClick(e, '/student/exam-prep/config', 'mockExams')}>
                <Button className="bg-primary hover:bg-primary/90">
                   <Plus className="w-4 h-4 mr-2" />
                   New Study Session
                </Button>
-             </Link>
+             </div>
            )}
         </div>
       </div>
@@ -309,11 +376,11 @@ export const ExamPrepPage = () => {
                       </div>
                       <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">No Exams Available</h4>
                       <p className="text-slate-500 max-w-sm mx-auto mb-6">You haven't been assigned any practice exams yet. Generate custom mock exams from your notes, flashcards, or AI.</p>
-                      <Link to="/student/exam-prep/config">
-                         <Button className="bg-primary hover:bg-primary/90">
+                      <div onClick={(e) => handleCreateClick(e, '/student/exam-prep/config', 'mockExams')}>
+                         <Button className="bg-primary hover:bg-primary/90">    
                             Create Mock Exam
                          </Button>
-                      </Link>
+                      </div>
                    </div>
                 </div>
               )}
@@ -326,27 +393,33 @@ export const ExamPrepPage = () => {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <Link to="/student/exam-prep/flashcards" className="border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-5 flex flex-col items-center justify-center text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer min-h-[160px]">
-                          <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 mb-3">       
+                       <div onClick={(e) => handleCreateClick(e, '/student/exam-prep/flashcards', 'flashcards')} className="border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-5 flex flex-col items-center justify-center text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer min-h-[160px]">
+                          <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 mb-3">
                              <Plus className="w-6 h-6" />
                           </div>
                           <h4 className="font-medium text-slate-600 dark:text-slate-400">Create New Deck</h4>
                           <p className="text-xs text-slate-400 mt-1">From notes or AI generation</p>
-                       </Link>
-
+                       </div>
                        {decks.map(deck => (
-                         <Link key={deck.id} to={`/student/exam-prep/flashcards/${deck.id}`} className="block border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-5 hover:border-primary/50 transition-colors">
-                            <div className="flex justify-between items-start mb-4">
-                               <div className="p-2 bg-primary/10 text-primary rounded-lg">
-                                  <Layers className="w-5 h-5" />
-                               </div>
-                               <span className="text-xs font-medium px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full">
-                                  {deck.flashcardIds?.length || 0} Cards
-                               </span>
+                         <div key={deck.id} className="block relative group border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-5 hover:border-primary/50 transition-colors">
+                            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                              <button onClick={(e) => handleDeleteDeck(e, deck.id)} className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 hover:bg-red-200 dark:hover:bg-red-900/50 rounded-lg transition-colors" title="Delete Deck">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </div>
-                            <h4 className="font-bold text-slate-900 dark:text-white line-clamp-1 mb-1">{deck.title}</h4>
-                            <p className="text-sm text-slate-500 capitalize">{deck.difficulty} • {deck.subject}</p>
-                         </Link>
+                            <Link to={`/student/exam-prep/flashcards/${deck.id}`} className="block">
+                                <div className="flex justify-between items-start mb-4 pr-10">
+                                   <div className="p-2 bg-primary/10 text-primary rounded-lg">
+                                      <Layers className="w-5 h-5" />
+                                   </div>
+                                   <span className="text-xs font-medium px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full">
+                                      {deck.flashcardIds?.length || 0} Cards
+                                   </span>
+                                </div>
+                                <h4 className="font-bold text-slate-900 dark:text-white line-clamp-1 mb-1">{deck.title}</h4>
+                                <p className="text-sm text-slate-500 capitalize">{deck.difficulty} • {deck.subject}</p>
+                            </Link>
+                         </div>
                        ))}
                     </div>
                   )}
@@ -368,13 +441,17 @@ export const ExamPrepPage = () => {
                        <p className="text-slate-500 max-w-md mx-auto mb-8">
                           Tell us your exam date and topics, and we'll generate a personalized day-by-day study schedule for you.
                        </p>
-                       <Link to="/student/exam-prep/planner-config"><Button className="bg-primary hover:bg-primary/90">Generate New Plan</Button></Link> 
+                       <div onClick={(e) => handleCreateClick(e, '/student/exam-prep/planner-config', 'studyPlans')}><Button className="bg-primary hover:bg-primary/90">Generate New Plan</Button></div> 
                     </div>
                   ) : (
                     <div className="space-y-4">
                        <div className="flex justify-between items-center mb-4">
                           <h3 className="font-bold text-slate-900 dark:text-white">Your Study Plans</h3>
-                          <Link to="/student/exam-prep/planner-config"><Button className="bg-primary hover:bg-primary/90" size="sm">New Plan</Button></Link>
+                          {(!hasAccess && studyPlans.length >= 2) ? (
+                               <Button onClick={(e) => handleCreateClick(e, '/student/exam-prep/planner-config', 'studyPlans')} className="bg-primary hover:bg-primary/90" size="sm" title="Limit Reached">New Plan</Button>
+                          ) : (
+                               <div onClick={(e) => handleCreateClick(e, '/student/exam-prep/planner-config', 'studyPlans')}><Button className="bg-primary hover:bg-primary/90" size="sm">New Plan</Button></div>
+                            )}
                        </div>
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {studyPlans.map(plan => (

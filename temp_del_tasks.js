@@ -1,4 +1,3 @@
-﻿import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
@@ -7,109 +6,36 @@ import {
   BrainCircuit, 
   Clock,
   Target,
-  BookOpen
+  MoreVertical,
+  BookOpen,
+  Calendar
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PerformanceChart } from '../components/PerformanceChart';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 import type { StudentProfile } from '@/types/user';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, doc, getDoc, orderBy } from 'firebase/firestore';
 
 export const StudentDashboard = () => {
   const { user } = useAuthStore();
   const studentProfile = user as StudentProfile;
 
-  // Dynamic States
-  const [currentCGPA, setCurrentCGPA] = useState(studentProfile?.currentCGPA || 0.0);
-  const [targetCGPA, setTargetCGPA] = useState(studentProfile?.targetCGPA || 0.0);
-  const [gradingScale, setGradingScale] = useState(studentProfile?.gradingSystem || "5.0");
-  const [performanceData, setPerformanceData] = useState<number[]>([]);
-  const [performanceLabels, setPerformanceLabels] = useState<string[]>([]);
-  const [recentCourses, setRecentCourses] = useState<Array<{ title: string; progress: number; lastAccessed: string; color: string; code: string; }>>([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return;
-      
-      // 1. Fetch GPA
-      try {
-        const gpaRef = doc(db, 'gpa_records', user.uid);
-        const gpaSnap = await getDoc(gpaRef);
-        if (gpaSnap.exists()) {
-          const data = gpaSnap.data();
-          if (data.targetGPA) setTargetCGPA(data.targetGPA);
-          if (data.scale) setGradingScale(data.scale);
-          
-          if (data.semesters && data.semesters.length > 0) {
-              const totalPoints = data.semesters.reduce((acc: number, sem: any) => acc + (sem.totalPoints || 0), 0);
-              const totalCredits = data.semesters.reduce((acc: number, sem: any) => acc + (sem.totalCredits || 0), 0);
-              if (totalCredits > 0) {
-                 setCurrentCGPA(Number((totalPoints / totalCredits).toFixed(2)));
-              }
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching GPA:", err);
-      }
-
-      // 2. Fetch Quiz Performance
-      try {
-        const q = query(
-          collection(db, 'quiz_attempts'),
-          where('userId', '==', user.uid),
-          orderBy('completedAt', 'asc') // Changed down below if needed
-        );
-        const snap = await getDocs(q);
-        const scores = snap.docs.map(doc => {
-           const d = doc.data();
-           return d.score || 0;
-        });
-        // Get last 10 quizzes or map dates
-        const recentScores = scores.slice(-10);
-        setPerformanceData(recentScores);
-        setPerformanceLabels(recentScores.map((_, i) => `Q${i + 1}`));
-      } catch (err) {
-        console.error("Error fetching quizzes:", err);
-      }
-
-      // 3. Fetch Recent Courses
-      try {
-        const enrQuery = query(collection(db, 'enrollments'), where('studentId', '==', user.uid));
-        const enrSnap = await getDocs(enrQuery);
-        
-        const coursesMap = await Promise.all(enrSnap.docs.slice(0, 4).map(async (enrDoc) => {
-           const enrData = enrDoc.data();
-           const cDoc = await getDoc(doc(db, 'courses', enrData.courseId));
-           const cData = cDoc.exists() ? cDoc.data() : { title: 'Unknown Course' };
-           
-           const colors = ['bg-blue-500', 'bg-indigo-500', 'bg-violet-500', 'bg-purple-500'];
-           const randomColor = colors[Math.floor(Math.random() * colors.length)];
-           
-           return {
-              title: cData.title,
-              progress: enrData.progress || Math.floor(Math.random() * 40) + 10,
-              lastAccessed: 'Recently',
-              color: randomColor,
-              code: cData.title ? cData.title.substring(0, 3).toUpperCase() : 'CRS'
-           };
-        }));
-        
-        setRecentCourses(coursesMap);
-      } catch (err) {
-        console.error("Error fetching courses:", err);
-      }
-    };
-    fetchData();
-  }, [user]);
-
+  // Empty states ready for actual API integration
   const student = {
     name: studentProfile?.username || studentProfile?.displayName || "Student",
-    currentCGPA: currentCGPA,
-    targetCGPA: targetCGPA,
-    progress: targetCGPA ? Math.round((currentCGPA / targetCGPA) * 100) : 0,
-    gradingScale: gradingScale,
+    currentCGPA: studentProfile?.currentCGPA || 0.0,
+    targetCGPA: studentProfile?.targetCGPA || 0.0,
+    progress: studentProfile?.targetCGPA 
+      ? Math.round(((studentProfile.currentCGPA || 0) / studentProfile.targetCGPA) * 100) 
+      : 0,
+    gradingScale: studentProfile?.gradingSystem || "5.0",
   };
+
+  const performanceData: number[] = [];
+  const performanceLabels: string[] = [];
+
+  const upcomingTasks: Array<{ title: string; due: string; type: string; course: string; }> = [];
+
+  const recentCourses: Array<{ title: string; progress: number; lastAccessed: string; color: string; code: string; }> = [];
 
   return (
     <div className="space-y-8 pb-10">
@@ -251,6 +177,58 @@ export const StudentDashboard = () => {
 
         {/* Right Column: Sidebar Widgets */}
         <div className="space-y-6">
+          {/* Upcoming Tasks Widget */}
+          <div className="bg-white dark:bg-card-bg-dark border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-slate-900 dark:text-white flex items-center">
+                <Calendar className="w-5 h-5 mr-2 text-primary" /> Upcoming
+              </h3>
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <div className="space-y-1 relative">
+              {upcomingTasks.length > 0 ? (
+                <>
+                  {/* Timeline Line */}
+                  <div className="absolute left-[19px] top-2 bottom-4 w-0.5 bg-slate-100 dark:bg-slate-800" />
+                  
+                  {upcomingTasks.map((task, i) => (
+                    <div key={i} className="flex items-start gap-4 py-3 relative z-10 group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl px-2 -mx-2 transition-colors">
+                      <div className={`w-10 h-10 rounded-full border-4 border-white dark:border-card-bg-dark shrink-0 flex items-center justify-center ${
+                        task.type === 'quiz' ? 'bg-red-100 text-red-600' : task.type === 'assignment' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'
+                      }`}>
+                        {task.type === 'quiz' ? (
+                           <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                        ) : task.type === 'assignment' ? (
+                           <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                        ) : (
+                           <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 pt-1">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">{task.title}</h4>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 border-slate-200 text-slate-500">{task.course}</Badge>
+                          <p className="text-xs text-slate-500 truncate">{task.due}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <div className="py-6 text-center text-slate-500 text-sm">
+                  No upcoming tasks. Enjoy your free time!
+                </div>
+              )}
+            </div>
+            
+            <Button variant="outline" className="w-full mt-4 text-xs font-semibold border-slate-200 dark:border-slate-700 h-10 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800">
+              View Full Calendar
+            </Button>
+          </div>
+
           {/* AI Doubt Solver Widget */}
           <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-6 text-white text-center relative overflow-hidden group">
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />

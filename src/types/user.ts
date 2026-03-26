@@ -24,6 +24,11 @@ export interface User {
   permissions?: string[];
   teacherSubscriptionPlan?: string;
   currentCommissionRate?: number;
+  generationStats?: {
+    date: string;
+    mockExams: number;
+    flashcards: number;
+  };
 }
 
 export interface StudentProfile extends User {

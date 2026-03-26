@@ -18,7 +18,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { Link} from 'react-router-dom'
 import { useExamGenerator } from '../hooks/useExamGenerator';
 
 const AVAILABLE_SUBJECTS = ['Mathematics', 'Physics', 'Biology', 'History', 'Comp Sci', 'Chemistry'];
@@ -100,7 +101,25 @@ export const ExamConfigPage = () => {
   ];
 
   const handleStartExam = async () => {
-    let finalSub = selectedSubject;
+      try {
+        if (user) {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists() && userDoc.data().activeExamId) {
+            const activeExamId = userDoc.data().activeExamId;
+            toast.error("You have an incomplete exam. Please finish it first!", {
+                action: {
+                    label: "Resume",
+                    onClick: () => navigate(`/student/exam-prep/active/${activeExamId}`)
+                }
+            });
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Error checking active exam status", err);
+      }
+
+      let finalSub = selectedSubject;
     let finalTop = selectedTopic;
     if (sourceType === 'deck') {
         if (!selectedDeck) { toast.error('Please select a deck.'); return; }
@@ -133,13 +152,15 @@ export const ExamConfigPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-8 pb-12 w-full">    
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-8 pb-12 w-full">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Link to="/student/exam-prep" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 mb-6 transition-colors">
+               &larr; Back to Exam Hub
+            </Link>
             <div className="mb-8">
                 <h1 className="text-3xl font-bold font-display text-slate-900 dark:text-white mb-2">Configure Mock Exam</h1>
                 <p className="text-slate-600 dark:text-slate-400">Customize your practice session to target specific goals.</p>
             </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Configuration Panel */}
                 <div className="lg:col-span-2 space-y-6">
@@ -410,6 +431,18 @@ export const ExamConfigPage = () => {
                             <HelpCircle className="w-3 h-3" />
                              Results will be saved to your dashboard
                         </p>
+
+                        <div className="mt-4 text-center">
+                          {(!user?.plan || user.plan === 'free') ? (
+                              <p className="text-sm text-slate-500">
+                                <b>Free Plan Limit:</b> 1 Mock Exam per day. <Link to="/student/settings" className="text-primary font-medium hover:underline">Upgrade to Pro</Link> for unlimited practice!
+                              </p>
+                          ) : (
+                              <p className="text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 py-2 px-4 rounded-lg inline-block">
+                                ✨ Pro Plan: Unlimited Mock Exams
+                              </p>
+                          )}
+                        </div>
                     </div>
                 </div>
             </div>
