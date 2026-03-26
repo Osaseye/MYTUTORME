@@ -538,7 +538,7 @@ export const UserManagementPage = () => {
                         <div className="flex items-center justify-end gap-3 px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800">
                             <Button variant="ghost" onClick={() => { setIsRejectModalOpen(false); setRejectReason(''); }}>Cancel</Button>
                             <Button 
-                                variant="destructive" 
+                                 
                                 onClick={handleRejectTeacher}
                                 disabled={actionLoading || !rejectReason.trim()}
                             >

@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { 
   PlayCircle, CheckCircle, FileText, Monitor, Star, Users, 
-  ChevronDown, ArrowRight, School, Lock, Play
+  ArrowRight, School, Lock, Play
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { QuizRunner, QuizResults } from '../components/QuizRunner';
@@ -15,6 +15,7 @@ import type { Quiz, QuizStats } from '../types/quiz';
 import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, writeBatch, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
+import { usePlanGate } from '@/hooks/usePlanGate';
 
 const MOCK_QUIZ: Quiz = {
   id: 'quiz-1',
@@ -77,6 +78,8 @@ export const CourseDetailsPage = () => {
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
   const [activeLesson, setActiveLesson] = useState<{id: string, title: string, contentUrl?: string, contentType?: string} | null>(null);
   const [quizStats, setQuizStats] = useState<QuizStats | null>(null);
+  
+  const { hasAccess } = usePlanGate('full_course_library');
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -419,7 +422,18 @@ export const CourseDetailsPage = () => {
                  {isEnrolled ? (
                    <Button className="w-full h-12 text-base font-bold bg-green-600 hover:bg-green-700" onClick={() => setActiveTab('curriculum')}>Continue Learning <PlayCircle className="w-5 h-5 ml-2" /></Button>
                  ) : (
-                   <Button className="w-full h-12 text-base font-bold bg-primary hover:bg-green-700" onClick={() => setIsPurchaseModalOpen(true)}>Enroll Now <ArrowRight className="w-5 h-5 ml-2" /></Button>
+                   <div className="space-y-2">
+                     <Button className="w-full h-12 text-base font-bold bg-primary hover:bg-green-700" onClick={() => {
+                        if (!hasAccess && course.price !== 'Free' && course.price !== 0) {
+                          toast.error("Premium course. Please upgrade your plan to enroll.");
+                        } else {
+                          setIsPurchaseModalOpen(true);
+                        }
+                     }}>Enroll Now <ArrowRight className="w-5 h-5 ml-2" /></Button>
+                     {!hasAccess && (course.price !== 'Free' && course.price !== 0) && (
+                       <p className="text-xs text-center text-primary font-medium">Upgrade to Pro to access this course</p>
+                     )}
+                   </div>
                  )}
               </div>
               <p className="text-center text-xs text-slate-500 mb-6">Instructor: {course.teacherName}</p>

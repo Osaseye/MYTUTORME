@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export const CTASection = () => {
     return (
       <section className="py-24 relative overflow-hidden bg-gradient-to-br from-emerald-600 to-teal-700">
@@ -12,19 +14,19 @@ export const CTASection = () => {
           <p className="text-emerald-100 text-lg md:text-xl mb-10 max-w-2xl mx-auto font-medium">
             Join over 50,000 students already using MyTutorMe to secure their future.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <a
-              href="#"
-              className="px-8 py-4 bg-white text-emerald-700 font-bold rounded-full hover:bg-emerald-50 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
+          <div className="flex flex-col w-full sm:w-auto sm:flex-row justify-center gap-4 px-4 sm:px-0">
+            <Link
+              to="/register"
+              className="px-8 py-4 bg-white text-emerald-700 font-bold rounded-full hover:bg-emerald-50 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 block sm:inline-block"
             >
               Join for Free
-            </a>
-            <a
-              href="#"
-              className="px-8 py-4 bg-transparent border-2 border-white text-white font-bold rounded-full hover:bg-white/10 transition-colors"
+            </Link>
+            <Link
+              to="/register"
+              className="px-8 py-4 bg-transparent border-2 border-white text-white font-bold rounded-full hover:bg-white/10 transition-colors block sm:inline-block"
             >
               Schedule Demo
-            </a>
+            </Link>
           </div>
         </div>
       </section>

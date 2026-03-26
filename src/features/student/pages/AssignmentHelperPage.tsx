@@ -15,8 +15,7 @@ import {
 } from 'lucide-react';
 import { getGenerativeModel } from 'firebase/ai';
 import { ai } from '@/lib/firebase';
-import ReactMarkdown from 'react-markdown';
-
+import ReactMarkdown from 'react-markdown';import { usePlanGate } from '@/hooks/usePlanGate';
 // Create a GenerativeModel instance with gemini-2.5-pro for reasoning tasks
 const model = getGenerativeModel(ai, { model: 'gemini-2.5-pro' });
 
@@ -34,6 +33,7 @@ interface HistoryItem {
 }
 
 export const AssignmentHelperPage = () => {
+  const { hasAccess } = usePlanGate('guided_assignments');
   const [question, setQuestion] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -116,12 +116,19 @@ export const AssignmentHelperPage = () => {
         return;
     }
     
+    if (!hasAccess && history.length >= 3) {
+      toast.error('Free tier limits reached. Please upgrade your plan in Settings to analyze more assignments.');
+      return;
+    }
+
     setIsAnalyzing(true);
-    setResult(''); // Start empty for streaming
 
     try {
-      const prompt = `You are an expert AI tutor. Explain the following assignment question step-by-step and guide the student towards the solution. Break down complex concepts. Here is the question:\n\n${question}`;
-      const parts: any[] = [prompt];
+      const parts: any[] = [];
+      
+      if (question.trim()) {
+        parts.push(question);
+      }
       
       if (selectedFile) {
         parts.push({
@@ -167,6 +174,21 @@ export const AssignmentHelperPage = () => {
 
   return (
     <div className="flex-grow flex flex-col w-full h-full gap-8">
+      {!hasAccess && (
+        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-500 p-4 rounded-xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Brain className="w-6 h-6" />
+            <div>
+              <p className="font-bold">Free Plan Limit: 3 assignments.</p>
+              <p className="text-sm opacity-90">You have analyzed {Math.min(history.length, 3)} out of 3 assignments.</p>
+            </div>
+          </div>
+          <a href="/student/settings" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
+            Upgrade Plan
+          </a>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-display font-bold text-gray-900 dark:text-white">Assignment Helper</h1>

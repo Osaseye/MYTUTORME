@@ -21,6 +21,14 @@ import { ref, uploadBytes } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
 import { useAuth, useAuthStore } from '@/features/auth/hooks/useAuth';
 
+interface TeacherFormData {
+  title: string;
+  bio: string;
+  subjects: string;
+  file: File | null;
+  plan: string;
+}
+
 export const TeacherOnboarding = () => {
   const [step, setStep] = useState(() => {
     const saved = localStorage.getItem('teacher_onboarding_step');
@@ -30,7 +38,7 @@ export const TeacherOnboarding = () => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [formData, setFormData] = useState(() => {
+  const [formData, setFormData] = useState<TeacherFormData>(() => {
     const saved = localStorage.getItem('teacher_onboarding_formData');
     if (saved) {
       try {

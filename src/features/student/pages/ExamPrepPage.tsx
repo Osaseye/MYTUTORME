@@ -1,15 +1,15 @@
 import { 
-  BarChart, 
+   
   Calendar, 
   Clock, 
   BrainCircuit, 
-  Play, 
+   
   TrendingUp,
   FileText,
   AlertCircle,
   CheckCircle,
   Plus,
-  Sparkles,
+  
   Layers,
   ArrowRight
 } from 'lucide-react';
@@ -20,13 +20,19 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 import { Link } from 'react-router-dom';
+import { usePlanGate } from '@/hooks/usePlanGate';
 
 export const ExamPrepPage = () => {
+  const { hasAccess } = usePlanGate('premium_mock_exams');
   const [activeTab, setActiveTab] = useState<'exams' | 'flashcards' | 'planner'>('exams');
-  const [decks, setDecks] = useState<any[]>([]);
-  const [loadingDecks, setLoadingDecks] = useState(false);
+  
+  
   const [studyPlans, setStudyPlans] = useState<any[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
+  const [decks, setDecks] = useState<any[]>([]);
+  console.log(setDecks);
+  const [loadingDecks, setLoadingDecks] = useState(false);
+  console.log(setLoadingDecks);
   const [stats, setStats] = useState({
     studyTime: 0,
     questionsSolved: 0,
@@ -174,6 +180,21 @@ export const ExamPrepPage = () => {
 
   return (
     <div className="w-full px-4 md:px-8 py-8 space-y-8">
+      {!hasAccess && (
+        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-500 p-4 rounded-xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-6 h-6" />
+            <div>
+              <p className="font-bold">Free Plan Limit</p>
+              <p className="text-sm opacity-90">Upgrade to Pro for unlimited mock exams and advanced analytics.</p>
+            </div>
+          </div>
+          <Link to="/student/settings" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
+            Upgrade Plan
+          </Link>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -185,12 +206,22 @@ export const ExamPrepPage = () => {
               <BrainCircuit className="w-4 h-4" />
               <span>AI Study Streak: {stats.streak} Days</span>
            </div>
-           <Link to="/student/exam-prep/config">
-             <Button className="bg-primary hover:bg-primary/90">
+           {(!hasAccess && studyPlans.length >= 2) ? (
+             <Button
+               className="bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed"
+               title="Upgrade to create more study sessions"
+             >
                 <Plus className="w-4 h-4 mr-2" />
                 New Study Session
              </Button>
-           </Link>
+           ) : (
+             <Link to="/student/exam-prep/config">
+               <Button className="bg-primary hover:bg-primary/90">
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Study Session
+               </Button>
+             </Link>
+           )}
         </div>
       </div>
 

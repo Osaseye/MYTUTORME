@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Bell, Lock, GraduationCap, Upload, ShieldCheck, Loader2 } from 'lucide-react';
+import { User, Bell, Lock, GraduationCap, Upload, ShieldCheck, Loader2, CreditCard } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
 export const SettingsPage = () => {
@@ -182,6 +182,24 @@ export const SettingsPage = () => {
     }
   };
 
+  const handleUpgradeToPro = async () => {
+    if (!user) return;
+    setIsSaving(true);
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        plan: 'pro_monthly' // default upgrade to pro_monthly for demo
+      });
+      setUser({ ...user, plan: 'pro_monthly' } as StudentProfile);
+      toast.success('Successfully upgraded to Pro Monthly!');
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Failed to upgrade subscription.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="container max-w-5xl mx-auto py-8 px-4 md:px-8">
       <div className="mb-8">
@@ -202,6 +220,9 @@ export const SettingsPage = () => {
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex gap-2">
             <Bell className="h-4 w-4" /> Notifications
+          </TabsTrigger>
+          <TabsTrigger value="subscription" className="flex gap-2">
+            <CreditCard className="h-4 w-4" /> Subscription
           </TabsTrigger>
         </TabsList>
 
@@ -465,6 +486,43 @@ export const SettingsPage = () => {
                 Save Preferences
               </Button>
             </CardFooter>
+          </Card>
+        </TabsContent>
+
+        {/* SUBSCRIPTION TAB */}
+        <TabsContent value="subscription" className="space-y-6">
+          <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
+            <CardHeader>
+              <CardTitle>Subscription Plan</CardTitle>
+              <CardDescription>Manage your current plan and billing details.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <ShieldCheck className="h-6 w-6 text-primary" />
+                      {studentProfile?.plan === 'pro_monthly' ? 'Pro Monthly Plan' : studentProfile?.plan === 'pro_yearly' ? 'Pro Yearly Plan' : 'Free Basic Plan'}
+                    </h3>
+                    <p className="text-slate-500 mt-1">
+                      {studentProfile?.plan?.includes('pro') 
+                        ? 'You have access to all premium features including GPA Simulator, Unlimited AI, and Priority Support.'
+                        : 'Upgrade to a Pro plan to unlock advanced features and boost your academic performance.'}
+                    </p>
+                  </div>
+                  <div>
+                    {studentProfile?.plan?.includes('pro') ? (
+                      <Button variant="outline">Manage Subscription</Button>
+                    ) : (
+                      <Button onClick={handleUpgradeToPro} disabled={isSaving}>
+                        {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        Upgrade to Pro
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>

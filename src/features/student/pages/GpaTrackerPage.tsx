@@ -31,8 +31,10 @@ import {
   calculateRequiredGPA,
   getGradePoints
 } from '../utils/gpaUtils';
+import { usePlanGate } from '@/hooks/usePlanGate';
 
 export const GpaTrackerPage = () => {
+  const { hasAccess } = usePlanGate('gpa_simulator');
   const { user } = useAuthStore();
   
   // State
@@ -401,6 +403,14 @@ export const GpaTrackerPage = () => {
              <h2 className="text-xl font-bold text-gray-900 dark:text-white">"What If" Simulator</h2>
           </div>
 
+          {!hasAccess ? (
+             <div className="bg-amber-500/10 border border-amber-500/20 text-center p-8 rounded-xl flex flex-col items-center justify-center">
+                 <AlertCircle className="w-12 h-12 text-amber-500 mb-4" />
+                 <h3 className="text-lg font-bold text-amber-700 dark:text-amber-500 mb-2">Pro Feature: What If Simulator</h3>
+                 <p className="text-Amber-600 dark:text-amber-400 mb-6 text-sm max-w-sm">Upgrade to Pro to simulate hypothetical courses and see exactly what grades you need to hit your target CGPA.</p>
+                 <a href="/student/settings" className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors">Upgrade Plan</a>
+             </div>
+          ) : (
           <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-primary/20 dark:border-primary/20 p-6">
              <div className="mb-6 flex justify-between items-center">
                <div>
@@ -472,7 +482,8 @@ export const GpaTrackerPage = () => {
                 </div>
              </div>
           </div>
-        
+          )}
+
           {/* Helper Tips */}
           <div className="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-6 border border-blue-100 dark:border-blue-900/20">
              <h3 className="font-semibold text-blue-800 dark:text-blue-300 flex items-center gap-2 mb-2">

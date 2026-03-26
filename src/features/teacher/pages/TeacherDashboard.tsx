@@ -9,7 +9,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { Button } from '@/components/ui/button';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth, useAuthStore } from '@/features/auth/hooks/useAuth';
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -28,7 +28,7 @@ const mockData = [
 
 export const TeacherDashboard = () => {
     const { user } = useAuth();
-    const navigate = useNavigate();
+    
     const [stats, setStats] = useState({
         totalEarnings: (user as any)?.lifetimeEarnings || 0,
         activeStudents: 0,
@@ -63,7 +63,7 @@ export const TeacherDashboard = () => {
                     ...prev,
                     activeStudents: students,
                     totalCourses: publishedCourseCount,
-                    totalEarnings: user?.lifetimeEarnings || 0
+                    totalEarnings: (user as any)?.lifetimeEarnings || 0
                 }));
             } catch (error) {
                 console.error("Error fetching stats:", error);

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export const PricingSection = () => {
     return (
       <section className="py-24 bg-background-light dark:bg-background-dark relative overflow-hidden">
@@ -38,12 +40,12 @@ export const PricingSection = () => {
                   Basic GPA summary
                 </li>
               </ul>
-              <a
-                href="/register"
+              <Link
+                to="/register"
                 className="w-full block text-center py-4 px-6 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 Get Started Free
-              </a>
+              </Link>
             </div>
   
             {/* Pro Monthly Plan */}
@@ -76,12 +78,12 @@ export const PricingSection = () => {
                   </li>
                 ))}
               </ul>
-              <a
-                href="/register"
+              <Link
+                to="/register"
                 className="w-full block text-center py-4 px-6 rounded-xl border-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 dark:border-emerald-500/50 font-bold hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
               >
                 Choose Monthly
-              </a>
+              </Link>
             </div>
 
             {/* Pro Yearly Plan */}
@@ -116,12 +118,12 @@ export const PricingSection = () => {
                     </li>
                   ))}
                 </ul>
-                <a
-                  href="/register"
+                <Link
+                  to="/register"
                   className="w-full block text-center py-4 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold transition-all shadow-glow-primary hover:shadow-lg transform active:scale-95"
                 >
                   Upgrade to Yearly
-                </a>
+                </Link>
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {

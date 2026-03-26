@@ -18,15 +18,15 @@ import { cn } from '@/lib/utils';
 import { ScrollToTop } from '@/components/ui/scroll-to-top';
 import { useAiTutor } from '@/features/ai-tutor/hooks/useAiTutor';
 import ReactMarkdown from 'react-markdown';
-import { usePlanGate } from '@/hooks/usePlanGate';
+import { usePlanGate, UpgradePrompt } from '@/hooks/usePlanGate';
 
-// Types for our chat
-// interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: string;
-}
+
+
+
+
+
+
+
 
 export const AiTutorPage = () => {
     const [showHistory, setShowHistory] = useState(false);
@@ -36,7 +36,7 @@ export const AiTutorPage = () => {
     const [activeTopic, setActiveTopic] = useState('');
     const [selectedImages, setSelectedImages] = useState<{data: string, mimeType: string}[]>([]);
     
-    usePlanGate('unlimited_ai');
+    const { hasAccess } = usePlanGate('unlimited_ai');
 
     // Connect to AI useAiTutor Hook
     const {
@@ -86,6 +86,13 @@ export const AiTutorPage = () => {
 
     const handleSend = async () => {
         if ((!inputValue.trim() && selectedImages.length === 0) || isStreaming) return;
+
+        // Soft limit for free users: restrict to a certain number of messages per session
+        if (!hasAccess && messages.length >= 6) {
+            alert('Free tier AI limit reached for this session. Please upgrade your plan in Settings to unlock unlimited AI queries.');
+            return;
+        }
+
         const msg = inputValue;
         const imgs = [...selectedImages];
         setInputValue('');
@@ -109,8 +116,7 @@ export const AiTutorPage = () => {
     }, [inputValue]);
 
     return (
-        <div className="flex flex-col md:flex-row h-[calc(100vh-8rem)] gap-0 relative bg-white dark:bg-slate-950">
-            
+        <div className="flex flex-col md:flex-row h-[calc(100vh-4rem)] md:h-screen w-full bg-slate-50 dark:bg-slate-900 absolute top-0 left-0 z-10 overflow-hidden pt-16 md:pt-0">
             {/* Mobile Header */}
             <div className="md:hidden flex flex-col p-4 gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50 absolute top-0 left-0 right-0 z-20">
                 <div className="flex items-center justify-between">
@@ -282,10 +288,16 @@ export const AiTutorPage = () => {
                 <ScrollToTop scrollableRef={scrollRef} className="bottom-24 right-4 md:bottom-28 md:right-8 lg:right-auto lg:left-1/2" />
 
                 {/* Messages Area */}
-                <div 
+                <div
                     ref={scrollRef}
                     className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 pt-20 md:pt-16 pb-32 md:pb-8 flex flex-col"
                 >
+                    {!hasAccess && (
+                        <div className="w-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-500 p-3 rounded-lg text-sm flex items-center justify-center gap-2 mt-4 md:mt-0">
+                            <Zap className="w-4 h-4" />
+                            <span>You are on the Free Plan. AI queries are limited to 3 per session. <a href="/student/settings" className="font-bold underline">Upgrade Plan</a> to unlock unlimited AI.</span>
+                        </div>
+                    )}
                     {messages.length === 0 ? (
                         <div className="my-auto flex flex-col items-center justify-center text-center max-w-2xl mx-auto px-4 w-full">
                             <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-8 shadow-sm">

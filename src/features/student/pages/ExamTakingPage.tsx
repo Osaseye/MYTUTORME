@@ -8,8 +8,8 @@ import {
   ArrowLeft,
   ArrowRight,
   AlertCircle,
-  PlayCircle,
-  FileText,
+  
+  
   Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

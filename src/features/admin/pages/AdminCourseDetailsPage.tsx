@@ -5,7 +5,7 @@ import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { 
   ChevronLeft, Check, X, BookOpen, PlayCircle, FileText,
-  Tag, Banknote, User, GraduationCap, BarChart3, AlertCircle 
+  Tag, Banknote, User, GraduationCap, BarChart3, AlertCircle, Calendar 
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';

@@ -4,8 +4,8 @@ import {
   LayoutGrid,
   Star,
   Clock,
-  ChevronLeft, 
-  ChevronRight,
+   
+  
   Check,
   PlayCircle,
   BookOpen

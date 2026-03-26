@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export const CoursesPreviewSection = () => {
     return (
       <section className="py-24 bg-white dark:bg-[#0F172A] border-t border-slate-100 dark:border-slate-800">
@@ -9,15 +11,15 @@ export const CoursesPreviewSection = () => {
                 Join thousands of learners mastering new skills.
               </p>
             </div>
-            <a
-              href="#"
+            <Link
+              to="/student/courses"
               className="hidden md:inline-flex items-center text-primary font-bold hover:text-primary-dark transition-colors mt-4 md:mt-0 group"
             >
               View all courses{' '}
               <span className="material-symbols-outlined ml-1 group-hover:translate-x-1 transition-transform">
                 arrow_forward
               </span>
-            </a>
+            </Link>
           </div>
   
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

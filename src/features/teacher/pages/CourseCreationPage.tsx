@@ -26,6 +26,17 @@ type CourseModule = {
   items: ModuleItem[];
 };
 
+interface CourseFormData {
+    title: string;
+    subject: string;
+    level: string;
+    description: string;
+    price: number;
+    thumbnailUrl: string;
+    promoVideoUrl: string;
+    modules: CourseModule[];
+}
+
 export const CourseCreationPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -44,7 +55,7 @@ export const CourseCreationPage = () => {
   const isPremium = user?.teacherSubscriptionPlan === 'premium_tools';
 
   // Persistent State for FormData
-  const [formData, setFormData] = useState(() => {
+  const [formData, setFormData] = useState<CourseFormData>(() => {
     const saved = localStorage.getItem('courseCreationData');
     if (saved) {
       try {
