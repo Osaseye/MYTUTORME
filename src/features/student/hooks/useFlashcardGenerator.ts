@@ -51,8 +51,7 @@ export const useFlashcardGenerator = () => {
         if (!existingDecksSnap.empty) {
             // Re-use the existing deck if we already have one!
             const existingDeck = existingDecksSnap.docs[0];
-            const existingDeckData = existingDeck.data();
-            
+
             // Should we add more cards if requested count > existing count?
             // For now, if the user generates it again, let's just return the existing deck to avoid duplicates.
             toast.success("Deck already exists! Redirecting...");

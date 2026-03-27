@@ -24,6 +24,7 @@ export const useStudyPlanGenerator = () => {
   const { user } = useAuthStore();
 
   const generatePlan = async (options: StudyPlanGenerationOptions) => {
+    const { subject, targetExam, durationWeeks, proficiency } = options;
     setIsGenerating(true);
     try {
       // 0. Subscription Constraint Check

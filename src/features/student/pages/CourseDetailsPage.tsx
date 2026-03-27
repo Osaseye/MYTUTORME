@@ -12,7 +12,7 @@ import { PurchaseCourseModal } from '../components/PurchaseCourseModal';
 import { LessonPlayer } from '../components/LessonPlayer';
 import type { Quiz, QuizStats } from '../types/quiz';
 
-import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, writeBatch, increment } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, writeBatch, increment, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 import { usePlanGate } from '@/hooks/usePlanGate';
@@ -205,9 +205,36 @@ export const CourseDetailsPage = () => {
     }
   };
 
-  const handleQuizComplete = (stats: QuizStats) => {
+  const handleQuizComplete = async (stats: QuizStats) => {
     setQuizStats(stats);
     setActiveQuiz(null);
+    if (!user) return;
+    
+    try {
+        await addDoc(collection(db, 'quiz_attempts'), {
+            studentId: user.uid,
+            quizId: activeQuiz?.id,
+            courseId: course?.id,
+            title: activeQuiz?.title || 'Course Quiz',
+            startedAt: serverTimestamp(),
+            completedAt: serverTimestamp(),
+            score: Math.round(stats.score),
+            passed: stats.passed,
+            timeTaken: stats.timeTaken,
+            totalQuestions: stats.totalQuestions,
+            correctAnswers: stats.correctAnswers
+        });
+        
+        if (enrollmentId && stats.passed) {
+            const enrRef = doc(db, 'enrollments', enrollmentId);
+            await updateDoc(enrRef, {
+                completedModules: arrayUnion(activeQuiz?.id),
+                progress: increment(5) // Example increment
+            });
+        }
+    } catch (e) {
+        console.error("Failed to save quiz attempt: ", e);
+    }
   };
 
   if (loading) {
@@ -350,14 +377,23 @@ export const CourseDetailsPage = () => {
                                     </div>
                                     <Button onClick={() => {
                                         // Try to match the Quiz type
-                                        const mappedQuiz: Quiz = {
-                                            id: quiz.id || `quiz-${qIdx}`,
-                                            title: quiz.title || 'Course Checkpoint',
-                                            description: `Test your knowledge on ${quiz.moduleTitle}`,
-                                            courseId: course.id,
-                                            passingScore: 70,
-                                            timeLimit: (quiz.questions?.length || 10) * 2, // 2 mins per question
-                                            questions: quiz.questions || []
+                                          const mappedQuestions = (quiz.questions || []).map((q: any, i: number) => ({
+                                              id: q.id || `q-${i}`,
+                                              text: q.text || q.question || 'Missing question text',
+                                              type: q.type || 'multiple-choice',
+                                              options: q.options || [],
+                                              correctAnswer: q.correctAnswer || '',
+                                              explanation: q.explanation || '',
+                                              points: q.points || 1
+                                          }));
+                                          const mappedQuiz: Quiz = {
+                                              id: quiz.id || `quiz-${qIdx}`,
+                                              title: quiz.title || 'Course Checkpoint',
+                                              description: `Test your knowledge on ${quiz.moduleTitle}`,
+                                              courseId: course.id,
+                                              passingScore: 70,
+                                              timeLimit: (quiz.questions?.length || 10) * 2, // 2 mins per question
+                                              questions: mappedQuestions
                                         };
                                         setActiveQuiz(mappedQuiz);
                                     }} className="w-full sm:w-auto">Start Quiz</Button>

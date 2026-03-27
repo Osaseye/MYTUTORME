@@ -10,7 +10,6 @@ import {
   Image as ImageIcon,
   PlusCircle,
   X,
-  MessageSquarePlus,
   PanelLeftClose,
   PanelLeftOpen,
   Loader2,

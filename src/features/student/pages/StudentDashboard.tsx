@@ -14,7 +14,8 @@ import { PerformanceChart } from '../components/PerformanceChart';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 import type { StudentProfile } from '@/types/user';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, doc, getDoc, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { calculateCumulativeGPA } from '../utils/gpaUtils';
 
 export const StudentDashboard = () => {
   const { user } = useAuthStore();
@@ -42,10 +43,10 @@ export const StudentDashboard = () => {
           if (data.scale) setGradingScale(data.scale);
           
           if (data.semesters && data.semesters.length > 0) {
-              const totalPoints = data.semesters.reduce((acc: number, sem: any) => acc + (sem.totalPoints || 0), 0);
-              const totalCredits = data.semesters.reduce((acc: number, sem: any) => acc + (sem.totalCredits || 0), 0);
+              const calculatedGPA = calculateCumulativeGPA(data.semesters, data.scale || gradingScale);
+              const totalCredits = data.semesters.flatMap((s: any) => s.courses || []).reduce((sum: number, c: any) => sum + (Number(c.credits) || 0), 0);
               if (totalCredits > 0) {
-                 setCurrentCGPA(Number((totalPoints / totalCredits).toFixed(2)));
+                 setCurrentCGPA(calculatedGPA);
               }
           }
         }
@@ -57,14 +58,16 @@ export const StudentDashboard = () => {
       try {
         const q = query(
           collection(db, 'quiz_attempts'),
-          where('userId', '==', user.uid),
-          orderBy('completedAt', 'asc') // Changed down below if needed
+          where('studentId', '==', user.uid)
         );
         const snap = await getDocs(q);
-        const scores = snap.docs.map(doc => {
-           const d = doc.data();
-           return d.score || 0;
+        const docs = snap.docs.map(doc => doc.data());
+        docs.sort((a, b) => {
+          const timeA = a.completedAt?.toMillis?.() || 0;
+          const timeB = b.completedAt?.toMillis?.() || 0;
+          return timeA - timeB;
         });
+        const scores = docs.map(d => d.score || 0);
         // Get last 10 quizzes or map dates
         const recentScores = scores.slice(-10);
         setPerformanceData(recentScores);
