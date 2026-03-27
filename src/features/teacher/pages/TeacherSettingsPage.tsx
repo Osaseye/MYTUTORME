@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Lock, User, Globe } from "lucide-react";
+import { Bell, Lock, User, Globe, CreditCard, Sparkles, Check } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useState, useEffect, useRef } from "react";
 import { updateDoc, doc } from "firebase/firestore";
@@ -14,7 +14,7 @@ import { toast } from "sonner";
 
 export const TeacherSettingsPage = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'security'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'security' | 'subscription'>('profile');
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -60,11 +60,26 @@ export const TeacherSettingsPage = () => {
       await updateDoc(doc(db, "users", user.uid), updatedData);
       toast.success("Profile updated successfully!");
     } catch (error: any) {
-      toast.error(error.message || "Failed to update profile");
+      toast.error("Failed to update profile", { description: error.message });
     } finally {
       setIsSaving(false);
     }
   };
+
+  const handleUpdateSubscription = async (newPlan: 'free' | 'premium_tools') => {
+    if (!user?.uid) return;
+    try {
+      await updateDoc(doc(db, "users", user.uid), {
+        teacherSubscriptionPlan: newPlan
+      });
+      toast.success(`Successfully switched to ${newPlan === 'free' ? 'Standard' : 'Premium'} plan!`);
+      // Optional: Refresh auth store / user context here if necessary depending on app implementation
+      setTimeout(() => window.location.reload(), 1000); 
+    } catch(e: any) {
+      toast.error("Failed to update subscription", { description: e.message });
+    }
+  };
+
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -140,6 +155,13 @@ export const TeacherSettingsPage = () => {
                 onClick={() => setActiveTab('security')}
             >
               <Lock className="h-4 w-4" /> Security
+            </Button>
+            <Button
+                variant="ghost"
+                className={`justify-start gap-2 font-medium ${activeTab === 'subscription' ? 'bg-secondary/10 text-primary' : 'text-slate-600 hover:text-slate-900'}`}
+                onClick={() => setActiveTab('subscription')}
+            >
+              <CreditCard className="h-4 w-4" /> Subscription
             </Button>
           </nav>
         </div>
@@ -264,6 +286,52 @@ export const TeacherSettingsPage = () => {
                     <p className="text-sm text-slate-500">Update your password to keep your account secure.</p>
                   </div>
                   <Button variant="outline" size="sm">Change</Button>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {activeTab === 'subscription' && (
+            <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 max-w-3xl">
+              <h2 className="text-xl font-semibold mb-2 text-slate-900">Subscription Plan</h2>
+              <p className="text-slate-500 text-sm mb-8">Manage your instructor plan and tools.</p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Free Plan */}
+                <div className={`border rounded-xl p-6 flex flex-col ${(!user?.teacherSubscriptionPlan || user?.teacherSubscriptionPlan === 'free') ? 'border-primary shadow-sm bg-primary/5' : 'border-slate-200 bg-white'}`}>
+                  <h3 className="font-bold text-lg mb-1">Standard Instructor</h3>
+                  <div className="text-2xl font-bold mb-4">Free</div>
+                  <ul className="text-sm space-y-3 mb-8 flex-grow">
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0" /> Host unlimited courses</li>
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0" /> Basic course builder</li>
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary shrink-0" /> 15% platform commission</li>
+                    <li className="flex items-start gap-2 text-slate-400"><span className="w-4 h-4 shrink-0 block" /> No AI Generation Tools</li>
+                    <li className="flex items-start gap-2 text-slate-400"><span className="w-4 h-4 shrink-0 block" /> Standard discoverability</li>
+                  </ul>
+                  {(!user?.teacherSubscriptionPlan || user?.teacherSubscriptionPlan === 'free') ? (
+                    <Button variant="outline" className="w-full" disabled>Current Plan</Button>
+                  ) : (
+                    <Button variant="outline" className="w-full" onClick={() => handleUpdateSubscription('free')}>Downgrade to Free</Button>
+                  )}
+                </div>
+
+                {/* Premium Plan */}
+                <div className={`border rounded-xl p-6 flex flex-col relative overflow-hidden ${user?.teacherSubscriptionPlan === 'premium_tools' ? 'border-amber-500 shadow-sm bg-amber-500/5' : 'border-slate-200 bg-white'}`}>
+                  <div className="absolute top-0 right-0 bg-amber-500 text-white text-[10px] uppercase font-bold px-3 py-1 rounded-bl-lg">Recommended</div>
+                  <h3 className="font-bold text-lg mb-1 flex items-center gap-2 text-amber-600">Premium Toolset <Sparkles className="w-4 h-4" /></h3>
+                  <div className="text-2xl font-bold mb-4">₦10,000<span className="text-sm font-normal text-slate-500">/mo</span></div>
+                  <ul className="text-sm space-y-3 mb-8 flex-grow">
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-amber-500 shrink-0" /> Everything in Standard</li>
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-amber-500 shrink-0" /> Smart AI Syllabus Generator</li>
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-amber-500 shrink-0" /> Auto AI Quiz Generator</li>
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-amber-500 shrink-0" /> Priority algorithm boosting</li>
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-amber-500 shrink-0" /> Lower 10% platform commission</li>
+                  </ul>
+                  {user?.teacherSubscriptionPlan === 'premium_tools' ? (
+                    <Button variant="outline" className="w-full border-amber-500 text-amber-600 hover:bg-amber-50" disabled>Current Plan</Button>
+                  ) : (
+                    <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white" onClick={() => handleUpdateSubscription('premium_tools')}>Upgrade to Premium</Button>
+                  )}
                 </div>
               </div>
             </section>

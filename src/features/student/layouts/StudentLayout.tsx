@@ -4,12 +4,22 @@ import { MobileFloatingNav } from '../components/MobileFloatingNav';
 import { Bell, Search, UserCircle, Crown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
-import { Badge } from '@/components/ui/badge';
 
 export const StudentLayout = () => {
   const { user } = useAuthStore();
   const location = useLocation();
   const isAiTutor = location.pathname === '/student/ai-tutor';
+
+  const getPlanDisplay = (plan?: string) => {
+    if (!plan || plan === 'free') return 'Free';
+    if (plan === 'pro_monthly') return 'Pro Monthly';
+    if (plan === 'pro_yearly') return 'Pro Yearly';
+    if (plan === 'pro') return 'Pro';
+    return plan.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const planDisplay = getPlanDisplay(user?.plan);
+  const isPro = user?.plan && user.plan !== 'free';
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -39,23 +49,29 @@ export const StudentLayout = () => {
             </div>
 
             <div className="flex items-center gap-4">
-               {user?.plan !== 'free' && (
-                  <Badge variant="outline" className="hidden sm:flex border-primary/20 bg-primary/10 text-primary px-3 py-1 items-center gap-1">
-                     <Crown className="w-3.5 h-3.5" /> 
-                     <span className="capitalize">{user?.plan || 'Free'}</span>
-                  </Badge>
+               {isPro && (
+                  <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-200 to-yellow-400 dark:from-amber-500/20 dark:to-yellow-500/20 text-amber-900 dark:text-amber-300 shadow-sm border border-amber-300/50 dark:border-amber-500/30">
+                     <Crown className="w-3.5 h-3.5" />
+                     <span className="text-[11px] font-bold tracking-wider uppercase">{planDisplay}</span> 
+                  </div>
                )}
-               
+
                <button className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-500">
                  <Bell className="w-5 h-5" />
                </button>
 
                <div className="flex items-center gap-3">
-                 <div className="hidden sm:block text-right">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white leading-none mb-1">
+                 <div className="hidden sm:flex flex-col items-end justify-center">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white leading-none mb-1.5">
                       {(user as any)?.username || user?.displayName || "Student"}
                     </p>
-                    <p className="text-xs text-slate-500 capitalize">{user?.plan || 'Free'} Plan</p>
+                    {isPro ? (
+                        <p className="text-[10px] font-bold bg-gradient-to-r from-amber-500 to-yellow-600 dark:from-amber-400 dark:to-yellow-500 bg-clip-text text-transparent uppercase tracking-wider leading-none">
+                            {planDisplay} PLAN
+                        </p>
+                    ) : (
+                        <p className="text-xs text-slate-500 leading-none">Free Plan</p>
+                    )}
                  </div>
                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 cursor-pointer overflow-hidden">
                     {user?.photoURL ? (

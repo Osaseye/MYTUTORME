@@ -11,7 +11,8 @@ import {
   LogOut,
   Sparkles,
   FileEdit,
-  Users
+  Users,
+  HelpCircle
 } from 'lucide-react';
 
 export const StudentSidebar = () => {
@@ -70,6 +71,16 @@ export const StudentSidebar = () => {
                 </div>
 
                 <div className="space-y-1 pt-6 border-t border-slate-200 dark:border-slate-800">
+                     <Link
+                        to="/support"
+                        className={cn(
+                             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white",        
+                             location.pathname === '/support' && "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white"
+                        )}
+                    >
+                        <HelpCircle className="h-4 w-4 text-slate-400 group-hover:text-slate-600 dark:text-slate-500" />
+                        Help & Support
+                    </Link>
                      <Link
                         to="/student/settings"
                         className={cn(

@@ -7,10 +7,11 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { registerSchema, type RegisterCredentials } from '../types';
-import { registerUser, loginWithGoogle } from '../api/auth';
+import { registerUser, registerWithGoogle } from '../api/auth';
 
 export const RegisterForm = () => {
-    const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -47,11 +48,18 @@ export const RegisterForm = () => {
   };
 
   const handleGoogleLogin = async () => {
+    setIsOAuthLoading(true);
     try {
-      await loginWithGoogle();
+      await registerWithGoogle(selectedRole);
       // onAuthStateChanged handles the rest
-    } catch (error) {
-      toast.error('Google login failed.');
+    } catch (error: any) {
+      const messages: Record<string, string> = {
+        'auth/popup-closed-by-user': 'Google sign-up was cancelled.',
+        'auth/cancelled-popup-request': 'Google sign-up is already in progress.',
+      };
+      toast.error(messages[error?.code] ?? 'Google sign-up failed.');
+    } finally {
+      setIsOAuthLoading(false);
     }
   };
 
@@ -64,8 +72,15 @@ export const RegisterForm = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Button variant="outline" type="button" className="w-full" onClick={handleGoogleLogin}>
+      <div className="grid grid-cols-1 gap-4">
+        <Button
+          variant="outline"
+          type="button"
+          className="w-full"
+          onClick={handleGoogleLogin}
+          isLoading={isOAuthLoading}
+          disabled={isOAuthLoading || isLoading}
+        >
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -84,13 +99,7 @@ export const RegisterForm = () => {
               fill="#EA4335"
             />
           </svg>
-          Google
-        </Button>
-        <Button variant="outline" type="button" className="w-full">
-          <svg className="mr-2 h-4 w-4 fill-current" viewBox="0 0 24 24">
-            <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.78 1.18-.19 2.31-.89 3.51-.84 1.54.06 2.68.74 3.37 1.74-2.92 1.51-2.39 5.86.3 6.69-.15.42-.31.83-.51 1.21-.6 1.19-1.25 2.38-1.75 3.39zm-3.88-16.7c.39-2.32 2.15-3.52 4.19-3.58.4 2.54-1.92 4.67-4.19 3.58z" />
-          </svg>
-          Apple
+          Continue with Google
         </Button>
       </div>
 

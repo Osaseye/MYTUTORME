@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Download, Share2, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Download, Share2, ArrowLeft } from 'lucide-react';        
 import { Button } from '@/components/ui/button';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -84,40 +84,100 @@ export const CertificatePage = () => {
         </div>
       </div>
 
-      <div className="bg-slate-100 dark:bg-slate-800 p-8 rounded-2xl flex justify-center overflow-x-auto">
+      <div className="bg-slate-100 dark:bg-slate-800 p-8 rounded-2xl flex justify-center overflow-x-auto shadow-inner">
         <div 
            id="certificate-node" 
-           className="bg-white text-slate-900 border-8 border-double border-slate-200 p-12 text-center relative w-[800px] h-[600px] flex flex-col justify-center items-center shadow-xl font-serif shrink-0 space-y-6"
-           style={{ backgroundImage: 'linear-gradient(to bottom right, #ffffff, #f8fafc)' }}
+           className="bg-white text-slate-900 relative w-[800px] h-[600px] flex flex-col items-center shadow-2xl shrink-0 overflow-hidden"
+           style={{ 
+             background: 'radial-gradient(circle at center, #ffffff 0%, #f0fdf4 100%)',
+           }}
         >
-           <div className="absolute top-8 left-8 flex items-center gap-2 text-primary font-sans font-bold">
-              <CheckCircle className="w-6 h-6" /> MyTutorMe Verify
+           {/* Decorative Outer Border */}
+           <div className="absolute inset-5 border-2 border-primary/40 pointer-events-none"></div>
+           {/* Decorative Inner Border */}
+           <div className="absolute inset-[26px] border-[1px] border-primary/40 pointer-events-none"></div>
+           {/* Corner Ornaments */}
+           <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-primary pointer-events-none"></div>
+           <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-primary pointer-events-none"></div>
+           <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-primary pointer-events-none"></div>
+           <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-primary pointer-events-none"></div>
+
+           {/* Top Brand Logo */}
+           <div className="mt-12 flex items-center gap-3">
+              <img src="/icon.png" alt="Logo" className="w-10 h-10" crossOrigin="anonymous" />
+              <span className="font-display font-black text-3xl tracking-tight text-slate-900 border-b-2 border-transparent">
+                  MyTutor<span className="text-primary">Me</span>
+              </span>
            </div>
            
-           <h2 className="text-4xl font-bold tracking-widest uppercase text-slate-400 mb-2">Certificate</h2>
-           <p className="text-lg italic text-slate-600 mb-6">This is to certify that</p>
+           {/* Main Certificate Title */}
+           <div className="mt-8 text-center space-y-1">
+              <h2 className="text-[2.75rem] font-serif text-slate-800 tracking-[0.15em] font-black uppercase" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.05)' }}>
+                  Certificate
+              </h2>
+              <h3 className="text-[1.1rem] tracking-[0.3em] font-sans text-primary/80 font-bold uppercase">
+                  Of Achievement
+              </h3>
+           </div>
+
+           {/* Presentation Text */}
+           <p className="text-lg italic text-slate-500 mt-8 mb-4 font-serif">
+              This is proudly presented to
+           </p>
            
-           <h1 className="text-5xl font-bold text-slate-800 mb-6 border-b-2 border-slate-300 pb-2 inline-block px-12">
+           {/* Student Name */}
+           <h1 className="text-5xl font-bold font-serif text-slate-900 mb-6 pb-2 px-12 border-b-[3px] border-primary/30 min-w-[500px] text-center">
               {cert.studentName}
            </h1>
            
-           <p className="text-lg italic text-slate-600 mb-2">has successfully completed the course</p>
-           <h3 className="text-2xl font-bold text-primary mb-12 max-w-2xl">
+           {/* Course Description */}
+           <p className="text-sm text-slate-600 mb-2 font-sans uppercase tracking-widest font-semibold">
+              For successfully completing the course
+           </p>
+           
+           {/* Course Name */}
+           <h3 className="text-2xl font-bold font-serif text-primary px-8 text-center max-w-2xl leading-tight mb-8">
               {cert.courseName}
            </h3>
 
-           <div className="w-full flex justify-between items-end px-12 mt-12">
-               <div className="text-left">
-                   <div className="border-b border-slate-400 w-48 pb-1 mb-2 font-handwriting text-2xl text-slate-700 text-center">{cert.instructorName}</div>
-                   <p className="text-sm font-sans tracking-widest uppercase text-slate-500 text-center">Instructor</p>
-               </div>
-               <div className="text-right flex flex-col items-center">
-                   <div className="w-24 h-24 bg-primary/5 rounded-full flex items-center justify-center border-4 border-primary/20 mb-2 shadow-inner">
-                       {/* <Award className="w-10 h-10 text-primary" /> */}
+           {/* Bottom Section: Signatures & Seal */}
+           <div className="w-full flex justify-between items-end px-20 mt-auto mb-16">
+               
+               {/* Date Section */}
+               <div className="text-center w-48 flex flex-col items-center">
+                   <div className="border-b border-slate-400 w-full pb-1 mb-2 text-lg text-slate-700 font-serif min-h-[32px] flex items-end justify-center">
+                     {cert.issueDate?.toDate ? cert.issueDate.toDate().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date('2026-03-27').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                    </div>
-                   <p className="text-xs font-sans text-slate-400">ID: {cert.verificationCode}</p>
-                   <p className="text-xs font-sans text-slate-400">Issued: {cert.issueDate?.toDate ? cert.issueDate.toDate().toLocaleDateString() : 'Today'}</p>
+                   <p className="text-[0.65rem] font-sans tracking-[0.2em] uppercase text-slate-400 font-bold">Date Issued</p>
                </div>
+
+               {/* Center Seal */}
+               <div className="relative flex justify-center items-center -mb-8">
+                   <div className="w-32 h-32 rounded-full flex items-center justify-center relative bg-gradient-to-br from-[#f0fdf4] to-[#dcfce7] shadow-[0_4px_20px_rgba(22,163,74,0.15)] ring-8 ring-white">
+                       {/* Inner dashed ring */}
+                       <div className="absolute inset-2 border-[2px] border-primary/40 rounded-full border-dashed"></div>
+                       {/* Double solid ring */}
+                       <div className="absolute inset-0 border-[4px] border-primary/20 rounded-full"></div>
+                       
+                       <div className="relative z-10 flex flex-col items-center">
+                           <img src="/icon.png" alt="Seal" className="w-12 h-12 mb-1" crossOrigin="anonymous" />
+                           <span className="text-[0.55rem] font-bold text-primary uppercase tracking-widest bg-white/80 px-2 py-0.5 rounded-full backdrop-blur-sm">Verified</span>
+                       </div>
+                   </div>
+               </div>
+
+               {/* Signature Section */}
+               <div className="text-center w-48 flex flex-col items-center">
+                   <div className="border-b border-slate-400 w-full pb-1 mb-2 text-2xl text-slate-800 font-serif italic min-h-[32px] flex items-end justify-center">
+                     {cert.instructorName}
+                   </div>
+                   <p className="text-[0.65rem] font-sans tracking-[0.2em] uppercase text-slate-400 font-bold">Instructor Signature</p>
+               </div>
+           </div>
+           
+           {/* Footer ID */}
+           <div className="absolute bottom-5 text-[10px] font-sans text-slate-400 tracking-wider w-full text-center">
+              CERTIFICATE ID: <span className="font-mono text-slate-500">{cert.verificationCode}</span> &nbsp;|&nbsp; VERIFY AT MYTUTORME.COM/VERIFY
            </div>
         </div>
       </div>

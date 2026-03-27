@@ -10,6 +10,8 @@ import { OnboardingLayout, StudentOnboarding, TeacherOnboarding } from '@/featur
 import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, AssignmentHelperPage, GpaTrackerPage, CertificatePage, MyCertificatesPage, SettingsPage, ExamPrepPage, ExamConfigPage, ExamResultsPage, ExamTakingPage, FlashcardConfigPage, FlashcardPlayerPage, CommunityPage, StudyPlannerConfigPage, StudyPlannerViewPage } from '@/features/student';
 import { TeacherLayout, TeacherDashboard, TeacherCoursesPage, TeacherCourseDetailsPage, CourseCreationPage, ResourcesPage, EarningsPage, CommunityPage as TeacherCommunityPage, TeacherSettingsPage, StudentsPage, TeacherPendingPage } from '@/features/teacher';
 import { AdminLayout, AdminDashboard, UserManagementPage, AdminLoginPage, CourseModerationPage, AdminCourseDetailsPage, FinancialsPage, SettingsPage as AdminSettingsPage } from '@/features/admin';
+import { SupportPage } from '@/pages/SupportPage';
+import { VerifyCertificatePage } from '@/pages/VerifyCertificatePage';
 
 export const AppRoutes = () => {
   return (
@@ -18,6 +20,8 @@ export const AppRoutes = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
+        <Route path={paths.support} element={<SupportPage />} />
+        <Route path={paths.verifyCertificate} element={<VerifyCertificatePage />} />
         <Route element={<AuthLayout />}>
           <Route path={paths.auth.login} element={<LoginPage />} />
           <Route path={paths.auth.register} element={<RegisterPage />} />

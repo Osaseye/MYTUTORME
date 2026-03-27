@@ -59,11 +59,21 @@ export const TeacherDashboard = () => {
                     }
                 });
 
+                // Fetch real earnings
+                const txRef = collection(db, 'transactions');
+                const tq = query(txRef, where('teacherId', '==', user.uid), where('status', '==', 'completed'));
+                const txSnap = await getDocs(tq);
+                let computedEarnings = 0;
+                txSnap.forEach((doc) => {
+                    const data = doc.data();
+                    computedEarnings += (data.teacherEarnings !== undefined ? data.teacherEarnings : (data.amount * 0.70)) || 0;
+                });
+
                 setStats(prev => ({
                     ...prev,
                     activeStudents: students,
                     totalCourses: publishedCourseCount,
-                    totalEarnings: (user as any)?.lifetimeEarnings || 0
+                    totalEarnings: computedEarnings // Use actual transactions instead of just user profile
                 }));
             } catch (error) {
                 console.error("Error fetching stats:", error);

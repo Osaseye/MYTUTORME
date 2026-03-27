@@ -45,6 +45,8 @@ interface PlatformUser {
   // Specific student fields
   level?: string;
   institution?: string;
+  plan?: string;
+  teacherSubscriptionPlan?: string;
   // Account status
   isSuspended?: boolean;
 }
@@ -56,7 +58,7 @@ export const UserManagementPage = () => {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [tab, setTab] = useState<'all' | 'teachers_pending' | 'students'>('teachers_pending');
+    const [tab, setTab] = useState<'all' | 'teachers_pending' | 'teachers' | 'students'>('teachers_pending');
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
     const [enrolledCourses, setEnrolledCourses] = useState<{id: string, title: string}[]>([]);
@@ -135,6 +137,8 @@ export const UserManagementPage = () => {
         // Tab Filtering
         if (tab === 'teachers_pending') {
             result = result.filter(u => u.role === 'teacher' && u.verificationStatus === 'pending');
+        } else if (tab === 'teachers') {
+            result = result.filter(u => u.role === 'teacher' && u.verificationStatus !== 'pending');
         } else if (tab === 'students') {
             result = result.filter(u => u.role === 'student');
         }
@@ -233,6 +237,12 @@ export const UserManagementPage = () => {
                             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${tab === 'teachers_pending' ? 'bg-white dark:bg-slate-700 shadow-sm text-amber-600' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                             Pending Tutors
+                        </button>
+                        <button 
+                            onClick={() => { setTab('teachers'); setSelectedUser(null); }}
+                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${tab === 'teachers' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            Tutors
                         </button>
                         <button 
                             onClick={() => { setTab('students'); setSelectedUser(null); }}
@@ -366,9 +376,16 @@ export const UserManagementPage = () => {
                                 </Avatar>
                                 <div className="flex flex-col items-center gap-1">
                                     <CardTitle>{selectedUser.displayName || 'Unnamed User'}</CardTitle>
-                                    {selectedUser.isSuspended && (
-                                        <Badge  className="mt-1 mb-1">Suspended</Badge>
-                                    )}
+                                    <div className="flex items-center gap-2 mt-1 flex-wrap justify-center">
+                                       <Badge variant="outline" className={`capitalize ${(selectedUser.role === 'teacher' && selectedUser.teacherSubscriptionPlan === 'premium_tools') || (selectedUser.role === 'student' && selectedUser.plan && selectedUser.plan.includes('pro')) ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+                                          {selectedUser.role === 'teacher' 
+                                            ? (selectedUser.teacherSubscriptionPlan === 'premium_tools' ? 'Premium Teacher' : 'Free Teacher') 
+                                            : ((selectedUser.plan && selectedUser.plan.includes('pro')) ? `Pro ${selectedUser.plan.includes('yearly') ? 'Yearly' : 'Monthly'} Student` : 'Free Student')}
+                                       </Badge>
+                                       {selectedUser.isSuspended && (
+                                           <Badge variant="destructive">Suspended</Badge>
+                                       )}
+                                    </div>
                                 </div>
                                 <CardDescription className="flex items-center justify-center mt-1">
                                     <Mail className="w-3 h-3 mr-1" /> {selectedUser.email}

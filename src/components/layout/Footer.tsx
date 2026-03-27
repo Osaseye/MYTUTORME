@@ -18,16 +18,16 @@ export const Footer = () => {
   
             {/* Links */}
             {[
-              { title: 'Platform', links: ['Browse Courses', 'AI Tutor', 'Pricing', 'For Schools'] },
-              { title: 'Company', links: ['About Us', 'Careers', 'Blog', 'Contact'] },
+              { title: 'Platform', links: [{name: 'Browse Courses', href:'#'}, {name: 'AI Tutor', href:'#'}, {name: 'Pricing', href:'#'}, {name: 'For Schools', href:'#'}, {name: 'Verify Certificate', href:'/verify'}] },
+              { title: 'Company', links: [{name: 'About Us', href:'#'}, {name: 'Careers', href:'#'}, {name: 'Blog', href:'#'}, {name: 'Support & FAQ', href:'/support'}] },
             ].map((col) => (
               <div key={col.title}>
                 <h4 className="font-bold text-slate-900 dark:text-white mb-4">{col.title}</h4>
                 <ul className="space-y-3 text-sm text-slate-500">
                   {col.links.map((link) => (
-                    <li key={link}>
-                      <a href="#" className="hover:text-primary transition-colors">
-                        {link}
+                    <li key={link.name}>
+                      <a href={link.href} className="hover:text-primary transition-colors">
+                        {link.name}
                       </a>
                     </li>
                   ))}

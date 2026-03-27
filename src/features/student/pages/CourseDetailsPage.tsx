@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { 
-  PlayCircle, CheckCircle, FileText, Monitor, Star, Users, 
-  ArrowRight, School, Lock, Play
+import {
+  PlayCircle, CheckCircle, FileText, Monitor, Star, Users,
+  ArrowRight, School, Lock, Play, Award
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { QuizRunner, QuizResults } from '../components/QuizRunner';
@@ -15,7 +15,6 @@ import type { Quiz, QuizStats } from '../types/quiz';
 import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, writeBatch, increment, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
-import { usePlanGate } from '@/hooks/usePlanGate';
 
 const MOCK_QUIZ: Quiz = {
   id: 'quiz-1',
@@ -77,9 +76,8 @@ export const CourseDetailsPage = () => {
   
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
   const [activeLesson, setActiveLesson] = useState<{id: string, title: string, contentUrl?: string, contentType?: string} | null>(null);
+  const [courseCertificate, setCourseCertificate] = useState<any>(null);
   const [quizStats, setQuizStats] = useState<QuizStats | null>(null);
-  
-  const { hasAccess } = usePlanGate('full_course_library');
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -115,6 +113,13 @@ export const CourseDetailsPage = () => {
             setActiveTab('curriculum');
             setCompletedLessons(enrDoc.data().completedModules || []);
           }
+
+          // 4. Fetch User Certificate for this course
+          const certsQ = query(collection(db, 'certificates'), where('studentId', '==', user.uid), where('courseId', '==', courseId));
+          const certsSnap = await getDocs(certsQ);
+          if (!certsSnap.empty) {
+              setCourseCertificate({ id: certsSnap.docs[0].id, ...certsSnap.docs[0].data() });
+          }
         }
       } catch (err) {
         console.error("Failed to load course details", err);
@@ -128,6 +133,22 @@ export const CourseDetailsPage = () => {
   const handleEnrollSuccess = async () => {
     if (!user || !course) return;
     try {
+        // Fetch teacher to get currentCommissionRate or use 30% default
+        let commissionRate = 0.30;
+        if (course.teacherId) {
+            const teacherRefSnap = await getDoc(doc(db, 'users', course.teacherId));
+            if (teacherRefSnap.exists()) {
+                const tData = teacherRefSnap.data();
+                if (tData.currentCommissionRate !== undefined) {
+                    commissionRate = tData.currentCommissionRate;
+                }
+            }
+        }
+        
+        const price = course.price === 'Free' ? 0 : Number(course.price);
+        const platformFee = price * commissionRate;
+        const teacherEarnings = price - platformFee;
+
         const batch = writeBatch(db);
 
         // 1. Create enrollment
@@ -136,6 +157,7 @@ export const CourseDetailsPage = () => {
         batch.set(newEnrollmentRef, {
             courseId: course.id,
             studentId: user.uid,
+            teacherId: course.teacherId || course.teacherName, // Needed for teacher dashboard
             enrolledAt: new Date(),
             progress: 0,
             completedModules: []
@@ -145,7 +167,9 @@ export const CourseDetailsPage = () => {
         const transactionsRef = collection(db, 'transactions');
         const newTransactionRef = doc(transactionsRef);
         batch.set(newTransactionRef, {
-            amount: course.price === 'Free' ? 0 : course.price,
+            amount: price,
+            platformFee,
+            teacherEarnings,
             courseId: course.id,
             studentId: user.uid,
             teacherId: course.teacherId || course.teacherName, // Fallback to name if ID not present
@@ -170,6 +194,9 @@ export const CourseDetailsPage = () => {
             createdAt: new Date()
         });
 
+        // Skip updating teacher's lifetime earnings here to avoid permission issues
+        // We will fetch and calculate earnings on the fly on the dashboard instead
+
         await batch.commit();
 
         setEnrollmentId(newEnrollmentRef.id);
@@ -183,19 +210,63 @@ export const CourseDetailsPage = () => {
     }
   };
 
+  const checkAndAwardCertificate = async (updatedCompletedList: string[]) => {
+      if (!user || !course || courseCertificate) return;
+
+      let allItems: any[] = [];
+      modules.forEach(m => {
+          if (m.items) allItems.push(...m.items);
+          if (m.lessons) allItems.push(...m.lessons);
+      });
+
+      const totalItems = allItems.length;
+      if (totalItems === 0) return 0;
+      
+      const progressPct = Math.min(100, Math.round((updatedCompletedList.length / totalItems) * 100));
+
+      if (progressPct === 100 && !courseCertificate) {
+          try {
+              const suffix = Math.floor(1000 + Math.random() * 9000);
+              const verificationCode = `MTM-${new Date().getFullYear()}-${suffix}`;
+              const pUser = user as any;
+              // Extract the user's actual formal name robustly
+              const actualFullName = [pUser.firstName, pUser.lastName].filter(Boolean).join(' ').trim() || user.displayName || 'Dedicated Student';
+
+              const certData = {
+                  studentId: user.uid,
+                  studentName: actualFullName,
+                  courseId: course.id,
+                  courseName: course.title,
+                  instructorName: course.teacherName || 'Instructor',
+                  issueDate: serverTimestamp(),
+                  verificationCode,
+                  grade: 'Completed (100%)'
+              };
+              
+              const docRef = await addDoc(collection(db, 'certificates'), certData);
+              setCourseCertificate({ id: docRef.id, ...certData });
+              toast.success("Course Completed!", { description: "You've earned a new certificate!" });
+          } catch (e) {
+              console.error("Error generating certificate", e);
+          }
+      }
+      return progressPct;
+  };
+
   const handleLessonComplete = async () => {
     if (!activeLesson) return;
     try {
-        // Update local state and backend
-        setCompletedLessons(prev => [...new Set([...prev, activeLesson.id])]);
+        const newCompleted = [...new Set([...completedLessons, activeLesson.id])];
+        setCompletedLessons(newCompleted);  
         toast.success("Lesson Completed!");
+
+        const currentProgress = await checkAndAwardCertificate(newCompleted) || 0;
 
         if (enrollmentId) {
             const enrRef = doc(db, 'enrollments', enrollmentId);
-            // We just add lesson ID to completedModules. In reality we could compute total progress %.
             await updateDoc(enrRef, {
                 completedModules: arrayUnion(activeLesson.id),
-                progress: 15 // Mock hardcoded progress calculation for now
+                progress: currentProgress
             });
         }
     } catch (e) {
@@ -225,11 +296,16 @@ export const CourseDetailsPage = () => {
             correctAnswers: stats.correctAnswers
         });
         
-        if (enrollmentId && stats.passed) {
+        if (enrollmentId && stats.passed && activeQuiz) {
+            const newCompleted = [...new Set([...completedLessons, activeQuiz.id])];
+            setCompletedLessons(newCompleted);
+
+            const currentProgress = await checkAndAwardCertificate(newCompleted) || 0;
+
             const enrRef = doc(db, 'enrollments', enrollmentId);
             await updateDoc(enrRef, {
-                completedModules: arrayUnion(activeQuiz?.id),
-                progress: increment(5) // Example increment
+                completedModules: arrayUnion(activeQuiz.id),
+                progress: currentProgress
             });
         }
     } catch (e) {
@@ -405,12 +481,29 @@ export const CourseDetailsPage = () => {
 
                    {activeTab === 'certificate' && (
                       <div className="text-center py-12 px-4 border border-slate-200 dark:border-slate-800 rounded-xl">
-                         <div className="w-20 h-20 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400"><Lock className="w-8 h-8" /></div>
-                         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">My Certificate</h3>
-                         <p className="text-slate-500 dark:text-gray-400 max-w-md mx-auto mb-6">Your certificate will be available here once you complete 100% of the course content.</p>
-                         <Link to="/student/certificates/cert-123">
-                            <Button variant="outline">Preview Certificate</Button>
-                         </Link>
+                         {courseCertificate ? (
+                             <>
+                                 <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
+                                     <Award className="w-8 h-8" />
+                                 </div>
+                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Congratulations!</h3>
+                                 <p className="text-slate-500 dark:text-gray-400 max-w-md mx-auto mb-6">You have completed all course requirements and earned your certificate of achievement.</p>
+                                 <Link to={`/student/certificates/${courseCertificate.id}`}>
+                                    <Button className="bg-primary hover:bg-green-700 text-white shadow-lg">View Certificate</Button>
+                                 </Link>
+                             </>
+                         ) : (
+                             <>
+                                 <div className="w-20 h-20 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                                     <Lock className="w-8 h-8" />
+                                 </div>
+                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">My Certificate</h3>
+                                 <p className="text-slate-500 dark:text-gray-400 max-w-md mx-auto mb-6">Your certificate will be available here once you complete 100% of the course content.</p>
+                                 <Link to="/student/certificates/cert-123">
+                                    <Button variant="outline">Preview Certificate</Button>
+                                 </Link>
+                             </>
+                         )}
                       </div>
                    )}
                    
@@ -460,15 +553,8 @@ export const CourseDetailsPage = () => {
                  ) : (
                    <div className="space-y-2">
                      <Button className="w-full h-12 text-base font-bold bg-primary hover:bg-green-700" onClick={() => {
-                        if (!hasAccess && course.price !== 'Free' && course.price !== 0) {
-                          toast.error("Premium course. Please upgrade your plan to enroll.");
-                        } else {
-                          setIsPurchaseModalOpen(true);
-                        }
+                        setIsPurchaseModalOpen(true);
                      }}>Enroll Now <ArrowRight className="w-5 h-5 ml-2" /></Button>
-                     {!hasAccess && (course.price !== 'Free' && course.price !== 0) && (
-                       <p className="text-xs text-center text-primary font-medium">Upgrade to Pro to access this course</p>
-                     )}
                    </div>
                  )}
               </div>

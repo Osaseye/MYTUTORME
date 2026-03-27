@@ -10,6 +10,50 @@ import {
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import type { LoginCredentials, RegisterCredentials } from '../types';
 
+type AuthRole = RegisterCredentials['role'];
+
+const buildUserDoc = (
+  user: { uid: string; email: string | null; displayName: string | null; photoURL: string | null },
+  role: AuthRole,
+) => {
+  const baseUserData: Record<string, unknown> = {
+    uid: user.uid,
+    email: user.email ?? '',
+    displayName: user.displayName ?? '',
+    role,
+    photoURL: user.photoURL ?? '',
+    createdAt: Date.now(),
+    isOnboardingComplete: false,
+    plan: 'free',
+    subscriptionStatus: null,
+    subscriptionId: null,
+    planStartDate: null,
+    planRenewalDate: null,
+    planCancelledAt: null,
+    guidedAssignmentsRemaining: 0,
+    premiumMockExamsRemaining: 0,
+    aiQueryCount: 0,
+    aiQueryDate: '',
+    totalAmountPaid: 0,
+    firstPaymentDate: null,
+    acquisitionSource: 'organic',
+  };
+
+  if (role === 'student') {
+    return {
+      ...baseUserData,
+      level: 'secondary',
+      gradingSystem: '5.0',
+      studyStreak: 0,
+    };
+  }
+
+  return {
+    ...baseUserData,
+    subjects: [],
+  };
+};
+
 export const loginUser = async ({ email, password }: LoginCredentials) => {
   const result = await signInWithEmailAndPassword(auth, email, password);
   
@@ -87,32 +131,28 @@ export const loginWithGoogle = async () => {
   }
 
   if (!userDoc.exists()) {
-    // First Google login — create user document with student defaults
-    await setDoc(doc(db, 'users', user.uid), {
-      uid: user.uid,
-      email: user.email!,
-      displayName: user.displayName ?? '',
-      role: 'student',
-      photoURL: user.photoURL ?? '',
-      createdAt: Date.now(),
-      isOnboardingComplete: false,
-      plan: 'free',
-      subscriptionStatus: null,
-      subscriptionId: null,
-      planStartDate: null,
-      planRenewalDate: null,
-      planCancelledAt: null,
-      guidedAssignmentsRemaining: 0,
-      premiumMockExamsRemaining: 0,
-      aiQueryCount: 0,
-      aiQueryDate: '',
-      totalAmountPaid: 0,
-      firstPaymentDate: null,
-      acquisitionSource: 'organic',
-      level: 'secondary',
-      gradingSystem: '5.0',
-      studyStreak: 0,
-    });
+    // First Google auth via login defaults to student profile.
+    await setDoc(doc(db, 'users', user.uid), buildUserDoc(user, 'student'));
+  }
+
+  return result;
+};
+
+export const registerWithGoogle = async (role: AuthRole) => {
+  const provider = new GoogleAuthProvider();
+  const result = await signInWithPopup(auth, provider);
+  const user = result.user;
+
+  const userDocRef = doc(db, 'users', user.uid);
+  const userDoc = await getDoc(userDocRef);
+
+  if (userDoc.exists() && userDoc.data().isSuspended) {
+    await signOut(auth);
+    throw { code: 'auth/account-suspended', message: 'Your account has been suspended.' };
+  }
+
+  if (!userDoc.exists()) {
+    await setDoc(userDocRef, buildUserDoc(user, role));
   }
 
   return result;

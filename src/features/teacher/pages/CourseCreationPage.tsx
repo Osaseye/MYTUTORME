@@ -273,11 +273,17 @@ export const CourseCreationPage = () => {
       if (!poolSnapshot.empty) {
         const cachedData = poolSnapshot.docs[0].data();
         
+        // Strip correct answers from cached data so the teacher still has to select them
+        const strippedQuestions = (cachedData.questions || []).map((q: any) => ({
+            ...q,
+            correctAnswer: ""
+        }));
+
         const newQuizItem: ModuleItem = {
             id: uuidv4(),
             type: 'quiz',
             title: `${moduleTitle} Quiz`,
-            questions: cachedData.questions
+            questions: strippedQuestions
         };
 
         const updatedModules = formData.modules.map(mod => 
@@ -304,8 +310,8 @@ export const CourseCreationPage = () => {
         The module title is: "${moduleTitle}". The overall course title is "${formData.title}".
         Return ONLY a complete, valid JSON array of question objects. 
         Each object must exactly match this format:
-        { "question": "The question text?", "options": ["A", "B", "C", "D"], "correctAnswer": "The exact string from options" }
-        Do not include any other markdown or text.`;
+        { "question": "The question text?", "options": ["Option A", "Option B", "Option C", "Option D"], "correctAnswer": "" }
+        Leave "correctAnswer" as an empty string. The teacher will manually select the correct answer later. Do not include any other markdown or text.`;
 
         const model = getModel({ jsonMode: true, temperature: 0.7 });
         const response = await model.generateContent(prompt);
@@ -602,8 +608,90 @@ export const CourseCreationPage = () => {
                                      )}
 
                                      {item.type === 'quiz' && item.questions && (
-                                         <div className="pl-2 pt-1">
-                                             <p className="text-xs text-slate-500 font-medium">{item.questions.length} questions mapped.</p>
+                                         <div className="pl-2 pt-3 space-y-4 w-full">
+                                            {item.questions.map((q, qIdx) => (
+                                                <div key={qIdx} className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700 space-y-3">
+                                                    <div className="flex justify-between items-start gap-2">
+                                                        <Input 
+                                                            value={q.question} 
+                                                            placeholder="Question text..." 
+                                                            onChange={(e) => {
+                                                                const newModules = [...formData.modules];
+                                                                const modIndex = newModules.findIndex(m => m.id === module.id);
+                                                                newModules[modIndex].items[iIdx].questions![qIdx].question = e.target.value;
+                                                                updateField('modules', newModules);
+                                                            }} 
+                                                            className="font-medium text-sm border-transparent bg-white dark:bg-slate-900 border"
+                                                        />
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-500 shrink-0" onClick={() => {
+                                                            const newModules = [...formData.modules];
+                                                            const modIndex = newModules.findIndex(m => m.id === module.id);
+                                                            newModules[modIndex].items[iIdx].questions!.splice(qIdx, 1);
+                                                            updateField('modules', newModules);
+                                                        }}>
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
+                                                    
+                                                    <div className="space-y-2 pl-1">
+                                                        {q.options.map((opt: string, optIdx: number) => (
+                                                            <div key={optIdx} className="flex flex-row items-center gap-3">
+                                                                <input 
+                                                                    type="radio" 
+                                                                    name={`quiz-${item.id}-q-${qIdx}`} 
+                                                                    checked={q.correctAnswer === opt && opt.trim() !== ""}
+                                                                    onChange={() => {
+                                                                        const newModules = [...formData.modules];
+                                                                        const modIndex = newModules.findIndex(m => m.id === module.id);
+                                                                        newModules[modIndex].items[iIdx].questions![qIdx].correctAnswer = opt;
+                                                                        updateField('modules', newModules);
+                                                                    }}
+                                                                    className="w-4 h-4 text-primary cursor-pointer shrink-0"
+                                                                />
+                                                                <Input 
+                                                                    value={opt} 
+                                                                    onChange={(e) => {
+                                                                        const newModules = [...formData.modules];
+                                                                        const modIndex = newModules.findIndex(m => m.id === module.id);
+                                                                        
+                                                                        const newVal = e.target.value;
+                                                                        const oldVal = newModules[modIndex].items[iIdx].questions![qIdx].options[optIdx];
+                                                                        
+                                                                        // If this option was previously selected as correct, update it
+                                                                        if (newModules[modIndex].items[iIdx].questions![qIdx].correctAnswer === oldVal) {
+                                                                            newModules[modIndex].items[iIdx].questions![qIdx].correctAnswer = newVal;
+                                                                        }
+                                                                        
+                                                                        newModules[modIndex].items[iIdx].questions![qIdx].options[optIdx] = newVal;
+                                                                        
+                                                                        updateField('modules', newModules);
+                                                                    }}
+                                                                    placeholder={`Option ${optIdx + 1}`}
+                                                                    className="h-8 text-sm"
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                className="w-full border-dashed"
+                                                onClick={() => {
+                                                    const newModules = [...formData.modules];
+                                                    const modIndex = newModules.findIndex(m => m.id === module.id);
+                                                    newModules[modIndex].items[iIdx].questions!.push({
+                                                        question: '',
+                                                        options: ['', '', '', ''],
+                                                        correctAnswer: ''
+                                                    });
+                                                    updateField('modules', newModules);
+                                                }}
+                                            >
+                                                + Add Question
+                                            </Button>
                                          </div>
                                      )}
                                   </div>
@@ -629,6 +717,22 @@ export const CourseCreationPage = () => {
                                updateField('modules', newModules);
                              }}>
                                <FileText className="w-3 h-3" /> Add Document
+                             </Button>
+
+                             <Button variant="outline" size="sm" className="h-8 text-xs border-dashed gap-1.5" onClick={() => {
+                               const newModules = [...formData.modules];
+                               const modIndex = newModules.findIndex(m => m.id === module.id);
+                               newModules[modIndex].items.push({ 
+                                 id: uuidv4(), 
+                                 type: 'quiz', 
+                                 title: 'Quiz', 
+                                 questions: [
+                                   { question: '', options: ['', '', '', ''], correctAnswer: '' }
+                                 ] 
+                               });
+                               updateField('modules', newModules);
+                             }}>
+                               <FileQuestion className="w-3 h-3" /> Manual Quiz
                              </Button>
 
                              {isPremium && (

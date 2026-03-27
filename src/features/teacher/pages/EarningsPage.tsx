@@ -36,8 +36,10 @@ export const EarningsPage = () => {
         const txList: any[] = [];
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          total += data.amount || 0;
-          txList.push({ id: doc.id, ...data });
+          // Use teacherEarnings if it exists, otherwise mathematically deduce 70% for legacy fallback
+          const amt = data.teacherEarnings !== undefined ? data.teacherEarnings : ((data.amount || 0) * 0.70);
+          total += amt;
+          txList.push({ id: doc.id, ...data, displayAmount: amt });
         });
         setTotalEarnings(total);
         setTransactions(txList);
@@ -68,7 +70,7 @@ export const EarningsPage = () => {
         if (date && !isNaN(date.getTime())) {
           const monthName = date.toLocaleString("en-US", { month: "short" });
           if (dataByMonth.has(monthName)) {
-            dataByMonth.set(monthName, dataByMonth.get(monthName)! + (t.amount || 0));
+            dataByMonth.set(monthName, dataByMonth.get(monthName)! + (t.displayAmount || 0));
           }
         }
       }
@@ -274,12 +276,30 @@ export const EarningsPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900">
+              {transactions.length > 0 ? transactions.map((t, idx) => {
+                 let dateStr = "Unknown";
+                 if (t.createdAt) {
+                    if (t.createdAt.toDate) dateStr = t.createdAt.toDate().toLocaleDateString();
+                    else if (typeof t.createdAt === 'number') dateStr = new Date(t.createdAt).toLocaleDateString();
+                    else if (typeof t.createdAt === 'string') dateStr = new Date(t.createdAt).toLocaleDateString();
+                 }
+                 return (
+                 <tr key={t.id || idx}>
+                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{dateStr}</td>
+                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white capitalize">{t.type || 'Course Sale'}</td>
+                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{t.courseId || 'Unknown'}</td>
+                   <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-green-600">₦{(t.displayAmount || 0).toLocaleString()}</td>
+                   <td className="px-6 py-4 whitespace-nowrap text-sm text-right"><span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 capitalize">{t.status || 'completed'}</span></td>
+                 </tr>
+                 );
+              }) : (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                   <span className="material-symbols-outlined text-4xl mb-2 text-slate-300">receipt_long</span>
                   <p>No recent transactions.</p>
                 </td>
               </tr>
+              )}
             </tbody>
           </table>
         </div>

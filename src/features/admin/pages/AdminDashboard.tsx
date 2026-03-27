@@ -29,6 +29,7 @@ interface DashboardStats {
   totalRevenue: number;
   pendingVerifications: number;
   pendingCourseReviews: number;
+  platformCuts: number;
 }
 
 export const AdminDashboard = () => {
@@ -48,6 +49,7 @@ export const AdminDashboard = () => {
               pendingCoursesSnap, 
               pendingTeachersSnap,
               revenueSnap,
+              platformFeesSnap,
               usersCollection
           ] = await Promise.all([
               getCountFromServer(collection(db, 'users')),
@@ -57,6 +59,7 @@ export const AdminDashboard = () => {
               getCountFromServer(query(collection(db, 'courses'), or(where('status', '==', 'pending_review'), where('status', '==', 'pending')))),
               getCountFromServer(query(collection(db, 'users'), where('role', '==', 'teacher'), where('verificationStatus', '==', 'pending'))),
               getAggregateFromServer(collection(db, 'transactions'), { totalRevenue: sum('amount') }),
+              getAggregateFromServer(collection(db, 'transactions'), { platformCuts: sum('platformFee') }),
               getDocs(collection(db, 'users'))
           ]);
 
@@ -68,6 +71,7 @@ export const AdminDashboard = () => {
               totalRevenue: revenueSnap.data().totalRevenue || 0,
               pendingVerifications: pendingTeachersSnap.data().count,
               pendingCourseReviews: pendingCoursesSnap.data().count,
+              platformCuts: platformFeesSnap.data().platformCuts || 0,
           });
 
           const monthCounts: Record<string, number> = {};
@@ -180,15 +184,22 @@ export const AdminDashboard = () => {
         </Card>
         <Card className="border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-600">Total Revenue & Cuts</CardTitle>
             <DollarSign className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold font-display">₦{(stats?.totalRevenue || 0).toLocaleString()}</div>
-            <p className="text-xs text-green-600 flex items-center gap-1 font-medium mt-1">
-               <TrendingUp className="w-3 h-3" />
-               Platform Gross
-            </p>
+            <div className="flex items-baseline justify-between">
+              <div>
+                <div className="text-2xl font-bold font-display">₦{(stats?.platformCuts || 0).toLocaleString()}</div>
+                <p className="text-xs text-green-600 flex items-center gap-1 font-medium mt-1">
+                  <TrendingUp className="w-3 h-3" />
+                  Net Income (Platform)
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-bold text-slate-400">Gross: ₦{(stats?.totalRevenue || 0).toLocaleString()}</div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

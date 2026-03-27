@@ -43,6 +43,7 @@ interface Transaction {
 export const FinancialsPage = () => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
+    const [userStats, setUserStats] = useState({ studentPro: 0, teacherPro: 0 });
 
     useEffect(() => {
         const q = query(collection(db, 'transactions'), orderBy('createdAt', 'desc'));
@@ -54,16 +55,52 @@ export const FinancialsPage = () => {
             console.error("Error fetching transactions:", error);
             setLoading(false);
         });
+
+        // Fetch pro users
+        import('firebase/firestore').then(({ getDocs, collection, query, where }) => {
+            const fetchProUsers = async () => {
+                try {
+                    const usersRef = collection(db, 'users');
+                    
+                    const studentsQ = query(usersRef, where('role', '==', 'student'));
+                    const stdSnap = await getDocs(studentsQ);
+                    let stdPro = 0;
+                    stdSnap.forEach(doc => {
+                        const plan = doc.data().plan;
+                        if (plan === 'pro' || plan === 'pro_monthly' || plan === 'pro_yearly') stdPro++;
+                    });
+
+                    const teachersQ = query(usersRef, where('role', '==', 'teacher'));
+                    const tchSnap = await getDocs(teachersQ);
+                    let tchPro = 0;
+                    tchSnap.forEach(doc => {
+                        const plan = doc.data().teacherSubscriptionPlan;
+                        if (plan === 'premium_tools' || plan === 'enterprise') tchPro++;
+                    });
+
+                    setUserStats({
+                        studentPro: stdPro,
+                        teacherPro: tchPro
+                    });
+                } catch(err) {
+                    console.error("Error fetching pro users:", err);
+                }
+            };
+            fetchProUsers();
+        });
+
         return () => unsubscribe();
     }, []);
 
+    const isSuccessful = (t: Transaction) => t.status === 'successful' || (t.status as string) === 'completed';
+
     // Calculate Metrics
     const totalRevenue = transactions
-        .filter(t => t.status === 'successful' && t.type !== 'payout')
+        .filter(t => isSuccessful(t) && t.type !== 'payout')
         .reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
     const teacherPayouts = transactions
-        .filter(t => t.status === 'successful' && t.type === 'payout')
+        .filter(t => isSuccessful(t) && t.type === 'payout')
         .reduce((acc, curr) => acc + (curr.amount || 0), 0);
         
     const pendingPayouts = transactions
@@ -71,19 +108,19 @@ export const FinancialsPage = () => {
         .reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
     const platformFees = transactions
-        .filter(t => t.status === 'successful')
+        .filter(t => isSuccessful(t))
         .reduce((acc, curr) => acc + (curr.platformFee || 0), 0);
 
     // If platform fees aren't explicitly tracked, estimate net profit
     const owedToTeachers = transactions
-        .filter(t => t.status === 'successful' && t.type === 'course_purchase')
-        .reduce((acc, curr) => acc + (curr.teacherPayoutAmount || 0), 0);
+        .filter(t => isSuccessful(t) && (t.type === 'course_purchase' || (t.type as string) === 'purchase'))
+        .reduce((acc, curr) => acc + ((curr as any).teacherEarnings !== undefined ? (curr as any).teacherEarnings : (curr.amount * 0.70)), 0);
         
     const totalNetProfit = platformFees > 0 ? platformFees : (totalRevenue - owedToTeachers);
 
     // Get Subscription Count
-    const studentSubscriptions = transactions.filter(t => t.type === 'subscription' && t.userRole === 'student' && t.status === 'successful').length;
-    const teacherSubscriptions = transactions.filter(t => t.type === 'subscription' && t.userRole === 'teacher' && t.status === 'successful').length;
+    const studentSubscriptions = userStats.studentPro;
+    const teacherSubscriptions = userStats.teacherPro;
 
     const formatCurrency = (amt: number) => `₦${(amt || 0).toLocaleString()}`;
 

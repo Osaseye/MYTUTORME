@@ -12,7 +12,9 @@ import {
   X,
   CreditCard,
   FileText,
-  Users
+  Users,
+  HelpCircle,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -72,6 +74,7 @@ export const TeacherLayout = () => {
         { label: 'Earnings', path: '/teacher/earnings', icon: CreditCard },
         { label: 'Community', path: '/teacher/community', icon: MessageSquare },
         { label: 'Settings', path: '/teacher/settings', icon: Settings },
+        { label: 'Help & Support', path: '/support', icon: HelpCircle },
     ];
 
     const handleLogout = async () => {
@@ -162,6 +165,13 @@ export const TeacherLayout = () => {
                    </div>
                    
                    <div className="flex items-center gap-4">
+                        {user?.teacherSubscriptionPlan === 'premium_tools' && (
+                            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-200 to-yellow-400 dark:from-amber-500/20 dark:to-yellow-500/20 text-amber-900 dark:text-amber-300 shadow-sm border border-amber-300/50 dark:border-amber-500/30">
+                                <Sparkles className="w-3.5 h-3.5" />
+                                <span className="text-[11px] font-bold tracking-wider uppercase">Premium</span>
+                            </div>
+                        )}
+
                         <Button variant="ghost" size="icon" className="relative">
                             <Bell className="h-5 w-5 text-slate-600 dark:text-slate-400" />
                             <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
@@ -177,8 +187,14 @@ export const TeacherLayout = () => {
                                         <AvatarFallback>{(user?.displayName || 'Teacher').charAt(0).toUpperCase()}</AvatarFallback>
                                     </Avatar>
                                     <div className="text-left hidden lg:block">
-                                        <p className="text-sm font-medium leading-none">{user?.displayName || "Teacher"}</p>
-                                        <p className="text-xs text-slate-500">Teacher</p>
+                                        <p className="text-sm font-medium leading-none mb-1.5">{user?.displayName || "Teacher"}</p>
+                                        {user?.teacherSubscriptionPlan === 'premium_tools' ? (
+                                            <p className="text-[10px] font-bold bg-gradient-to-r from-amber-500 to-yellow-600 dark:from-amber-400 dark:to-yellow-500 bg-clip-text text-transparent uppercase tracking-wider leading-none">
+                                                PREMIUM PLAN
+                                            </p>
+                                        ) : (
+                                            <p className="text-xs text-slate-500 leading-none">Free Plan</p>
+                                        )}
                                     </div>
                                 </Button>
                             </DropdownMenuTrigger>
