@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { Search, CheckCircle, XCircle, Award, Loader2, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Search, CheckCircle, XCircle, Award, Loader2, ShieldCheck } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
