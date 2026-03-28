@@ -15,8 +15,10 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from '@/lib/firebase';
 import { useAuth, useAuthStore } from '@/features/auth/hooks/useAuth';
+import { toast } from "sonner";
 
 // Defined interface for form data
 interface StudentFormData {
@@ -108,7 +110,7 @@ export const StudentOnboarding = () => {
   const nextStep = () => setStep(prev => prev + 1);
   const prevStep = () => setStep(prev => prev - 1);
 
-  const handleComplete = async () => {
+const handleComplete = async (selectedPlan?: 'pro_monthly' | 'pro_yearly') => {
     if (!user) return;
     setIsSubmitting(true);
     try {
@@ -125,18 +127,41 @@ export const StudentOnboarding = () => {
         targetCGPA: parseFloat(formData.target_cgpa) || 0,
         painPoint: formData.painPoint,
         interests: formData.subjects,
+        // Fallback or explicit init if they hit skip
+        plan: 'free',
       });
-      useAuthStore.getState().setUser({ 
-        ...user, 
-        isOnboardingComplete: true, 
+      useAuthStore.getState().setUser({
+        ...user,
+        isOnboardingComplete: true,
         displayName: formData.fullName || user.displayName,
         ...({ ...({ username: formData.username } as any) } as any)
       });
       localStorage.removeItem('student_onboarding_step');
       localStorage.removeItem('student_onboarding_formData');
+      
+      // If plan is selected handle payout transition
+      if (selectedPlan && (selectedPlan === 'pro_monthly' || selectedPlan === 'pro_yearly')) {
+        const initializeSubscription = httpsCallable(functions, 'initializeSubscription');
+        const planCode = selectedPlan === 'pro_monthly' ? "PLN_6txydrn1y6vh7pl" : "PLN_c879xjnliprqly3";
+        const result = await initializeSubscription({
+          planCode,
+          email: user?.email,
+          userId: user?.uid
+        });
+
+        const data: any = result.data;
+        if (data?.authorizationUrl) {
+          window.location.href = data.authorizationUrl; // Redirect to Paystack
+          return;
+        } else {
+           toast.error("Error initializing payment URL.");
+        }
+      }
+
       navigate('/student/dashboard');
     } catch (error) {
       console.error('Error completing onboarding:', error);
+      toast.error('Error completing onboarding');
       setIsSubmitting(false);
     }
   };
@@ -477,7 +502,7 @@ export const StudentOnboarding = () => {
                       <CheckCircle2 className="w-4 h-4 text-emerald-500" /> 10 queries / day
                     </li>
                   </ul>
-                  <Button variant="outline" className="w-full mt-auto" onClick={nextStep}>
+                  <Button variant="outline" className="w-full mt-auto" onClick={() => handleComplete('free')} disabled={isSubmitting}>
                     Skip for now
                   </Button>
                 </motion.div>
@@ -506,7 +531,7 @@ export const StudentOnboarding = () => {
                       <CheckCircle2 className="w-4 h-4 text-primary" /> Advanced Analytics
                     </li>
                   </ul>
-                  <Button className="w-full gap-2 shadow-md shadow-primary/20 mt-auto" onClick={nextStep}>
+                  <Button className="w-full gap-2 shadow-md shadow-primary/20 mt-auto" onClick={() => handleComplete('pro_monthly')} disabled={isSubmitting}>
                     <Sparkles className="w-4 h-4" /> Upgrade Monthly
                   </Button>
                 </motion.div>
@@ -535,7 +560,7 @@ export const StudentOnboarding = () => {
                       <CheckCircle2 className="w-4 h-4 text-amber-500" /> Priority Support
                     </li>
                   </ul>
-                  <Button className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20 mt-auto" onClick={nextStep}>
+                  <Button className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20 mt-auto" onClick={() => handleComplete('pro_yearly')} disabled={isSubmitting}>
                     <Sparkles className="w-4 h-4" /> Upgrade Yearly
                   </Button>
                 </motion.div>

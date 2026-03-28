@@ -9,7 +9,8 @@ import { useState, useEffect, useRef } from "react";
 import { updateDoc, doc } from "firebase/firestore";
 import { updateProfile, getAuth } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "@/lib/firebase";
+import { httpsCallable } from "firebase/functions";
+import { db, storage, functions } from "@/lib/firebase";
 import { toast } from "sonner";
 
 export const TeacherSettingsPage = () => {
@@ -68,18 +69,48 @@ export const TeacherSettingsPage = () => {
 
   const handleUpdateSubscription = async (newPlan: 'free' | 'premium_tools') => {
     if (!user?.uid) return;
+
+    if (newPlan === 'premium_tools') {
+      try {
+        const initializeSubscription = httpsCallable(functions, 'initializeSubscription');
+        const result = await initializeSubscription({
+          planCode: "PLN_f310wmozw4tnxhq", // Teacher premium plan
+          email: user?.email,
+          userId: user?.uid
+        });
+
+        const data: any = result.data;
+        if (data?.authorizationUrl) {
+          window.location.href = data.authorizationUrl; // Redirect to Paystack
+        } else {
+          toast.error("Error initializing payment URL.");
+        }
+      } catch (e: any) {
+        toast.error("Failed to start payment", { description: e.message });
+      }
+      return;
+    }
+
     try {
+      // Logic for downgrading to free
+      const cancelSubscription = httpsCallable(functions, 'cancelSubscription');
+      // If cancelling, you might need their Paystack customer code here based on the Firebase Document mapping
+      if (user?.subscriptionCode && user?.paystackCustomerCode) {
+         await cancelSubscription({
+             subscriptionCode: user.subscriptionCode,
+             emailToken: user.paystackCustomerCode
+         });
+      }
+
       await updateDoc(doc(db, "users", user.uid), {
         teacherSubscriptionPlan: newPlan
       });
-      toast.success(`Successfully switched to ${newPlan === 'free' ? 'Standard' : 'Premium'} plan!`);
-      // Optional: Refresh auth store / user context here if necessary depending on app implementation
-      setTimeout(() => window.location.reload(), 1000); 
+      toast.success(`Successfully switched to Standard plan!`);
+      setTimeout(() => window.location.reload(), 1000);
     } catch(e: any) {
-      toast.error("Failed to update subscription", { description: e.message });
+      toast.error("Failed to downgrade subscription", { description: e.message });
     }
   };
-
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

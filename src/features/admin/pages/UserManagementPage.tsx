@@ -377,10 +377,10 @@ export const UserManagementPage = () => {
                                 <div className="flex flex-col items-center gap-1">
                                     <CardTitle>{selectedUser.displayName || 'Unnamed User'}</CardTitle>
                                     <div className="flex items-center gap-2 mt-1 flex-wrap justify-center">
-                                       <Badge variant="outline" className={`capitalize ${(selectedUser.role === 'teacher' && selectedUser.teacherSubscriptionPlan === 'premium_tools') || (selectedUser.role === 'student' && selectedUser.plan && selectedUser.plan.includes('pro')) ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+                                       <Badge variant="outline" className={`capitalize ${(selectedUser.role === 'teacher' && selectedUser.teacherSubscriptionPlan === 'premium_tools') || (selectedUser.role === 'student' && selectedUser.plan && (selectedUser.plan.includes('pro') || selectedUser.plan === 'monthly' || selectedUser.plan === 'yearly')) ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-700 border-slate-200'}`}>
                                           {selectedUser.role === 'teacher' 
                                             ? (selectedUser.teacherSubscriptionPlan === 'premium_tools' ? 'Premium Teacher' : 'Free Teacher') 
-                                            : ((selectedUser.plan && selectedUser.plan.includes('pro')) ? `Pro ${selectedUser.plan.includes('yearly') ? 'Yearly' : 'Monthly'} Student` : 'Free Student')}
+                                            : ((selectedUser.plan && (selectedUser.plan.includes('pro') || selectedUser.plan === 'monthly' || selectedUser.plan === 'yearly')) ? `Pro ${(selectedUser.plan.includes('yearly') || selectedUser.plan === 'yearly') ? 'Yearly' : 'Monthly'} Student` : 'Free Student')}
                                        </Badge>
                                        {selectedUser.isSuspended && (
                                            <Badge variant="destructive">Suspended</Badge>

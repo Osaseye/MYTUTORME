@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useAuth, useAuthStore } from '@/features/auth/hooks/useAuth';
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '@/lib/firebase';
 import { Sparkles, Zap, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -87,22 +88,40 @@ export const TeacherDashboard = () => {
         if (!user) return;
         setIsUpgrading(true);
         try {
-            await updateDoc(doc(db, 'users', user.uid), {
-                teacherSubscriptionPlan: 'premium_tools',
-                currentCommissionRate: 0.15 // Standard base config for premium
+            const initializeSubscription = httpsCallable(functions, 'initializeSubscription');
+            const result = await initializeSubscription({
+                planCode: "PLN_f310wmozw4tnxhq",
+                email: user?.email,
+                userId: user?.uid
             });
-            
+
+            const data: any = result.data;
+            if (data?.authorizationUrl) {
+                window.location.href = data.authorizationUrl; // Redirect to Paystack
+                return;
+            } else {
+                toast.error("Error initializing payment URL.");
+                setIsUpgrading(false);
+                return;
+            }
+
+            // We comment out standard client update which webhook handles
+            // await updateDoc(doc(db, 'users', user.uid), {
+            //    teacherSubscriptionPlan: 'premium_tools',
+            //    currentCommissionRate: 0.15 // Standard base config for premium
+            //});
+
+            /*
             useAuthStore.getState().setUser({
                 ...user,
                 teacherSubscriptionPlan: 'premium_tools',
                 currentCommissionRate: 0.15
             });
-            
-            toast.success("Successfully upgraded to Premium Tools!");
-        } catch (error) {
-            toast.error("Failed to upgrade. Please try again.");
+            */
+
+        } catch (error: any) {
+            toast.error("Failed to start payment.", { description: error.message });
             console.error("Upgrade error:", error);
-        } finally {
             setIsUpgrading(false);
         }
     };

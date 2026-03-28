@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import type { ChangeEvent } from 'react';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 import type { StudentProfile } from '@/types/user';
-import { db, storage, auth } from '@/lib/firebase';
+import { db, storage, auth, functions } from '@/lib/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
@@ -17,9 +18,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Bell, Lock, GraduationCap, Upload, ShieldCheck, Loader2, CreditCard } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
-export const SettingsPage = () => {
-  const { user, setUser } = useAuthStore();
-  const studentProfile = user as StudentProfile;
+  export const SettingsPage = () => {
+    const { user, setUser } = useAuthStore();
+    const studentProfile = user as StudentProfile;
+
+    // Normalize legacy plans from earlier webhook payload
+      const normalizedPlan = studentProfile?.plan === 'monthly' ? 'pro_monthly' : studentProfile?.plan === 'yearly' ? 'pro_yearly' : (studentProfile?.plan || 'free');
 
   const [isSaving, setIsSaving] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
@@ -187,18 +191,42 @@ export const SettingsPage = () => {
     if (!user) return;
     setIsSaving(true);
     try {
+      if (newPlan !== 'free') {
+        const initializeSubscription = httpsCallable(functions, 'initializeSubscription');
+        const planCode = newPlan === 'pro_monthly' ? "PLN_6txydrn1y6vh7pl" : "PLN_c879xjnliprqly3";
+        const result = await initializeSubscription({
+          planCode,
+          email: user?.email,
+          userId: user?.uid
+        });
+
+        const data: any = result.data;
+        if (data?.authorizationUrl) {
+          window.location.href = data.authorizationUrl; // Redirect to Paystack
+          return;
+        } else {
+          toast.error("Error initializing payment URL.");
+          setIsSaving(false);
+          return;
+        }
+      }
+
+      // Logc for cancelling
+      const cancelSubscription = httpsCallable(functions, 'cancelSubscription');
+      if (user?.subscriptionCode && user?.paystackCustomerCode) {
+         await cancelSubscription({
+             subscriptionCode: user.subscriptionCode,
+             emailToken: user.paystackCustomerCode
+         });
+      }
+
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
-        plan: newPlan 
+        plan: newPlan
       });
       setUser({ ...user, plan: newPlan } as StudentProfile);
-      
-      const planName = newPlan === 'free' ? 'Free Basic' : newPlan === 'pro_monthly' ? 'Pro Monthly' : 'Pro Yearly';
-      toast.success(`Successfully changed plan to ${planName}!`);
-      setShowPlans(false);
-    } catch (error: any) {
-      console.error(error);
-      toast.error('Failed to change subscription plan.');
+
+      toast.success(`Successfully restored to Free Plan!`);
     } finally {
       setIsSaving(false);
     }
@@ -507,10 +535,10 @@ export const SettingsPage = () => {
                     <div>
                       <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <ShieldCheck className="h-6 w-6 text-primary" />
-                        {studentProfile?.plan === 'pro_monthly' ? 'Pro Monthly Plan' : studentProfile?.plan === 'pro_yearly' ? 'Pro Yearly Plan' : 'Free Basic Plan'}
+                        {normalizedPlan === 'pro_monthly' ? 'Pro Monthly Plan' : normalizedPlan === 'pro_yearly' ? 'Pro Yearly Plan' : 'Free Basic Plan'}
                       </h3>
                       <p className="text-slate-500 mt-1">
-                        {studentProfile?.plan?.includes('pro') 
+                        {normalizedPlan?.includes('pro') 
                           ? 'You have access to all premium features including GPA Simulator, Unlimited AI, and Priority Support.'
                           : 'Upgrade to a Pro plan to unlock advanced features and boost your academic performance.'}
                       </p>
@@ -532,33 +560,33 @@ export const SettingsPage = () => {
                   {/* 3 Columns for Pricing Plans */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Free Plan */}
-                    <div className={`border rounded-xl p-4 flex flex-col ${studentProfile?.plan === 'free' ? 'border-primary bg-primary/5' : 'border-slate-200'}`}>
+                    <div className={`border rounded-xl p-4 flex flex-col ${normalizedPlan === 'free' ? 'border-primary bg-primary/5' : 'border-slate-200'}`}>
                       <h4 className="font-bold">Free Basic</h4>
                       <span className="text-2xl font-black my-2">₦0</span>
                       <p className="text-sm text-slate-500 flex-1">Basic access to limited AI queries and free courses.</p>
-                      <Button className="mt-4 w-full" variant={studentProfile?.plan === 'free' ? 'secondary' : 'outline'} onClick={() => handleChangePlan('free')} disabled={isSaving || studentProfile?.plan === 'free'}>
-                        {studentProfile?.plan === 'free' ? 'Current Plan' : 'Downgrade'}
+                      <Button className="mt-4 w-full" variant={normalizedPlan === 'free' ? 'secondary' : 'outline'} onClick={() => handleChangePlan('free')} disabled={isSaving || normalizedPlan === 'free'}>
+                        {normalizedPlan === 'free' ? 'Current Plan' : 'Downgrade'}
                       </Button>
                     </div>
 
                     {/* Pro Monthly */}
-                    <div className={`border rounded-xl p-4 flex flex-col ${studentProfile?.plan === 'pro_monthly' ? 'border-primary bg-primary/5' : 'border-slate-200'}`}>
+                    <div className={`border rounded-xl p-4 flex flex-col ${normalizedPlan === 'pro_monthly' ? 'border-primary bg-primary/5' : 'border-slate-200'}`}>
                       <h4 className="font-bold text-primary">Pro Monthly</h4>
                       <span className="text-2xl font-black my-2">₦4,000<span className="text-sm font-normal text-slate-500">/mo</span></span>
                       <p className="text-sm text-slate-500 flex-1">Unlimited AI, GPA Simulator, offline downloads, and more.</p>
-                      <Button className="mt-4 w-full" onClick={() => handleChangePlan('pro_monthly')} disabled={isSaving || studentProfile?.plan === 'pro_monthly'}>
-                        {studentProfile?.plan === 'pro_monthly' ? 'Current Plan' : 'Select Monthly'}
+                      <Button className="mt-4 w-full" onClick={() => handleChangePlan('pro_monthly')} disabled={isSaving || normalizedPlan === 'pro_monthly'}>
+                        {normalizedPlan === 'pro_monthly' ? 'Current Plan' : 'Select Monthly'}
                       </Button>
                     </div>
 
                     {/* Pro Yearly */}
-                    <div className={`border rounded-xl p-4 flex flex-col ${studentProfile?.plan === 'pro_yearly' ? 'border-primary bg-primary/5' : 'border-slate-200 shadow-md relative overflow-hidden'}`}>
+                    <div className={`border rounded-xl p-4 flex flex-col ${normalizedPlan === 'pro_yearly' ? 'border-primary bg-primary/5' : 'border-slate-200 shadow-md relative overflow-hidden'}`}>
                       <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">BEST VALUE</div>
                       <h4 className="font-bold text-primary">Pro Yearly</h4>
                       <span className="text-2xl font-black my-2">₦40,000<span className="text-sm font-normal text-slate-500">/yr</span></span>
                       <p className="text-sm text-slate-500 flex-1">Save ₦8,000 annually. Includes priority support.</p>
-                      <Button className="mt-4 w-full" onClick={() => handleChangePlan('pro_yearly')} disabled={isSaving || studentProfile?.plan === 'pro_yearly'}>
-                        {studentProfile?.plan === 'pro_yearly' ? 'Current Plan' : 'Select Yearly'}
+                      <Button className="mt-4 w-full" onClick={() => handleChangePlan('pro_yearly')} disabled={isSaving || normalizedPlan === 'pro_yearly'}>
+                        {normalizedPlan === 'pro_yearly' ? 'Current Plan' : 'Select Yearly'}
                       </Button>
                     </div>
                   </div>
