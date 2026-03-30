@@ -10,8 +10,8 @@ import {
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { useAuth, useAuthStore } from '@/features/auth/hooks/useAuth';
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '@/lib/firebase';
 import { Sparkles, Zap, ShieldCheck } from 'lucide-react';

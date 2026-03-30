@@ -2,6 +2,13 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import axios from "axios";
 import * as crypto from "crypto";
+import React from 'react';
+import { sendEmail } from "./lib/email";
+import { SubscriptionSuccessEmail } from "./emails/templates/SubscriptionSuccessEmail";
+import { PaymentFailedEmail } from "./emails/templates/PaymentFailedEmail";
+import { SubscriptionCancelledEmail } from "./emails/templates/SubscriptionCancelledEmail";
+import { PaymentFailedEmail } from "./emails/templates/PaymentFailedEmail";
+import { SubscriptionCancelledEmail } from "./emails/templates/SubscriptionCancelledEmail";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -136,30 +143,68 @@ export const paystackWebhook = functions.https.onRequest(async (req, res) => {
             description: `Subscription Upgrade to ${plan ? plan.name : "Pro"}`,
             reference: event.data.reference
           });
+
+          // Send subscription success email
+          if (email && userData) {
+            const planName = plan ? plan.name : (userData.role === 'teacher' ? 'Premium Teacher Tools' : 'Pro Plan');
+            await sendEmail({
+              to: email,
+              subject: 'Your Subscription is Active! - MyTutorMe',
+              react: React.createElement(SubscriptionSuccessEmail, {
+                name: userData.displayName || 'Learner',
+                planName: planName,
+                amount: event.data.amount / 100,
+                dashboardUrl: 'https://mytutorme.com/dashboard',
+              }),
+            });
+          }
         }
         break;
       }
-      
+
       case "subscription.disable": {
          // Fired when subscription is cancelled
         const customerCode = event.data.customer.customer_code;
         const qs = await db.collection("users").where("paystackCustomerCode", "==", customerCode).get();
         if(!qs.empty) {
-            await qs.docs[0].ref.update({
+            const userDoc = qs.docs[0];
+            await userDoc.ref.update({
                 subscriptionStatus: "cancelled"
             });
+            
+            const userData = userDoc.data();
+            if (userData.email) {
+              await sendEmail({
+                to: userData.email,
+                subject: 'Your Subscription has been Cancelled - MyTutorMe',
+                react: React.createElement(SubscriptionCancelledEmail, {
+                  name: userData.displayName || 'Learner',
+                }),
+              });
+            }
         }
         break;
       }
-
+      
       case "invoice.payment_failed": {
-          // Fired when an automated billing fails
          const customerCode = event.data.customer.customer_code;
          const qs = await db.collection("users").where("paystackCustomerCode", "==", customerCode).get();
          if(!qs.empty) {
-             await qs.docs[0].ref.update({
+             const userDoc = qs.docs[0];
+             await userDoc.ref.update({
                  subscriptionStatus: "past_due"
              });
+
+             const userData = userDoc.data();
+             if (userData.email) {
+               await sendEmail({
+                 to: userData.email,
+                 subject: 'Payment Failed: Action Required - MyTutorMe',
+                 react: React.createElement(PaymentFailedEmail, {
+                   name: userData.displayName || 'Learner',
+                 }),
+               });
+             }
          }
          break;
        }
@@ -196,3 +241,9 @@ export const cancelSubscription = functions.https.onCall(async (request) => {
     throw new functions.https.HttpsError("internal", "Unable to cancel subscription.");
   }
 });
+
+export * from "./triggers/user";
+
+export * from "./endpoints/auth";
+
+export * from "./triggers/course";

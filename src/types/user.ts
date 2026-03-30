@@ -11,6 +11,8 @@ export interface User {
   plan?: string;
   subscriptionStatus?: string | null;
   subscriptionId?: string | null;
+  subscriptionCode?: string | null;
+  paystackCustomerCode?: string | null;
   planStartDate?: number | null;
   planRenewalDate?: number | null;
   planCancelledAt?: number | null;

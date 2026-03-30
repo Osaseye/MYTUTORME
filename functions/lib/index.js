@@ -32,6 +32,9 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -41,6 +44,9 @@ const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const axios_1 = __importDefault(require("axios"));
 const crypto = __importStar(require("crypto"));
+const react_1 = __importDefault(require("react"));
+const email_1 = require("./lib/email");
+const SubscriptionSuccessEmail_1 = require("./emails/templates/SubscriptionSuccessEmail");
 admin.initializeApp();
 const db = admin.firestore();
 const dotenv = __importStar(require("dotenv"));
@@ -161,17 +167,20 @@ exports.paystackWebhook = functions.https.onRequest(async (req, res) => {
                         description: `Subscription Upgrade to ${plan ? plan.name : "Pro"}`,
                         reference: event.data.reference
                     });
-                }
-                break;
-            }
-            case "subscription.disable": {
-                // Fired when subscription is cancelled
-                const customerCode = event.data.customer.customer_code;
-                const qs = await db.collection("users").where("paystackCustomerCode", "==", customerCode).get();
-                if (!qs.empty) {
-                    await qs.docs[0].ref.update({
-                        subscriptionStatus: "cancelled"
-                    });
+                    // Send subscription success email
+                    if (email && userData) {
+                        const planName = plan ? plan.name : (userData.role === 'teacher' ? 'Premium Teacher Tools' : 'Pro Plan');
+                        await (0, email_1.sendEmail)({
+                            to: email,
+                            subject: 'Your Subscription is Active! - MyTutorMe',
+                            react: react_1.default.createElement(SubscriptionSuccessEmail_1.SubscriptionSuccessEmail, {
+                                name: userData.displayName || 'Learner',
+                                planName: planName,
+                                amount: event.data.amount / 100,
+                                dashboardUrl: 'https://mytutorme.com/dashboard',
+                            }),
+                        });
+                    }
                 }
                 break;
             }
@@ -217,4 +226,7 @@ exports.cancelSubscription = functions.https.onCall(async (request) => {
         throw new functions.https.HttpsError("internal", "Unable to cancel subscription.");
     }
 });
+__exportStar(require("./triggers/user"), exports);
+__exportStar(require("./endpoints/auth"), exports);
+__exportStar(require("./triggers/course"), exports);
 //# sourceMappingURL=index.js.map

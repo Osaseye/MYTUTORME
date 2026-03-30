@@ -6,10 +6,11 @@ import LandingPage from '@/features/landing/LandingPage';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
+import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
 import { OnboardingLayout, StudentOnboarding, TeacherOnboarding } from '@/features/onboarding';
 import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, AssignmentHelperPage, GpaTrackerPage, CertificatePage, MyCertificatesPage, SettingsPage, ExamPrepPage, ExamConfigPage, ExamResultsPage, ExamTakingPage, FlashcardConfigPage, FlashcardPlayerPage, CommunityPage, StudyPlannerConfigPage, StudyPlannerViewPage } from '@/features/student';
 import { TeacherLayout, TeacherDashboard, TeacherCoursesPage, TeacherCourseDetailsPage, CourseCreationPage, ResourcesPage, EarningsPage, CommunityPage as TeacherCommunityPage, TeacherSettingsPage, StudentsPage, TeacherPendingPage } from '@/features/teacher';
-import { AdminLayout, AdminDashboard, UserManagementPage, AdminLoginPage, CourseModerationPage, AdminCourseDetailsPage, FinancialsPage, SettingsPage as AdminSettingsPage } from '@/features/admin';
+import { AdminLayout, AdminDashboard, UserManagementPage, CourseModerationPage, AdminCourseDetailsPage, FinancialsPage, SettingsPage as AdminSettingsPage } from '@/features/admin';
 import { SupportPage } from '@/pages/SupportPage';
 import { VerifyCertificatePage } from '@/pages/VerifyCertificatePage';
 
@@ -25,9 +26,8 @@ export const AppRoutes = () => {
         <Route element={<AuthLayout />}>
           <Route path={paths.auth.login} element={<LoginPage />} />
           <Route path={paths.auth.register} element={<RegisterPage />} />
-          <Route path={paths.admin.login} element={<AdminLoginPage />} />       
+          <Route path={paths.auth.forgotPassword} element={<ForgotPasswordPage />} />
         </Route>
-
       {/* Onboarding Routes (Protected) */}
       <Route element={<ProtectedRoute allowedRoles={['student', 'teacher'] as ('student' | 'teacher' | 'admin')[]} />}>
           <Route element={<OnboardingLayout />}>

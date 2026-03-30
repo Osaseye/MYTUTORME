@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import type { User } from '@/types/user';
 import { auth, db } from '@/lib/firebase';
-import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { onAuthStateChanged, signOut as firebaseSignOut, getRedirectResult } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { buildUserDoc } from '../api/auth';
 
 interface AuthState {
   user: User | null;
@@ -27,6 +28,26 @@ export const useAuthStore = create<AuthState>((set) => ({
   checkAuth: () => {
     set({ isLoading: true });
     
+    // Handle redirect result from OAuth on mobile
+    getRedirectResult(auth).then(async (result) => {
+      if (result) {
+        const user = result.user;
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists() && userDoc.data().isSuspended) {
+          await firebaseSignOut(auth);
+          return;
+        }
+
+        if (!userDoc.exists()) {
+          const intendedRole = localStorage.getItem('oauth_intended_role') as 'student' | 'teacher' || 'student';
+          await setDoc(userDocRef, buildUserDoc(user, intendedRole));
+        }
+        localStorage.removeItem('oauth_intended_role');
+      }
+    }).catch(console.error);
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         set({ isLoading: true }); // Ensure loading state while fetching profile

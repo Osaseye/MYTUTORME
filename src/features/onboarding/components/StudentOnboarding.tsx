@@ -110,7 +110,9 @@ export const StudentOnboarding = () => {
   const nextStep = () => setStep(prev => prev + 1);
   const prevStep = () => setStep(prev => prev - 1);
 
-const handleComplete = async (selectedPlan?: 'pro_monthly' | 'pro_yearly') => {
+  const handleComplete = async (selectedPlan?: 'free' | 'pro_monthly' | 'pro_yearly' | React.MouseEvent) => {
+    // If it's a mouse event, set to undefined or just ignore it for the string check
+    const plan = typeof selectedPlan === 'string' ? selectedPlan : undefined;
     if (!user) return;
     setIsSubmitting(true);
     try {
@@ -140,9 +142,9 @@ const handleComplete = async (selectedPlan?: 'pro_monthly' | 'pro_yearly') => {
       localStorage.removeItem('student_onboarding_formData');
       
       // If plan is selected handle payout transition
-      if (selectedPlan && (selectedPlan === 'pro_monthly' || selectedPlan === 'pro_yearly')) {
+      if (plan && (plan === 'pro_monthly' || plan === 'pro_yearly')) {
         const initializeSubscription = httpsCallable(functions, 'initializeSubscription');
-        const planCode = selectedPlan === 'pro_monthly' ? "PLN_6txydrn1y6vh7pl" : "PLN_c879xjnliprqly3";
+        const planCode = plan === 'pro_monthly' ? "PLN_6txydrn1y6vh7pl" : "PLN_c879xjnliprqly3";
         const result = await initializeSubscription({
           planCode,
           email: user?.email,

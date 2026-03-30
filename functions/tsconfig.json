@@ -1,1 +1,19 @@
-{ "compilerOptions": { "module": "commonjs", "rootDir": "src", "noImplicitReturns": true, "noUnusedLocals": true, "outDir": "lib", "sourceMap": true, "strict": true, "target": "es2017", "skipLibCheck": true, "esModuleInterop": true }, "compileOnSave": true, "include": [ "src" ] }
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "rootDir": "src",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "outDir": "lib",
+    "sourceMap": true,
+    "strict": true,
+    "target": "es2017",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx"
+  },
+  "compileOnSave": true,
+  "include": [
+    "src"
+  ]
+}

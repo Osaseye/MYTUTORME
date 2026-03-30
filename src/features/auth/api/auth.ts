@@ -4,6 +4,7 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
   signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   signOut
 } from 'firebase/auth';
@@ -12,7 +13,7 @@ import type { LoginCredentials, RegisterCredentials } from '../types';
 
 type AuthRole = RegisterCredentials['role'];
 
-const buildUserDoc = (
+export const buildUserDoc = (
   user: { uid: string; email: string | null; displayName: string | null; photoURL: string | null },
   role: AuthRole,
 ) => {
@@ -118,7 +119,22 @@ export const registerUser = async ({ email, password, name, role }: RegisterCred
 
 export const loginWithGoogle = async () => {
   const provider = new GoogleAuthProvider();
-  const result = await signInWithPopup(auth, provider);
+  let result;
+  try {
+    result = await signInWithPopup(auth, provider);
+  } catch (error: any) {
+    if (
+      error.code === 'auth/popup-blocked' ||
+      error.code === 'auth/popup-closed-by-user' ||
+      error.code === 'auth/cancelled-popup-request' ||
+      error.code === 'auth/unauthorized-domain' ||
+      error.message?.includes('Cross-Origin-Opener-Policy')
+    ) {
+      await signInWithRedirect(auth, provider);
+      return;
+    }
+    throw error;
+  }
   const user = result.user;
 
   // Check if Firestore document exists (returning user vs new user)
@@ -140,7 +156,27 @@ export const loginWithGoogle = async () => {
 
 export const registerWithGoogle = async (role: AuthRole) => {
   const provider = new GoogleAuthProvider();
-  const result = await signInWithPopup(auth, provider);
+  let result;
+  
+  if (role) {
+     localStorage.setItem('oauth_intended_role', role);
+  }
+
+  try {
+    result = await signInWithPopup(auth, provider);
+  } catch (error: any) {
+    if (
+      error.code === 'auth/popup-blocked' ||
+      error.code === 'auth/popup-closed-by-user' ||
+      error.code === 'auth/cancelled-popup-request' ||
+      error.code === 'auth/unauthorized-domain' ||
+      error.message?.includes('Cross-Origin-Opener-Policy')
+    ) {
+      await signInWithRedirect(auth, provider);
+      return;
+    }
+    throw error;
+  }
   const user = result.user;
 
   const userDocRef = doc(db, 'users', user.uid);
