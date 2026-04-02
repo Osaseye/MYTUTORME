@@ -22,16 +22,6 @@ import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firesto
 import { Link} from 'react-router-dom'
 import { useExamGenerator } from '../hooks/useExamGenerator';
 
-const AVAILABLE_SUBJECTS = ['Mathematics', 'Physics', 'Biology', 'History', 'Comp Sci', 'Chemistry'];
-const AVAILABLE_TOPICS: Record<string, string[]> = {
-  'Mathematics': ['Algebra', 'Geometry', 'Calculus', 'Trigonometry'],
-  'Physics': ['Kinematics', 'Dynamics', 'Waves', 'Electricity'],
-  'Biology': ['Genetics', 'Cell Biology', 'Ecology', 'Human Anatomy'],
-  'Chemistry': ['Organic Chemistry', 'Inorganic Chemistry', 'Physical Chemistry'],
-  'History': ['Pre-colonial Africa', 'Post-independence', 'World War II'],
-  'Comp Sci': ['Data Structures', 'Algorithms', 'Databases', 'Networking'],
-};
-
 export const ExamConfigPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();

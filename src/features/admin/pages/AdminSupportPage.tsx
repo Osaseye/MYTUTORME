@@ -10,7 +10,6 @@ import {
   Mail,
   Clock,
   CheckCircle2,
-  AlertCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

@@ -650,6 +650,20 @@ import { PaymentModal } from '@/components/shared/PaymentModal';
         </TabsContent>
       </Tabs>
       
+      <div className="mt-8 md:hidden pb-10">
+        <Button 
+          variant="destructive" 
+          className="w-full"
+          onClick={async () => {
+            const { signOut } = useAuthStore.getState();
+            await signOut();
+            window.location.href = '/login';
+          }}
+        >
+          Logout
+        </Button>
+      </div>
+
       {isPaymentModalOpen && selectedPlanForPayment && (
         <PaymentModal
           isOpen={isPaymentModalOpen}

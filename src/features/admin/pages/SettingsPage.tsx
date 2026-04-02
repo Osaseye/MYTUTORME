@@ -30,7 +30,7 @@ import { auth } from '@/lib/firebase';
 import { toast } from 'sonner';
 
 export const SettingsPage = () => {
-    const { user, setUser } = useAuthStore();
+    const { user, setUser, signOut } = useAuthStore();
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     
@@ -350,6 +350,19 @@ export const SettingsPage = () => {
                     </Card>
                 </TabsContent>
             </Tabs>
+            
+            <div className="mt-8 md:hidden pb-10">
+                <Button 
+                    variant="destructive" 
+                    className="w-full"
+                    onClick={async () => {
+                        await signOut();
+                        window.location.href = '/login';
+                    }}
+                >
+                    Logout
+                </Button>
+            </div>
         </div>
     );
 };

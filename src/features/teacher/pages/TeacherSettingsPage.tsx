@@ -14,7 +14,7 @@ import { db, storage, functions } from "@/lib/firebase";
 import { toast } from "sonner";
 
 export const TeacherSettingsPage = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'security' | 'subscription'>('profile');
   const [formData, setFormData] = useState({
     firstName: "",
@@ -413,6 +413,19 @@ export const TeacherSettingsPage = () => {
               </div>
             </section>
           )}
+          
+          <div className="md:hidden mt-8 pb-10">
+            <Button 
+              variant="destructive" 
+              className="w-full"
+              onClick={async () => {
+                await signOut();
+                window.location.href = '/login';
+              }}
+            >
+              Logout
+            </Button>
+          </div>
 
         </div>
       </div>
