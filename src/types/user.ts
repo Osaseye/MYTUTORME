@@ -12,7 +12,8 @@ export interface User {
   subscriptionStatus?: string | null;
   subscriptionId?: string | null;
   subscriptionCode?: string | null;
-  paystackCustomerCode?: string | null;
+  paymentProviderCustomerId?: string | null;
+  paymentProvider?: 'flutterwave' | 'paystack' | string | null;
   planStartDate?: number | null;
   planRenewalDate?: number | null;
   planCancelledAt?: number | null;

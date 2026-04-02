@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Bell, Lock, GraduationCap, Upload, ShieldCheck, Loader2, CreditCard } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { PaymentModal } from '@/components/shared/PaymentModal';
 
   export const SettingsPage = () => {
     const { user, setUser } = useAuthStore();
@@ -26,7 +27,11 @@ import { Switch } from '@/components/ui/switch';
       const normalizedPlan = studentProfile?.plan === 'monthly' ? 'pro_monthly' : studentProfile?.plan === 'yearly' ? 'pro_yearly' : (studentProfile?.plan || 'free');
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<'pro_monthly' | 'pro_yearly' | null>(null);
   const [showPlans, setShowPlans] = useState(false);
+  // @ts-ignore: used eventually or just tracking loading state locally
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
   const [formData, setFormData] = useState({
     displayName: '',
     phone: '',
@@ -45,6 +50,36 @@ import { Switch } from '@/components/ui/switch';
 
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const checkPaymentStatus = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const transactionId = params.get('transaction_id');
+      const status = params.get('status');
+
+      if (transactionId && status) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        setIsVerifyingPayment(true);
+        const verifyPayment = httpsCallable(functions, 'verifySubscription');
+        
+        try {
+          const result: any = await verifyPayment({ transactionId, status });
+          if (result.data?.success) {
+            toast.success("Payment verified! Your subscription has been updated.");
+            setTimeout(() => window.location.reload(), 1500);
+          } else {
+            toast.error("Payment verification pending or failed. Please check back later.");
+          }
+        } catch (error: any) {
+          toast.error("Error verifying payment", { description: error.message });
+        } finally {
+          setIsVerifyingPayment(false);
+        }
+      }
+    };
+    checkPaymentStatus();
+  }, []);
 
   // Initialize form when user data loads
   useEffect(() => {
@@ -189,20 +224,34 @@ import { Switch } from '@/components/ui/switch';
 
   const handleChangePlan = async (newPlan: 'free' | 'pro_monthly' | 'pro_yearly') => {
     if (!user) return;
+    
+    if (newPlan !== 'free') {
+      setSelectedPlanForPayment(newPlan);
+      setIsPaymentModalOpen(true);
+      return;
+    }
+    
+    await executePlanChange(newPlan);
+  };
+
+  const executePlanChange = async (newPlan: 'free' | 'pro_monthly' | 'pro_yearly', paymentProvider?: 'flutterwave' | 'paystack') => {
+    if (!user) return;
     setIsSaving(true);
     try {
       if (newPlan !== 'free') {
         const initializeSubscription = httpsCallable(functions, 'initializeSubscription');
-        const planCode = newPlan === 'pro_monthly' ? "PLN_6txydrn1y6vh7pl" : "PLN_c879xjnliprqly3";
+        const planCode = newPlan === 'pro_monthly' ? "FW_PLAN_STUDENT_MONTHLY" : "FW_PLAN_STUDENT_YEARLY";
         const result = await initializeSubscription({
           planCode,
           email: user?.email,
-          userId: user?.uid
+          userId: user?.uid,
+          provider: paymentProvider || 'flutterwave',
+          redirectUrl: window.location.origin + '/student/settings'
         });
 
         const data: any = result.data;
         if (data?.authorizationUrl) {
-          window.location.href = data.authorizationUrl; // Redirect to Paystack
+          window.location.href = data.authorizationUrl; // Redirect to Payment Provider
           return;
         } else {
           toast.error("Error initializing payment URL.");
@@ -211,22 +260,26 @@ import { Switch } from '@/components/ui/switch';
         }
       }
 
-      // Logc for cancelling
+      // Logic for cancelling
       const cancelSubscription = httpsCallable(functions, 'cancelSubscription');
-      if (user?.subscriptionCode && user?.paystackCustomerCode) {
+      if (user?.subscriptionId && user?.paymentProviderCustomerId) {
          await cancelSubscription({
-             subscriptionCode: user.subscriptionCode,
-             emailToken: user.paystackCustomerCode
+             subscriptionId: user.subscriptionId,
+             paymentProviderCustomerId: user.paymentProviderCustomerId
          });
       }
 
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
-        plan: newPlan
+        plan: 'free',
+        subscriptionStatus: 'active'
       });
-      setUser({ ...user, plan: newPlan } as StudentProfile);
+      setUser({ ...user, plan: 'free', subscriptionStatus: 'active' } as any);
+      toast.success("Successfully changed plan to Free.");
 
-      toast.success(`Successfully restored to Free Plan!`);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to change plan.");
     } finally {
       setIsSaving(false);
     }
@@ -240,7 +293,7 @@ import { Switch } from '@/components/ui/switch';
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-flow-col max-w-2xl bg-slate-100 dark:bg-slate-800/50 p-1">
+        <TabsList className="grid w-full grid-cols-2 md:grid-flow-col max-w-2xl bg-slate-100 dark:bg-slate-800/50 p-1 mb-8 gap-y-2 h-auto">
           <TabsTrigger value="profile" className="flex gap-2">
             <User className="h-4 w-4" /> Profile
           </TabsTrigger>
@@ -596,6 +649,18 @@ import { Switch } from '@/components/ui/switch';
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {isPaymentModalOpen && selectedPlanForPayment && (
+        <PaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          onConfirm={async (provider) => {
+            setIsPaymentModalOpen(false);
+            await executePlanChange(selectedPlanForPayment, provider);
+          }}
+          planName={selectedPlanForPayment === 'pro_yearly' ? 'Pro Yearly' : 'Pro Monthly'}
+        />
+      )}
     </div>
   );
 };

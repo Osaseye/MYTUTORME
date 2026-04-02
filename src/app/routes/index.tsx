@@ -10,7 +10,7 @@ import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
 import { OnboardingLayout, StudentOnboarding, TeacherOnboarding } from '@/features/onboarding';
 import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, AssignmentHelperPage, GpaTrackerPage, CertificatePage, MyCertificatesPage, SettingsPage, ExamPrepPage, ExamConfigPage, ExamResultsPage, ExamTakingPage, FlashcardConfigPage, FlashcardPlayerPage, CommunityPage, StudyPlannerConfigPage, StudyPlannerViewPage } from '@/features/student';
 import { TeacherLayout, TeacherDashboard, TeacherCoursesPage, TeacherCourseDetailsPage, CourseCreationPage, ResourcesPage, EarningsPage, CommunityPage as TeacherCommunityPage, TeacherSettingsPage, StudentsPage, TeacherPendingPage } from '@/features/teacher';
-import { AdminLayout, AdminDashboard, UserManagementPage, CourseModerationPage, AdminCourseDetailsPage, FinancialsPage, SettingsPage as AdminSettingsPage } from '@/features/admin';
+import { AdminLayout, AdminDashboard, AdminLoginPage, UserManagementPage, CourseModerationPage, AdminCourseDetailsPage, FinancialsPage, SettingsPage as AdminSettingsPage, AdminSupportPage } from '@/features/admin';
 import { SupportPage } from '@/pages/SupportPage';
 import { VerifyCertificatePage } from '@/pages/VerifyCertificatePage';
 
@@ -27,7 +27,9 @@ export const AppRoutes = () => {
           <Route path={paths.auth.login} element={<LoginPage />} />
           <Route path={paths.auth.register} element={<RegisterPage />} />
           <Route path={paths.auth.forgotPassword} element={<ForgotPasswordPage />} />
+          <Route path={paths.admin.login} element={<AdminLoginPage />} />
         </Route>
+
       {/* Onboarding Routes (Protected) */}
       <Route element={<ProtectedRoute allowedRoles={['student', 'teacher'] as ('student' | 'teacher' | 'admin')[]} />}>
           <Route element={<OnboardingLayout />}>
@@ -77,6 +79,8 @@ export const AppRoutes = () => {
           <Route element={<AdminLayout />}>
               <Route path={paths.admin.dashboard} element={<AdminDashboard />} />
               <Route path={paths.admin.users} element={<UserManagementPage />} />              <Route path={paths.admin.moderation} element={<CourseModerationPage />} />
+              <Route path={paths.admin.support} element={<AdminSupportPage />} />
+              <Route path={paths.admin.coursesNew} element={<CourseCreationPage />} />
               <Route path={paths.admin.courseDetails} element={<AdminCourseDetailsPage />} />
               <Route path={paths.admin.financials} element={<FinancialsPage />} />
               <Route path={paths.admin.settings} element={<AdminSettingsPage />} />

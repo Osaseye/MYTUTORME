@@ -62,12 +62,29 @@ export const CertificatePage = () => {
     pdf.save(`Certificate-${id}.pdf`);
   };
 
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'My Certificate',
+          text: `I just completed ${cert?.courseName} on MyTutorMe!`,
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+    } catch(e) {
+      console.log('Share failed', e);
+    }
+  };
+
   if (loading) return <div className="py-20 flex justify-center"><div className="animate-spin w-8 h-8 rounded-full border-b-2 border-primary"></div></div>;
 
   if (!cert) return <div className="text-center py-20">Certificate not found.</div>;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4 py-8 w-full">
       <div className="mb-6">
         <Link to="/student/certificates" className="text-primary hover:underline flex items-center gap-2 mb-6">
           <ArrowLeft className="w-4 h-4" /> Back to My Certificates
@@ -77,17 +94,17 @@ export const CertificatePage = () => {
             <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-white">Certificate of Completion</h1>
             <p className="text-slate-500">Verified and securely stored.</p>
           </div>
-          <div className="flex gap-3">
-             <Button variant="outline" className="flex items-center gap-2"><Share2 className="w-4 h-4" /> Share</Button>
+          <div className="flex flex-wrap gap-3">
+             <Button variant="outline" className="flex items-center gap-2" onClick={handleShare}><Share2 className="w-4 h-4" /> Share</Button>
              <Button onClick={handleDownload} className="flex items-center gap-2 bg-primary hover:bg-green-700 text-white"><Download className="w-4 h-4" /> Download PDF</Button>
           </div>
         </div>
       </div>
 
-      <div className="bg-slate-100 dark:bg-slate-800 p-8 rounded-2xl flex justify-center overflow-x-auto shadow-inner">
+      <div className="bg-slate-100 dark:bg-slate-800 p-4 sm:p-8 rounded-2xl w-full max-w-[calc(100vw-2rem)] md:max-w-none overflow-x-auto shadow-inner flex md:justify-center">
         <div 
            id="certificate-node" 
-           className="bg-white text-slate-900 relative w-[800px] h-[600px] flex flex-col items-center shadow-2xl shrink-0 overflow-hidden"
+           className="bg-white text-slate-900 relative w-[800px] h-[600px] flex flex-col items-center shadow-2xl shrink-0 overflow-hidden mx-auto"
            style={{ 
              background: 'radial-gradient(circle at center, #ffffff 0%, #f0fdf4 100%)',
            }}

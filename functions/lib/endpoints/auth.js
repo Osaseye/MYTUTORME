@@ -43,7 +43,8 @@ const react_1 = __importDefault(require("react"));
 const email_1 = require("../lib/email");
 const PasswordResetEmail_1 = require("../emails/templates/PasswordResetEmail");
 exports.requestPasswordReset = functions.https.onCall(async (request) => {
-    const { email } = request.data;
+    const data = request.data || request;
+    const { email } = data;
     if (!email) {
         throw new functions.https.HttpsError('invalid-argument', 'Email is required');
     }

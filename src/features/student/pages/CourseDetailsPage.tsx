@@ -12,8 +12,9 @@ import { PurchaseCourseModal } from '../components/PurchaseCourseModal';
 import { LessonPlayer } from '../components/LessonPlayer';
 import type { Quiz, QuizStats } from '../types/quiz';
 
-import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, writeBatch, increment, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
+import { db, functions } from '@/lib/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 
 const MOCK_QUIZ: Quiz = {
@@ -80,6 +81,38 @@ export const CourseDetailsPage = () => {
   const [quizStats, setQuizStats] = useState<QuizStats | null>(null);
 
   useEffect(() => {
+    const checkPaymentStatus = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const transactionId = params.get('transaction_id');
+      const status = params.get('status');
+
+      if (transactionId && status) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        const verifyPayment = httpsCallable(functions, 'verifyCoursePayment');
+        const verifyToast = toast.loading("Verifying your course enrollment payment...");
+        
+        try {
+          const result: any = await verifyPayment({ transactionId, status });
+          if (result.data?.success) {
+            toast.success("Payment verified! You are now enrolled.", { id: verifyToast });
+            // Let the regular fetch handle state changes smoothly
+            setTimeout(() => window.location.reload(), 1500);
+          } else if (result.data?.message === "Already verified") {
+            // Silently resolve already handled
+            toast.dismiss(verifyToast);
+          } else {
+            toast.error("Payment verification pending or failed.", { id: verifyToast });
+          }
+        } catch (error: any) {
+          toast.error("Error verifying payment", { description: error.message, id: verifyToast });
+        }
+      }
+    };
+    checkPaymentStatus();
+  }, []);
+
+  useEffect(() => {
     const fetchCourseData = async () => {
       if (!courseId) return;
       try {
@@ -132,74 +165,12 @@ export const CourseDetailsPage = () => {
 
   const handleEnrollSuccess = async () => {
     if (!user || !course) return;
+
     try {
-        // Fetch teacher to get currentCommissionRate or use 30% default
-        let commissionRate = 0.30;
-        if (course.teacherId) {
-            const teacherRefSnap = await getDoc(doc(db, 'users', course.teacherId));
-            if (teacherRefSnap.exists()) {
-                const tData = teacherRefSnap.data();
-                if (tData.currentCommissionRate !== undefined) {
-                    commissionRate = tData.currentCommissionRate;
-                }
-            }
-        }
-        
-        const price = course.price === 'Free' ? 0 : Number(course.price);
-        const platformFee = price * commissionRate;
-        const teacherEarnings = price - platformFee;
+        const enrollFn = httpsCallable<{courseId: string}, {success: boolean, enrollmentId: string}>(functions, 'enrollInCourse');
+        const result = await enrollFn({ courseId: course.id });
 
-        const batch = writeBatch(db);
-
-        // 1. Create enrollment
-        const enrollmentsRef = collection(db, 'enrollments');
-        const newEnrollmentRef = doc(enrollmentsRef);
-        batch.set(newEnrollmentRef, {
-            courseId: course.id,
-            studentId: user.uid,
-            teacherId: course.teacherId || course.teacherName, // Needed for teacher dashboard
-            enrolledAt: new Date(),
-            progress: 0,
-            completedModules: []
-        });
-
-        // 2. Create transaction
-        const transactionsRef = collection(db, 'transactions');
-        const newTransactionRef = doc(transactionsRef);
-        batch.set(newTransactionRef, {
-            amount: price,
-            platformFee,
-            teacherEarnings,
-            courseId: course.id,
-            studentId: user.uid,
-            teacherId: course.teacherId || course.teacherName, // Fallback to name if ID not present
-            createdAt: new Date(),
-            status: 'completed',
-            type: 'purchase'
-        });
-
-        // 3. Increment enrollmentCount
-        const courseRef = doc(db, 'courses', course.id);
-        batch.update(courseRef, {
-            enrollmentCount: increment(1)
-        });
-
-        // 4. Create notification
-        const notificationsRef = collection(db, 'notifications');
-        const newNotificationRef = doc(notificationsRef);
-        batch.set(newNotificationRef, {
-            teacherId: course.teacherId || course.teacherName,
-            message: `A new student enrolled in your course: ${course.title}`,
-            read: false,
-            createdAt: new Date()
-        });
-
-        // Skip updating teacher's lifetime earnings here to avoid permission issues
-        // We will fetch and calculate earnings on the fly on the dashboard instead
-
-        await batch.commit();
-
-        setEnrollmentId(newEnrollmentRef.id);
+        setEnrollmentId(result.data.enrollmentId);
         setIsEnrolled(true);
         setIsPurchaseModalOpen(false);
         setActiveTab('curriculum');
@@ -356,6 +327,7 @@ export const CourseDetailsPage = () => {
       <PurchaseCourseModal 
          isOpen={isPurchaseModalOpen}
          onClose={() => setIsPurchaseModalOpen(false)}
+         courseId={course.id}
          courseTitle={course.title}
          price={course.price === 'Free' || course.price === 0 ? "Free" : `₦${Number(course.price).toLocaleString()}`}
          onSuccess={handleEnrollSuccess}

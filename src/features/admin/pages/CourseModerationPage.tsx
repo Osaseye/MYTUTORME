@@ -52,7 +52,10 @@ interface Course {
     rejectionReason?: string;
 }
 
+import { useNavigate } from 'react-router-dom';
+
 export const CourseModerationPage = () => {
+    const navigate = useNavigate();
     const [courses, setCourses] = useState<Course[]>([]);
     const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
@@ -195,6 +198,11 @@ export const CourseModerationPage = () => {
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 font-display">Content Moderation</h1>
                     <p className="text-slate-500 dark:text-slate-400">Review new courses, manage flagged content, and maintain platform quality.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button onClick={() => navigate('/admin/courses/new')}>
+                        Create Course
+                    </Button>
                 </div>
             </div>
 

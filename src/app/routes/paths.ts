@@ -39,6 +39,8 @@
     dashboard: '/admin/dashboard',
     users: '/admin/users',
     moderation: '/admin/moderation',
+    support: '/admin/support',
+    coursesNew: '/admin/courses/new',
     courseDetails: '/admin/moderation/courses/:courseId',
     financials: '/admin/financials',
     settings: '/admin/settings',

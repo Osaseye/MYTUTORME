@@ -67,7 +67,9 @@ export const AdminLayout = () => {
         { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
         { label: 'User Management', path: '/admin/users', icon: Users },
         { label: 'Content Review', path: '/admin/moderation', icon: BookOpen },
+        { label: 'Create Course', path: '/admin/courses/new', icon: BookOpen },
         { label: 'Finance', path: '/admin/financials', icon: DollarSign },
+        { label: 'Support & Announcements', path: '/admin/support', icon: Bell },
         { label: 'Settings', path: '/admin/settings', icon: Settings },
     ];
 

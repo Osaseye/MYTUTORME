@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -74,15 +76,30 @@ export const SupportPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleTicketSubmit = (e: React.FormEvent) => {
+  const handleTicketSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate API call for dropping a ticket
-    setTimeout(() => {
-      setIsSubmitting(false);
+    
+    try {
+      const form = e.target as HTMLFormElement;
+      await addDoc(collection(db, 'support_tickets'), {
+        name: (form.elements.namedItem('name') as HTMLInputElement).value,
+        email: (form.elements.namedItem('email') as HTMLInputElement).value,
+        role: (form.elements.namedItem('role') as HTMLSelectElement).value,
+        subject: (form.elements.namedItem('subject') as HTMLInputElement).value,
+        message: (form.elements.namedItem('message') as HTMLTextAreaElement).value,
+        status: 'open',
+        createdAt: serverTimestamp()
+      });
       setSubmitted(true);
-      setTimeout(() => setSubmitted(false), 5000); // reset after 5s
-    }, 1500);
+      form.reset();
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to drop ticket.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -225,18 +242,19 @@ export const SupportPage = () => {
                     <form onSubmit={handleTicketSubmit} className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="name">Full Name</Label>
-                        <Input id="name" required placeholder="John Doe" className="bg-slate-50 dark:bg-slate-900" />
+                        <Input id="name" name="name" required placeholder="John Doe" className="bg-slate-50 dark:bg-slate-900" />
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="email">Email Address</Label>
-                        <Input id="email" type="email" required placeholder="you@example.com" className="bg-slate-50 dark:bg-slate-900" />
+                        <Input id="email" name="email" type="email" required placeholder="you@example.com" className="bg-slate-50 dark:bg-slate-900" />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="role">I am a...</Label>
                         <select 
                           id="role" 
+                          name="role"
                           required 
                           className="flex h-10 w-full rounded-md border border-input bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
@@ -248,13 +266,14 @@ export const SupportPage = () => {
 
                       <div className="space-y-2">
                         <Label htmlFor="subject">Subject</Label>
-                        <Input id="subject" required placeholder="What do you need help with?" className="bg-slate-50 dark:bg-slate-900" />
+                        <Input id="subject" name="subject" required placeholder="What do you need help with?" className="bg-slate-50 dark:bg-slate-900" />
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="message">Message Details</Label>
                         <Textarea 
                           id="message" 
+                          name="message"
                           required 
                           placeholder="Describe the issue or question in detail..." 
                           className="min-h-[120px] bg-slate-50 dark:bg-slate-900 resize-none" 

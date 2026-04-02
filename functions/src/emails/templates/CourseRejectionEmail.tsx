@@ -1,5 +1,5 @@
 
-import { Html, Head, Preview, Body, Container, Section, Text, Button, Img, Link, Font, Tailwind, Row, Column } from '@react-email/components';
+import { Html, Head, Preview, Body, Container, Section, Text, Img, Link, Font, Tailwind, Row, Column } from '@react-email/components';
 
 interface CourseRejectionEmailProps { teacherName: string; courseTitle: string; reason: string; }
 

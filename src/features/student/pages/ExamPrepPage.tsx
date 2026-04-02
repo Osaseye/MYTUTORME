@@ -248,7 +248,7 @@ export const ExamPrepPage = () => {
   return (
     <div className="w-full px-4 md:px-8 py-8 space-y-8">
       {!hasAccess && (
-        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-500 p-4 rounded-xl flex items-center justify-between">
+        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-500 p-4 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <AlertCircle className="w-6 h-6" />
             <div>
@@ -339,7 +339,7 @@ export const ExamPrepPage = () => {
         <div className="flex-1 space-y-6">
            
            {/* Navigation Tabs */}
-           <div className="flex border-b border-slate-200 dark:border-slate-800 space-x-6">
+           <div className="flex border-b border-slate-200 dark:border-slate-800 space-x-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
               <button 
                 onClick={() => setActiveTab('exams')}
                 className={`pb-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'exams' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-700'}`}

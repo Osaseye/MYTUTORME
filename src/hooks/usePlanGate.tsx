@@ -41,7 +41,9 @@ export const UpgradePrompt = ({ feature }: { feature: GatedFeature }) => {
 
 export const usePlanGate = (feature: GatedFeature) => {
   const { user } = useAuthStore();
-  const plan = user?.plan || 'free';
+  const rawPlan = user?.plan || 'free';
+  const plan = rawPlan === 'monthly' ? 'pro_monthly' : rawPlan === 'yearly' ? 'pro_yearly' : rawPlan;
+  
   const hasAccess = PLAN_FEATURES[feature].includes(plan);
 
   const gate = (

@@ -32,6 +32,7 @@ interface CourseFormData {
     level: string;
     description: string;
     price: number;
+    tier: 'free' | 'pro';
     thumbnailUrl: string;
     promoVideoUrl: string;
     modules: CourseModule[];
@@ -70,6 +71,7 @@ export const CourseCreationPage = () => {
       level: 'secondary',
       description: '',
       price: 0,
+      tier: 'free',
       thumbnailUrl: '',
       promoVideoUrl: '',
       modules: [] as CourseModule[],
@@ -386,7 +388,7 @@ export const CourseCreationPage = () => {
         ...formData,
         teacherId: user.uid,
         teacherName: user.displayName || 'Unknown Teacher',
-        status: 'pending', // or 'published' based on your requirements
+        status: user.role === 'admin' ? 'published' : 'pending', // or 'published' based on your requirements
         createdAt: serverTimestamp(),
         enrollmentCount: 0,
         rating: 0
@@ -397,7 +399,11 @@ export const CourseCreationPage = () => {
       localStorage.removeItem('courseCreationData');
       
       toast.success("Course draft saved and submitted for review!");
-      navigate('/teacher/courses');
+      if (user?.role === 'admin') {
+        navigate('/admin/moderation');
+      } else {
+        navigate('/teacher/courses');
+      }
     } catch (error) {
       console.error("Error publishing course:", error);
       toast.error('Failed to submit course');
@@ -410,7 +416,14 @@ export const CourseCreationPage = () => {
     <div className="w-full max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-white">Create New Course</h1>
+          <div className="flex items-center gap-3">
+             <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-white">Create New Course</h1>
+             {formData.tier && (
+                <div className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${formData.tier === 'pro' ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}`}>
+                   {formData.tier === 'pro' ? 'PRO TIER' : 'FREE TIER'}
+                </div>
+             )}
+          </div>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Design your curriculum and reach students globally.</p>
         </div>
         <div className="flex gap-3">
@@ -470,7 +483,7 @@ export const CourseCreationPage = () => {
                       onChange={(e) => updateField('title', e.target.value)} 
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="text-sm font-medium mb-1.5 block">Subject</label>
                       <Input 
@@ -488,6 +501,17 @@ export const CourseCreationPage = () => {
                       >
                         <option value="secondary">Secondary (WAEC/JAMB)</option>
                         <option value="tertiary">Tertiary (University)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1.5 block">Access Tier</label>
+                      <select 
+                        className="w-full h-10 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                        value={formData.tier || 'free'}
+                        onChange={(e) => updateField('tier', e.target.value as 'free' | 'pro')}
+                      >
+                        <option value="free">Free Users</option>
+                        <option value="pro">Pro Users Only</option>
                       </select>
                     </div>
                   </div>
@@ -888,7 +912,7 @@ export const CourseCreationPage = () => {
                         <Sparkles className="w-5 h-5 text-amber-400" />
                      </span>
                      <p className="text-sm text-slate-300 mb-4 text-left">Generate complete syllabuses, video scripts, and quizzes instantly based on your subject.</p>
-                     <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-lg" onClick={() => navigate('/teacher/dashboard')}>
+                     <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-lg" onClick={() => user?.role === 'admin' ? navigate('/admin/dashboard') : navigate('/teacher/dashboard')}>
                         Upgrade to Unlock
                      </Button>
                   </div>

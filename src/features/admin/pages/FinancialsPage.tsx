@@ -44,6 +44,7 @@ export const FinancialsPage = () => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
     const [userStats, setUserStats] = useState({ studentPro: 0, teacherPro: 0 });
+    const [userMap, setUserMap] = useState<Record<string, string>>({});
 
     useEffect(() => {
         const q = query(collection(db, 'transactions'), orderBy('createdAt', 'desc'));
@@ -56,34 +57,37 @@ export const FinancialsPage = () => {
             setLoading(false);
         });
 
-        // Fetch pro users
-        import('firebase/firestore').then(({ getDocs, collection, query, where }) => {
+        // Fetch pro users and build a map of user names
+        import('firebase/firestore').then(({ getDocs, collection }) => {
             const fetchProUsers = async () => {
                 try {
                     const usersRef = collection(db, 'users');
+                    const allUsersSnap = await getDocs(usersRef);
                     
-                    const studentsQ = query(usersRef, where('role', '==', 'student'));
-                    const stdSnap = await getDocs(studentsQ);
                     let stdPro = 0;
-                    stdSnap.forEach(doc => {
-                        const plan = doc.data().plan;
-                        if (plan === 'pro' || plan === 'pro_monthly' || plan === 'pro_yearly') stdPro++;
-                    });
-
-                    const teachersQ = query(usersRef, where('role', '==', 'teacher'));
-                    const tchSnap = await getDocs(teachersQ);
                     let tchPro = 0;
-                    tchSnap.forEach(doc => {
-                        const plan = doc.data().teacherSubscriptionPlan;
-                        if (plan === 'premium_tools' || plan === 'enterprise') tchPro++;
+                    const tempMap: Record<string, string> = {};
+
+                    allUsersSnap.forEach(doc => {
+                        const data = doc.data();
+                        tempMap[doc.id] = data.displayName || data.username || data.email || 'Unknown User';
+                        
+                        if (data.role === 'student') {
+                            const plan = data.plan;
+                            if (plan === 'pro' || plan === 'pro_monthly' || plan === 'pro_yearly') stdPro++;
+                        } else if (data.role === 'teacher') {
+                            const plan = data.teacherSubscriptionPlan;
+                            if (plan === 'premium_tools' || plan === 'enterprise') tchPro++;
+                        }
                     });
 
+                    setUserMap(tempMap);
                     setUserStats({
                         studentPro: stdPro,
                         teacherPro: tchPro
                     });
                 } catch(err) {
-                    console.error("Error fetching pro users:", err);
+                    console.error("Error fetching pro users & user map:", err);
                 }
             };
             fetchProUsers();
@@ -224,6 +228,7 @@ export const FinancialsPage = () => {
                                     <thead className="bg-slate-50 dark:bg-slate-900/80 text-slate-500 font-medium">
                                         <tr>
                                             <th className="h-12 px-6">Transaction</th>
+                                            <th className="h-12 px-6">User</th>
                                             <th className="h-12 px-6">Amount</th>
                                             <th className="h-12 px-6">Status</th>
                                             <th className="h-12 px-6">Date</th>
@@ -246,6 +251,13 @@ export const FinancialsPage = () => {
                                                             <p className="text-xs text-slate-500">{t.description || t.reference || t.id.substring(0, 10)}</p>
                                                         </div>
                                                     </div>
+                                                </td>
+                                                <td className="p-4 px-6 text-sm text-slate-600 dark:text-slate-400">
+                                                    {(() => {
+                                                        const uid = (t as any).studentId || (t as any).userId || (t as any).teacherId;
+                                                        if (uid && userMap[uid]) return userMap[uid];
+                                                        return (t as any).studentEmail || (t as any).customer?.email || uid || "System";
+                                                    })()}
                                                 </td>
                                                 <td className="p-4 px-6 font-semibold text-slate-700 dark:text-slate-300">
                                                     {t.type === 'payout' ? '-' : '+'}{formatCurrency(t.amount)}

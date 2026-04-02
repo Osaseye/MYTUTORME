@@ -1,41 +1,75 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Loader2, CreditCard, ShieldCheck, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuthStore } from '@/features/auth/hooks/useAuth';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase';
 
 interface PurchaseCourseModalProps {
   isOpen: boolean;
   onClose: () => void;
+  courseId: string;
   courseTitle: string;
   price: string;
   onSuccess: () => void;
 }
 
-export const PurchaseCourseModal = ({ isOpen, onClose, courseTitle, price, onSuccess }: PurchaseCourseModalProps) => {
+export const PurchaseCourseModal = ({ isOpen, onClose, courseId, courseTitle, price, onSuccess }: PurchaseCourseModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<'details' | 'processing' | 'success'>('details');
+  const { user } = useAuthStore();
 
   if (!isOpen) return null;
 
   const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+        toast.error("Please log in to purchase.");
+        return;
+    }
+    
     setIsLoading(true);
     setStep('processing');
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      setStep('success');
-      toast.success("Enrollment Successful!", {
-        description: `You now have full access to ${courseTitle}.`
-      });
-      setTimeout(() => {
-         onSuccess();
-         onClose();
-         setStep('details');
-      }, 2000);
-    }, 2000);
+    try {
+        const numericPrice = Number(String(price).replace(/[^0-9.-]+/g, ""));
+        
+        // Handle free courses directly without payment gateway
+        if (numericPrice <= 0) {
+            toast.success("Enrolling in Free Course...", { id: "enrollmentLoader" });
+            setTimeout(() => {
+                setIsLoading(false);
+                onSuccess(); // Triggers the local handleEnrollSuccess
+                onClose();
+            }, 1000);
+            return;
+        }
+
+        const initializeCoursePayment = httpsCallable(functions, 'initializeCoursePayment');
+        
+        const result: any = await initializeCoursePayment({
+            courseId,
+            courseTitle,
+            amount: numericPrice,
+            email: user?.email,
+            userId: user?.uid,
+            redirectUrl: window.location.origin + window.location.pathname
+        });
+
+        if (result.data?.authorizationUrl) {
+            window.location.href = result.data.authorizationUrl; 
+        } else {
+            toast.error("Error initializing payment URL.");
+            setIsLoading(false);
+            setStep('details');
+        }
+    } catch (error: any) {
+        console.error(error);
+        toast.error("Failed to initialize course purchase", { description: error.message });
+        setIsLoading(false);
+        setStep('details');
+    }
   };
 
   return (
@@ -67,41 +101,17 @@ export const PurchaseCourseModal = ({ isOpen, onClose, courseTitle, price, onSuc
                     <span className="text-2xl font-bold text-slate-900 dark:text-white">{price}</span>
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Cardholder Name</label>
-                    <Input id="name" placeholder="John Doe" required className="bg-white dark:bg-slate-900" />
-                </div>
-                
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Card Number</label>
-                    <div className="relative">
-                        <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <Input id="number" className="pl-9 bg-white dark:bg-slate-900" placeholder="0000 0000 0000 0000" required />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Expiry</label>
-                        <Input id="expiry" placeholder="MM/YY" required className="bg-white dark:bg-slate-900" />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">CVC</label>
-                        <Input id="cvc" placeholder="123" required className="bg-white dark:bg-slate-900" />
-                    </div>
-                </div>
-
                 <div className="pt-4 space-y-3">
                     <Button 
                         type="submit" 
-                        className="w-full bg-primary hover:bg-green-700 text-white font-bold h-12 shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5" 
+                        className="w-full bg-[#f5a623] hover:bg-[#d48c15] text-white font-bold h-12 shadow-lg shadow-[#f5a623]/20 transition-all hover:-translate-y-0.5" 
                         disabled={isLoading}
                     >
-                         {isLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <ShieldCheck className="w-5 h-5 mr-2" />}
-                         Pay {price}
+                         {isLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <CreditCard className="w-5 h-5 mr-2" />}
+                         {price.toLowerCase() === 'free' || price === '₦0' ? 'Enroll Now for Free' : 'Pay with Flutterwave'}
                     </Button>
                     <p className="text-xs text-center text-slate-400 flex items-center justify-center gap-1.5 opacity-80">
-                        <ShieldCheck className="w-3 h-3 text-green-500" /> Secured by Paystack
+                        <ShieldCheck className="w-3 h-3 text-[#f5a623]" /> Secured by Flutterwave
                     </p>
                 </div>
             </form>
@@ -111,10 +121,10 @@ export const PurchaseCourseModal = ({ isOpen, onClose, courseTitle, price, onSuc
             <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="relative w-16 h-16 mb-6">
                     <div className="absolute inset-0 border-4 border-slate-100 dark:border-slate-800 rounded-full"></div>
-                    <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 border-4 border-[#f5a623] border-t-transparent rounded-full animate-spin"></div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Processing Payment...</h3>
-                <p className="text-sm text-slate-500">Please verify the transaction on your device if prompted.</p>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Redirecting to Flutterwave...</h3>
+                <p className="text-sm text-slate-500">You will be securely transferred to complete your payment.</p>
             </div>
           )}
 

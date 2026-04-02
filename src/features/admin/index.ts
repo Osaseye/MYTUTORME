@@ -6,3 +6,4 @@ export * from './pages/CourseModerationPage';
 export * from './pages/AdminCourseDetailsPage';
 export * from './pages/FinancialsPage';
 export * from './pages/SettingsPage';
+export * from './pages/AdminSupportPage';

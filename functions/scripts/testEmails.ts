@@ -6,7 +6,11 @@ import { PaymentFailedEmail } from '../src/emails/templates/PaymentFailedEmail';
 import { SubscriptionCancelledEmail } from '../src/emails/templates/SubscriptionCancelledEmail';
 import { StudentEnrollmentEmail } from '../src/emails/templates/StudentEnrollmentEmail';
 
-const resend = new Resend('re_E4wQwb4N_L5uYhF3qZJYpPd2RbweYJpq5');
+const apiKey = process.env.RESEND_API_KEY;
+if (!apiKey) {
+  throw new Error('RESEND_API_KEY is not set');
+}
+const resend = new Resend(apiKey);
 
 async function testAllEmails() {
   const testEmail = 'sadebowale092@gmail.com';

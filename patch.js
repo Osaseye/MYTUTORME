@@ -1,8 +1,0 @@
-const fs = require('fs');
-const file = 'c:/Users/User/OneDrive/Desktop/MyTutorMe/mytutorme/src/features/student/pages/ExamPrepPage.tsx';
-let content = fs.readFileSync(file, 'utf8');
-const searchString = '{decks.map(deck => (';
-const endIndex = content.indexOf('))}</div>', content.indexOf(searchString));
-const actualOldBlock = content.slice(content.indexOf(searchString), endIndex + 3);
-console.log(actualOldBlock);
-

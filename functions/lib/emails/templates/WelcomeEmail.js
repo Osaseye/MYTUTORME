@@ -1,60 +1,27 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WelcomeEmail = void 0;
+exports.WelcomeEmailTemplate = void 0;
 const jsx_runtime_1 = require("react/jsx-runtime");
 const components_1 = require("@react-email/components");
-const WelcomeEmail = ({ name, loginUrl }) => {
-    return ((0, jsx_runtime_1.jsxs)(components_1.Html, { children: [(0, jsx_runtime_1.jsx)(components_1.Head, {}), (0, jsx_runtime_1.jsx)(components_1.Preview, { children: "Welcome to MyTutorMe!" }), (0, jsx_runtime_1.jsx)(components_1.Body, { style: main, children: (0, jsx_runtime_1.jsxs)(components_1.Container, { style: container, children: [(0, jsx_runtime_1.jsx)(components_1.Section, { style: header, children: (0, jsx_runtime_1.jsxs)(components_1.Heading, { style: headerText, children: ["Welcome, ", name, "!"] }) }), (0, jsx_runtime_1.jsxs)(components_1.Section, { style: body, children: [(0, jsx_runtime_1.jsx)(components_1.Text, { style: paragraph, children: "We are absolutely thrilled to have you join MyTutorMe. Our platform is designed to give you the ultimate learning experience with powerful AI tools, mock exams, and premium content." }), (0, jsx_runtime_1.jsx)(components_1.Text, { style: paragraph, children: "To get started, simply log into your account and explore the dashboard:" }), (0, jsx_runtime_1.jsx)(components_1.Section, { style: buttonContainer, children: (0, jsx_runtime_1.jsx)(components_1.Link, { href: loginUrl, style: button, children: "Go to Dashboard" }) }), (0, jsx_runtime_1.jsx)(components_1.Text, { style: paragraph, children: "If you have any questions, our support team is always here to help. Welcome to the future of learning!" })] }), (0, jsx_runtime_1.jsxs)(components_1.Text, { style: footer, children: ["\u00A9 ", new Date().getFullYear(), " MyTutorMe. All rights reserved."] })] }) })] }));
+const WelcomeEmailTemplate = ({ name, role }) => {
+    return ((0, jsx_runtime_1.jsxs)(components_1.Html, { children: [(0, jsx_runtime_1.jsx)(components_1.Preview, { children: "Welcome to MyTutorMe! Your AI-First Journey to Academic Excellence Starts Now." }), (0, jsx_runtime_1.jsxs)(components_1.Tailwind, { config: {
+                    theme: {
+                        extend: {
+                            colors: {
+                                primary: '#10B981',
+                                surface: '#faf8ff',
+                                onSurface: '#0f172a',
+                                onSurfaceVariant: '#475569',
+                                outline: '#e2e8f0',
+                                error: '#ef4444'
+                            },
+                            fontFamily: {
+                                headline: ['Manrope', 'sans-serif'],
+                                body: ['Inter', 'sans-serif']
+                            }
+                        }
+                    }
+                }, children: [(0, jsx_runtime_1.jsxs)(components_1.Head, { children: [(0, jsx_runtime_1.jsx)(components_1.Font, { fontFamily: "Inter", fallbackFontFamily: "sans-serif", webFont: { url: "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZJhjp-Ek-_EeAmM.woff2", format: "woff2" }, fontWeight: 400 }), (0, jsx_runtime_1.jsx)(components_1.Font, { fontFamily: "Manrope", fallbackFontFamily: "sans-serif", webFont: { url: "https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRqAuZuw1Bx9mbZk79FN_B_w.woff2", format: "woff2" }, fontWeight: 700 }), (0, jsx_runtime_1.jsx)(components_1.Font, { fontFamily: "Manrope", fallbackFontFamily: "sans-serif", webFont: { url: "https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRqAuZuw1Bx9mbZk79FN_B_w.woff2", format: "woff2" }, fontWeight: 800 })] }), (0, jsx_runtime_1.jsx)(components_1.Body, { className: "bg-surface text-onSurface font-body m-0 p-0 antialiased py-8", children: (0, jsx_runtime_1.jsxs)(components_1.Container, { className: "max-w-[600px] mx-auto p-4 md:p-6", children: [(0, jsx_runtime_1.jsx)(components_1.Section, { className: "mb-8 w-full px-2", children: (0, jsx_runtime_1.jsxs)(components_1.Row, { children: [(0, jsx_runtime_1.jsx)(components_1.Column, { align: "left", style: { width: '40px' }, children: (0, jsx_runtime_1.jsx)(components_1.Img, { src: "https://www.mytutorme.org/icon.png", width: "32", height: "32", alt: "TutorMe logo" }) }), (0, jsx_runtime_1.jsx)(components_1.Column, { align: "left", children: (0, jsx_runtime_1.jsx)(components_1.Text, { className: "text-[22px] font-extrabold font-headline text-primary m-0 pl-2 tracking-tight", children: "MyTutorMe" }) })] }) }), (0, jsx_runtime_1.jsxs)("main", { className: "px-2", children: [(0, jsx_runtime_1.jsxs)(components_1.Section, { className: "overflow-hidden rounded-2xl bg-emerald-500/10 p-8 md:p-10 mb-8 border border-emerald-500/20", children: [(0, jsx_runtime_1.jsx)(components_1.Text, { className: "text-3xl md:text-5xl font-extrabold font-headline leading-tight mb-4 text-[#0f172a]", children: "Welcome to MyTutorMe! Your AI-First Journey Starts Now." }), (0, jsx_runtime_1.jsx)(components_1.Text, { className: "text-lg md:text-xl font-body text-onSurfaceVariant mb-8 leading-relaxed", children: "Experience a new era of learning with a personalized 24/7 AI Tutor designed to accelerate your understanding and boost your GPA through targeted, intelligent support." }), (0, jsx_runtime_1.jsx)(components_1.Button, { className: "inline-flex items-center justify-center px-8 py-4 bg-primary text-white font-bold rounded-xl", href: "https://mytutorme.org/dashboard", children: "Start Your First Lesson" })] }), (0, jsx_runtime_1.jsxs)(components_1.Section, { className: "mb-10 mt-8", children: [(0, jsx_runtime_1.jsx)(components_1.Text, { className: "text-2xl font-bold font-headline mb-4", children: "Meet Your Personal Mentor" }), (0, jsx_runtime_1.jsx)(components_1.Text, { className: "text-[16px] text-onSurfaceVariant leading-relaxed mb-6 font-body", children: "MyTutorMe isn't just a platform; it's an intelligent companion. Our 24/7 AI Tutor analyzes your learning patterns to provide real-time explanations, helping you master complex concepts in minutes rather than hours. Whether it's Calculus at midnight or Literature at dawn, we're here to ensure your GPA reflects your true potential." })] }), (0, jsx_runtime_1.jsxs)(components_1.Section, { className: "bg-white p-8 rounded-xl mb-12 shadow-sm border border-outline/30", children: [(0, jsx_runtime_1.jsxs)(components_1.Text, { className: "text-xl font-bold font-headline mb-6 text-primary flex items-center", children: [(0, jsx_runtime_1.jsx)(components_1.Img, { src: "https://cdn-icons-png.flaticon.com/512/190/190411.png", width: "24", height: "24", className: "mr-2 inline-block opacity-70" }), "Getting Started Checklist"] }), (0, jsx_runtime_1.jsxs)(components_1.Row, { className: "mb-4 bg-surface p-4 rounded-lg", children: [(0, jsx_runtime_1.jsx)(components_1.Column, { style: { width: '40px' }, children: (0, jsx_runtime_1.jsx)("div", { className: "w-6 h-6 rounded border-2 border-primary flex items-center justify-center text-primary text-sm font-bold opacity-100", children: "\u2713" }) }), (0, jsx_runtime_1.jsx)(components_1.Column, { children: (0, jsx_runtime_1.jsx)(components_1.Text, { className: "m-0 font-medium font-body text-[15px]", children: "Verify your student email address" }) })] }), (0, jsx_runtime_1.jsxs)(components_1.Row, { className: "mb-4 bg-surface p-4 rounded-lg", children: [(0, jsx_runtime_1.jsx)(components_1.Column, { style: { width: '40px' }, children: (0, jsx_runtime_1.jsx)("div", { className: "w-6 h-6 rounded border-2 border-outline flex items-center justify-center" }) }), (0, jsx_runtime_1.jsx)(components_1.Column, { children: (0, jsx_runtime_1.jsx)(components_1.Text, { className: "m-0 font-medium font-body text-[15px]", children: "Set your academic study goals" }) })] }), (0, jsx_runtime_1.jsxs)(components_1.Row, { className: "bg-surface p-4 rounded-lg", children: [(0, jsx_runtime_1.jsx)(components_1.Column, { style: { width: '40px' }, children: (0, jsx_runtime_1.jsx)("div", { className: "w-6 h-6 rounded border-2 border-outline flex items-center justify-center" }) }), (0, jsx_runtime_1.jsx)(components_1.Column, { children: (0, jsx_runtime_1.jsx)(components_1.Text, { className: "m-0 font-medium font-body text-[15px]", children: "Try your first AI Tutor session" }) })] })] })] }), (0, jsx_runtime_1.jsxs)(components_1.Section, { className: "mt-12 pt-8 border-t border-solid border-outline/50 text-center", children: [(0, jsx_runtime_1.jsx)(components_1.Text, { className: "font-headline font-bold text-primary text-xl m-0", children: "MyTutorMe Intelligence" }), (0, jsx_runtime_1.jsx)(components_1.Text, { className: "text-xs font-body text-onSurfaceVariant/80 max-w-[400px] mx-auto my-4 leading-relaxed", children: "\u00A9 2026 MyTutorMe Intelligence. All rights reserved. Our mission is to democratize elite education through the power of artificial intelligence." }), (0, jsx_runtime_1.jsxs)(components_1.Section, { className: "flex justify-center text-center mt-2", children: [(0, jsx_runtime_1.jsx)(components_1.Link, { href: "#", className: "inline-block text-xs font-body text-onSurfaceVariant mx-3 underline", children: "Privacy Policy" }), (0, jsx_runtime_1.jsx)(components_1.Link, { href: "#", className: "inline-block text-xs font-body text-onSurfaceVariant mx-3 underline", children: "Terms of Service" }), (0, jsx_runtime_1.jsx)(components_1.Link, { href: "#", className: "inline-block text-xs font-body text-onSurfaceVariant mx-3 underline", children: "Unsubscribe" })] })] })] }) })] })] }));
 };
-exports.WelcomeEmail = WelcomeEmail;
-// Styles
-const main = {
-    backgroundColor: '#f6f9fc',
-    fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif',
-};
-const container = {
-    backgroundColor: '#ffffff',
-    margin: '0 auto',
-    padding: '20px 0 48px',
-    marginBottom: '64px',
-};
-const header = {
-    padding: '0 48px',
-    textAlign: 'center',
-};
-const headerText = {
-    color: '#333',
-    fontSize: '24px',
-    fontWeight: 'bold',
-};
-const body = {
-    padding: '0 48px',
-};
-const paragraph = {
-    color: '#555',
-    fontSize: '16px',
-    lineHeight: '24px',
-};
-const buttonContainer = {
-    margin: '24px 0',
-    textAlign: 'center',
-};
-const button = {
-    backgroundColor: '#4f46e5', // Primary theme color
-    borderRadius: '4px',
-    color: '#fff',
-    fontSize: '16px',
-    fontWeight: 'bold',
-    textDecoration: 'none',
-    textAlign: 'center',
-    display: 'inline-block',
-    width: '100%',
-    padding: '12px',
-};
-const footer = {
-    color: '#8898aa',
-    fontSize: '12px',
-    marginTop: '48px',
-    textAlign: 'center',
-};
+exports.WelcomeEmailTemplate = WelcomeEmailTemplate;
 //# sourceMappingURL=WelcomeEmail.js.map

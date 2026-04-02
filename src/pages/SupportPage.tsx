@@ -7,6 +7,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 type FaqCategory = 'student' | 'teacher' | 'general';
 
@@ -65,14 +67,28 @@ export const SupportPage = () => {
   const [activeTab, setActiveTab] = useState<FaqCategory>('general');
   const [ticketStatus, setTicketStatus] = useState<"" | "sending" | "sent">("");
 
-  const handleTicketSubmit = (e: React.FormEvent) => {
+  const handleTicketSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
     setTicketStatus('sending');
-    // Simulate API call
-    setTimeout(() => {
+    const formData = new FormData(form);
+    try {
+      await addDoc(collection(db, 'support_tickets'), {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        subject: formData.get('subject'),
+        message: formData.get('message'),
+        userId: user?.uid || null,
+        status: 'open',
+        createdAt: serverTimestamp()
+      });
       setTicketStatus('sent');
+      form.reset();
       setTimeout(() => setTicketStatus(""), 3000);
-    }, 1500);
+    } catch (error) {
+      console.error(error);
+      setTicketStatus("");
+    }
   };
 
   const filteredFaqs = faqs.filter(faq => faq.category === activeTab);
@@ -105,19 +121,19 @@ export const SupportPage = () => {
                   <form onSubmit={handleTicketSubmit} className="space-y-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Name</label>
-                      <Input placeholder="John Doe" defaultValue={user ? user.displayName : ''} required />
+                      <Input name="name" placeholder="John Doe" defaultValue={user ? user.displayName || '' : ''} required />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Email Address</label>
-                      <Input type="email" placeholder="john@example.com" defaultValue={user?.email || ''} required />
+                      <Input name="email" type="email" placeholder="john@example.com" defaultValue={user?.email || ''} required />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Subject</label>
-                      <Input placeholder="e.g., Course upload issue" required />
+                      <Input name="subject" placeholder="e.g., Course upload issue" required />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Message</label>
-                      <Textarea placeholder="Describe your issue in detail..." rows={5} required />
+                      <Textarea name="message" placeholder="Describe your issue in detail..." rows={5} required />
                     </div>
                     <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" disabled={ticketStatus === 'sending'}>
                       {ticketStatus === 'sending' ? (

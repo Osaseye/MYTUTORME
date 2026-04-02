@@ -4,8 +4,9 @@ import React from 'react';
 import { sendEmail } from '../lib/email';
 import { PasswordResetEmail } from '../emails/templates/PasswordResetEmail';
 
-export const requestPasswordReset = functions.https.onCall(async (request) => {
-  const { email } = request.data;
+export const requestPasswordReset = functions.https.onCall(async (request: any) => {
+  const data = request.data || request;
+  const { email } = data;
 
   if (!email) {
     throw new functions.https.HttpsError('invalid-argument', 'Email is required');

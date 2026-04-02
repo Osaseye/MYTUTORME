@@ -36,13 +36,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onCourseUpdated = void 0;
-const functions = __importStar(require("firebase-functions"));
+exports.onEnrollmentCreated = exports.onCourseUpdated = void 0;
+const functions = __importStar(require("firebase-functions/v1"));
 const admin = __importStar(require("firebase-admin"));
 const react_1 = __importDefault(require("react"));
 const email_1 = require("../lib/email");
 const CourseApprovalEmail_1 = require("../emails/templates/CourseApprovalEmail");
 const CourseRejectionEmail_1 = require("../emails/templates/CourseRejectionEmail");
+const StudentEnrollmentEmail_1 = require("../emails/templates/StudentEnrollmentEmail");
 exports.onCourseUpdated = functions.firestore
     .document('courses/{courseId}')
     .onUpdate(async (change, context) => {
@@ -92,6 +93,38 @@ exports.onCourseUpdated = functions.firestore
     }
     catch (e) {
         console.error('Error sending course status email:', e);
+    }
+    return null;
+});
+exports.onEnrollmentCreated = functions.firestore
+    .document('enrollments/{enrollmentId}')
+    .onCreate(async (snap, context) => {
+    var _a;
+    const data = snap.data();
+    try {
+        const studentDoc = await admin.firestore().collection('users').doc(data.studentId).get();
+        const courseDoc = await admin.firestore().collection('courses').doc(data.courseId).get();
+        if (!studentDoc.exists || !courseDoc.exists)
+            return null;
+        const studentData = studentDoc.data();
+        const courseData = courseDoc.data();
+        if (!(studentData === null || studentData === void 0 ? void 0 : studentData.email))
+            return null;
+        const teacherDoc = await admin.firestore().collection('users').doc((courseData === null || courseData === void 0 ? void 0 : courseData.teacherId) || '').get();
+        const teacherName = teacherDoc.exists ? (((_a = teacherDoc.data()) === null || _a === void 0 ? void 0 : _a.displayName) || 'Instructor') : 'Your Instructor';
+        await (0, email_1.sendEmail)({
+            to: studentData.email,
+            subject: `You are enrolled in ${(courseData === null || courseData === void 0 ? void 0 : courseData.title) || 'a new course'}!`,
+            react: react_1.default.createElement(StudentEnrollmentEmail_1.StudentEnrollmentEmail, {
+                studentName: studentData.displayName || 'Student',
+                courseTitle: (courseData === null || courseData === void 0 ? void 0 : courseData.title) || 'Your Course',
+                courseUrl: `https://mytutorme.com/courses/${data.courseId}`,
+                teacherName,
+            }),
+        });
+    }
+    catch (e) {
+        console.error('Error sending enrollment email', e);
     }
     return null;
 });

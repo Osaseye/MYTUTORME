@@ -41,8 +41,8 @@ export const ExamConfigPage = () => {
   const [userPlans, setUserPlans] = useState<any[]>([]);
   
   const [sourceType, setSourceType] = useState<'ai' | 'deck' | 'plan'>('ai');
-  const [selectedSubject, setSelectedSubject] = useState<string>('Mathematics');
-  const [selectedTopic, setSelectedTopic] = useState<string>('Algebra');
+  const [selectedSubject, setSelectedSubject] = useState<string>('');
+  const [selectedTopic, setSelectedTopic] = useState<string>('');
   const [selectedDeck, setSelectedDeck] = useState<string>('');
   const [selectedPlan, setSelectedPlan] = useState<string>('');
 
@@ -137,17 +137,24 @@ export const ExamConfigPage = () => {
     }
     
     // The hook creates the pool and quiz document
-    const quizId = await generateExam({
-      subject: finalSub,
-      topic: finalTop,
-      difficulty,
-      count: questionCount[0],
-      mode
-    });
+    const loadingToastId = toast.loading('Generating your custom exam... Please wait.');
+    try {
+        const quizId = await generateExam({
+          subject: finalSub,
+          topic: finalTop,
+          difficulty,
+          count: questionCount[0],
+          mode
+        });
 
-    if (quizId) {
-      toast.success('Exam generated successfully!');
-      navigate(`/student/exam-prep/active/${quizId}`);
+        if (quizId) {
+          toast.success('Exam generated successfully!', { id: loadingToastId });
+          navigate(`/student/exam-prep/active/${quizId}`);
+        } else {
+            toast.error('Could not generate exam. Please try a different topic.', { id: loadingToastId });
+        }
+    } catch (err) {
+        toast.error('An error occurred during generation.', { id: loadingToastId });
     }
   };
 
@@ -195,31 +202,27 @@ export const ExamConfigPage = () => {
                             <div className="animate-in fade-in slide-in-from-top-4 space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Subject</label>
-                                    <select 
+                                    <input
+                                        type="text"
                                         value={selectedSubject}
                                         onChange={(e) => {
                                             setSelectedSubject(e.target.value);
-                                            if (AVAILABLE_TOPICS[e.target.value]?.length > 0) {
-                                                setSelectedTopic(AVAILABLE_TOPICS[e.target.value][0]);
-                                            }
+                                            setSelectedTopic('');
                                         }}
+                                        placeholder="Enter subject (e.g. Mathematics)"
                                         className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-primary/50 outline-none text-slate-900 dark:text-white"
-                                    >
-                                        {AVAILABLE_SUBJECTS.map(sub => <option key={sub} value={sub}>{sub}</option>)}
-                                    </select>
+                                    />
                                 </div>
                                 {selectedSubject && (
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Topic</label>
-                                        <select 
+                                        <input
+                                            type="text"
                                             value={selectedTopic}
                                             onChange={(e) => setSelectedTopic(e.target.value)}
+                                            placeholder="Enter specific topic (e.g. Limits in Calculus)"
                                             className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-primary/50 outline-none text-slate-900 dark:text-white"
-                                        >
-                                            {AVAILABLE_TOPICS[selectedSubject]?.map(topic => (
-                                                <option key={topic} value={topic}>{topic}</option>
-                                            ))}
-                                        </select>
+                                        />
                                     </div>
                                 )}
                             </div>

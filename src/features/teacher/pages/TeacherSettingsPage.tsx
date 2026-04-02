@@ -25,8 +25,45 @@ export const TeacherSettingsPage = () => {
     twitter: ""
   });
   const [isSaving, setIsSaving] = useState(false);
+  // const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  // const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<'premium_tools' | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Check for payment return parameters
+    const checkPaymentStatus = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const transactionId = params.get('transaction_id');
+      const status = params.get('status');
+
+      if (transactionId && status) {
+        // Clean URL to prevent re-triggering
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        setIsVerifyingPayment(true);
+        setActiveTab('subscription');
+        const verifyPayment = httpsCallable(functions, 'verifySubscription');
+        
+        try {
+          const result: any = await verifyPayment({ transactionId, status });
+          if (result.data?.success) {
+            toast.success("Payment verified! Your subscription has been updated.");
+            // Refresh to grab new user claims/plan context
+            setTimeout(() => window.location.reload(), 1500);
+          } else {
+            toast.error("Payment verification pending or failed. Please check back later.");
+          }
+        } catch (error: any) {
+          toast.error("Error verifying payment", { description: error.message });
+        } finally {
+          setIsVerifyingPayment(false);
+        }
+      }
+    };
+    checkPaymentStatus();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -74,14 +111,15 @@ export const TeacherSettingsPage = () => {
       try {
         const initializeSubscription = httpsCallable(functions, 'initializeSubscription');
         const result = await initializeSubscription({
-          planCode: "PLN_f310wmozw4tnxhq", // Teacher premium plan
+          planCode: "FW_PLAN_TEACHER_PREMIUM", // Teacher premium plan
           email: user?.email,
-          userId: user?.uid
+          userId: user?.uid,
+          redirectUrl: window.location.href
         });
 
         const data: any = result.data;
         if (data?.authorizationUrl) {
-          window.location.href = data.authorizationUrl; // Redirect to Paystack
+          window.location.href = data.authorizationUrl; // Redirect to Paystack/Flutterwave
         } else {
           toast.error("Error initializing payment URL.");
         }
@@ -94,11 +132,11 @@ export const TeacherSettingsPage = () => {
     try {
       // Logic for downgrading to free
       const cancelSubscription = httpsCallable(functions, 'cancelSubscription');
-      // If cancelling, you might need their Paystack customer code here based on the Firebase Document mapping
-      if (user?.subscriptionCode && user?.paystackCustomerCode) {
+      // If cancelling, you might need their payment provider code here based on the Firebase Document mapping
+      if (user?.subscriptionId && user?.paymentProviderCustomerId) {
          await cancelSubscription({
-             subscriptionCode: user.subscriptionCode,
-             emailToken: user.paystackCustomerCode
+             subscriptionId: user.subscriptionId,
+             paymentProviderCustomerId: user.paymentProviderCustomerId
          });
       }
 
@@ -323,7 +361,15 @@ export const TeacherSettingsPage = () => {
           )}
 
           {activeTab === 'subscription' && (
-            <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 max-w-3xl">
+            <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 max-w-3xl relative">
+              {isVerifyingPayment && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-xl">
+                  <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <p className="mt-4 font-medium text-slate-700">Verifying your payment...</p>
+                  </div>
+                </div>
+              )}
               <h2 className="text-xl font-semibold mb-2 text-slate-900">Subscription Plan</h2>
               <p className="text-slate-500 text-sm mb-8">Manage your instructor plan and tools.</p>
               

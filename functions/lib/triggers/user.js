@@ -37,7 +37,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.onUserUpdated = exports.onUserCreated = void 0;
-const functions = __importStar(require("firebase-functions"));
+const functions = __importStar(require("firebase-functions/v1"));
 const react_1 = __importDefault(require("react"));
 const email_1 = require("../lib/email");
 const WelcomeEmail_1 = require("../emails/templates/WelcomeEmail");
@@ -57,9 +57,9 @@ exports.onUserCreated = functions.firestore
         await (0, email_1.sendEmail)({
             to: email,
             subject: 'Welcome to MyTutorMe!',
-            react: react_1.default.createElement(WelcomeEmail_1.WelcomeEmail, {
+            react: react_1.default.createElement(WelcomeEmail_1.WelcomeEmailTemplate, {
                 name,
-                loginUrl: 'https://mytutorme.com/login',
+                role: userData.role || 'student',
             }),
         });
         console.log(`Welcome email successfully sent to ${email}`);

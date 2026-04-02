@@ -16,6 +16,7 @@ import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '@/lib/firebase';
 import { Sparkles, Zap, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { PaymentModal } from '@/components/shared/PaymentModal';
 
 const mockData = [
   { name: 'Mon', revenue: 0 },
@@ -37,8 +38,37 @@ export const TeacherDashboard = () => {
         totalCourses: 0,
     });
     const [isUpgrading, setIsUpgrading] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
     const isPremium = user?.teacherSubscriptionPlan === 'premium_tools';
+
+    useEffect(() => {
+        const checkPaymentStatus = async () => {
+            const params = new URLSearchParams(window.location.search);
+            const transactionId = params.get('transaction_id');
+            const status = params.get('status');
+
+            if (transactionId && status) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                const verifyPayment = httpsCallable(functions, 'verifySubscription');
+                toast.loading("Verifying your payment...", { id: "verifyPayment" });
+                
+                try {
+                    const result: any = await verifyPayment({ transactionId, status });
+                    if (result.data?.success) {
+                        toast.success("Payment verified! Your teacher tools are now active.", { id: "verifyPayment" });
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        toast.error("Payment verification pending or failed. Please check back later.", { id: "verifyPayment" });
+                    }
+                } catch (error: any) {
+                    toast.error("Error verifying payment", { description: error.message, id: "verifyPayment" });
+                }
+            }
+        };
+        checkPaymentStatus();
+    }, []);
 
     useEffect(() => {
         const fetchDashboardStats = async () => {
@@ -84,15 +114,17 @@ export const TeacherDashboard = () => {
         fetchDashboardStats();
     }, [user]);
 
-    const handleUpgradeToPremium = async () => {
+    const executeUpgrade = async (paymentProvider?: 'flutterwave' | 'paystack') => {
         if (!user) return;
         setIsUpgrading(true);
         try {
             const initializeSubscription = httpsCallable(functions, 'initializeSubscription');
             const result = await initializeSubscription({
-                planCode: "PLN_f310wmozw4tnxhq",
+                planCode: "FW_PLAN_TEACHER_PREMIUM",
                 email: user?.email,
-                userId: user?.uid
+                userId: user?.uid,
+                provider: paymentProvider || 'flutterwave',
+                redirectUrl: window.location.origin + '/teacher/dashboard'
             });
 
             const data: any = result.data;
@@ -145,7 +177,7 @@ export const TeacherDashboard = () => {
                         </div>
                     </div>
                     <Button 
-                        onClick={handleUpgradeToPremium} 
+                        onClick={() => setIsPaymentModalOpen(true)} 
                         disabled={isUpgrading}
                         className="bg-amber-500 hover:bg-amber-600 text-white border-0"
                     >
@@ -232,7 +264,7 @@ export const TeacherDashboard = () => {
                                 <Zap className="w-12 h-12 text-amber-500 mx-auto mb-4" />
                                 <h4 className="font-bold text-lg mb-2">Advanced Analytics Locked</h4>
                                 <p className="text-sm text-slate-500 mb-4">Upgrade to Premium Tools to unlock detailed revenue breakdowns and student retention charts.</p>
-                                <Button onClick={handleUpgradeToPremium} disabled={isUpgrading} className="w-full">
+                                <Button onClick={() => setIsPaymentModalOpen(true)} disabled={isUpgrading} className="w-full">
                                    Upgrade Now
                                 </Button>
                             </div>
@@ -291,7 +323,16 @@ export const TeacherDashboard = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    );
+      </div>
+
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onConfirm={async (provider) => {
+          setIsPaymentModalOpen(false);
+          await executeUpgrade(provider);
+        }}
+      />
+    </div>
+  );
 };

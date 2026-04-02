@@ -1,14 +1,15 @@
-﻿import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { StudentSidebar } from '../components/StudentSidebar';
 import { MobileFloatingNav } from '../components/MobileFloatingNav';
-import { Bell, Search, UserCircle, Crown } from 'lucide-react';
+import { Search, UserCircle, Crown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
+import { NotificationDropdown } from '@/components/shared/NotificationDropdown';
 
 export const StudentLayout = () => {
   const { user } = useAuthStore();
   const location = useLocation();
-  const isAiTutor = location.pathname === '/student/ai-tutor';
+  const isAiTutor = location.pathname.includes('/student/ai-tutor');
 
   const getPlanDisplay = (plan?: string) => {
     if (!plan || plan === 'free') return 'Free';
@@ -56,9 +57,7 @@ export const StudentLayout = () => {
                   </div>
                )}
 
-               <button className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-500">
-                 <Bell className="w-5 h-5" />
-               </button>
+               <NotificationDropdown userRole="student" />
 
                <div className="flex items-center gap-3">
                  <div className="hidden sm:flex flex-col items-end justify-center">
@@ -86,8 +85,8 @@ export const StudentLayout = () => {
         )}
 
         {/* Main Content Area */}
-        <main className={`flex-1 ${isAiTutor ? '' : 'p-8'}`}>
-            <div className={`${isAiTutor ? 'h-[calc(100vh)] md:h-screen w-full' : 'max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500'}`}>
+          <main className={`flex-1 flex flex-col relative ${isAiTutor ? '' : 'p-4 md:p-8'}`}>
+            <div className={`${isAiTutor ? 'absolute inset-0 flex flex-col overflow-hidden' : 'w-full max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500'}`}>
                <Outlet />
             </div>
         </main>

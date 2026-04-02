@@ -15,9 +15,26 @@ import {
 } from 'lucide-react';
 import { getGenerativeModel } from 'firebase/ai';
 import { ai } from '@/lib/firebase';
-import ReactMarkdown from 'react-markdown';import { usePlanGate } from '@/hooks/usePlanGate';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
+import { usePlanGate } from '@/hooks/usePlanGate';
+
+const SYSTEM_INSTRUCTION = `You are an expert AI Assignment Helper. Your goal is to guide students to the answer, rather than just giving it to them outright.
+- Break down the problem into smaller, understandable steps.
+- Explain the underlying concepts briefly.
+- Use clear formatting with valid markdown. Use tables where appropriate.
+- For math equations, use LaTeX wrapped in $ for inline and $$ for blocks.
+- Be concise and avoid over-explaining simple concepts. Focus on the core of the problem.
+- Ask questions at the end of sections to gauge understanding if appropriate.`;
+
 // Create a GenerativeModel instance with gemini-2.5-pro for reasoning tasks
-const model = getGenerativeModel(ai, { model: 'gemini-2.5-pro' });
+const model = getGenerativeModel(ai, { 
+  model: 'gemini-2.5-pro',
+  systemInstruction: SYSTEM_INSTRUCTION
+});
 
 interface SelectedFile {
   name: string;
@@ -374,8 +391,13 @@ export const AssignmentHelperPage = () => {
                   <p className="text-sm text-gray-500 dark:text-gray-400">Our AI is breaking down the problem into understandable steps.</p>
                 </div>
               ) : result ? (
-                <div className="prose dark:prose-invert prose-slate prose-sm sm:prose-base max-w-none w-full">
-                  <ReactMarkdown>{result}</ReactMarkdown>
+                <div className="prose dark:prose-invert prose-slate prose-sm sm:prose-base max-w-none w-full flex flex-col gap-2">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                  >
+                    {result}
+                  </ReactMarkdown>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center text-center max-w-sm opacity-60 m-auto">

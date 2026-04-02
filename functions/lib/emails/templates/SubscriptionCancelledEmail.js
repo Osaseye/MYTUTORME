@@ -1,0 +1,27 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SubscriptionCancelledEmail = void 0;
+const jsx_runtime_1 = require("react/jsx-runtime");
+const components_1 = require("@react-email/components");
+const SubscriptionCancelledEmail = ({ name }) => {
+    return ((0, jsx_runtime_1.jsxs)(components_1.Html, { children: [(0, jsx_runtime_1.jsx)(components_1.Preview, { children: "Your subscription has been cancelled" }), (0, jsx_runtime_1.jsxs)(components_1.Tailwind, { config: {
+                    theme: {
+                        extend: {
+                            colors: {
+                                primary: '#10B981',
+                                surface: '#faf8ff',
+                                onSurface: '#0f172a',
+                                onSurfaceVariant: '#475569',
+                                outline: '#e2e8f0',
+                                error: '#ef4444'
+                            },
+                            fontFamily: {
+                                headline: ['Manrope', 'sans-serif'],
+                                body: ['Inter', 'sans-serif']
+                            }
+                        }
+                    }
+                }, children: [(0, jsx_runtime_1.jsxs)(components_1.Head, { children: [(0, jsx_runtime_1.jsx)(components_1.Font, { fontFamily: "Inter", fallbackFontFamily: "sans-serif", webFont: { url: "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZJhjp-Ek-_EeAmM.woff2", format: "woff2" }, fontWeight: 400 }), (0, jsx_runtime_1.jsx)(components_1.Font, { fontFamily: "Manrope", fallbackFontFamily: "sans-serif", webFont: { url: "https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRqAuZuw1Bx9mbZk79FN_B_w.woff2", format: "woff2" }, fontWeight: 700 }), (0, jsx_runtime_1.jsx)(components_1.Font, { fontFamily: "Manrope", fallbackFontFamily: "sans-serif", webFont: { url: "https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRqAuZuw1Bx9mbZk79FN_B_w.woff2", format: "woff2" }, fontWeight: 800 })] }), (0, jsx_runtime_1.jsx)(components_1.Body, { className: "bg-surface text-onSurface font-body m-0 p-0 antialiased py-8", children: (0, jsx_runtime_1.jsxs)(components_1.Container, { className: "max-w-[600px] mx-auto p-4 md:p-6", children: [(0, jsx_runtime_1.jsx)(components_1.Section, { className: "mb-8 w-full px-2", children: (0, jsx_runtime_1.jsxs)(components_1.Row, { children: [(0, jsx_runtime_1.jsx)(components_1.Column, { align: "left", style: { width: '40px' }, children: (0, jsx_runtime_1.jsx)(components_1.Img, { src: "https://www.mytutorme.org/icon.png", width: "32", height: "32", alt: "TutorMe logo" }) }), (0, jsx_runtime_1.jsx)(components_1.Column, { align: "left", children: (0, jsx_runtime_1.jsx)(components_1.Text, { className: "text-[22px] font-extrabold font-headline text-primary m-0 pl-2 tracking-tight", children: "MyTutorMe" }) })] }) }), (0, jsx_runtime_1.jsx)("main", { className: "px-2", children: (0, jsx_runtime_1.jsxs)(components_1.Section, { className: "bg-slate-100 p-10 rounded-[24px] mb-8 border border-slate-200 text-center", children: [(0, jsx_runtime_1.jsx)(components_1.Text, { className: "text-2xl font-bold font-headline mb-4 text-[#0f172a]", children: "Subscription Cancelled" }), (0, jsx_runtime_1.jsxs)(components_1.Text, { className: "text-[16px] font-body text-slate-600 leading-relaxed mb-6", children: ["Hi ", name, ", we're confirming that your premium access to MyTutorMe will end at the conclusion of your current billing cycle."] }), (0, jsx_runtime_1.jsx)(components_1.Text, { className: "text-[16px] font-body text-slate-600 leading-relaxed mb-8", children: "We're sorry to see you go! All your progress and data will be safely stored if you ever decide to jump back in." }), (0, jsx_runtime_1.jsx)(components_1.Button, { className: "inline-flex px-8 py-3 bg-white text-primary border-2 border-primary font-bold rounded-xl", href: "https://mytutorme.org/pricing", children: "Reactivate Plan" })] }) }), (0, jsx_runtime_1.jsxs)(components_1.Section, { className: "mt-12 pt-8 border-t border-solid border-outline/50 text-center", children: [(0, jsx_runtime_1.jsx)(components_1.Text, { className: "font-headline font-bold text-primary text-xl m-0", children: "MyTutorMe Intelligence" }), (0, jsx_runtime_1.jsx)(components_1.Text, { className: "text-xs font-body text-onSurfaceVariant/80 max-w-[400px] mx-auto my-4 leading-relaxed", children: "\u00A9 2026 MyTutorMe Intelligence. All rights reserved. Our mission is to democratize elite education through the power of artificial intelligence." }), (0, jsx_runtime_1.jsxs)(components_1.Section, { className: "flex justify-center text-center mt-2", children: [(0, jsx_runtime_1.jsx)(components_1.Link, { href: "#", className: "inline-block text-xs font-body text-onSurfaceVariant mx-3 underline", children: "Privacy Policy" }), (0, jsx_runtime_1.jsx)(components_1.Link, { href: "#", className: "inline-block text-xs font-body text-onSurfaceVariant mx-3 underline", children: "Terms of Service" }), (0, jsx_runtime_1.jsx)(components_1.Link, { href: "#", className: "inline-block text-xs font-body text-onSurfaceVariant mx-3 underline", children: "Unsubscribe" })] })] })] }) })] })] }));
+};
+exports.SubscriptionCancelledEmail = SubscriptionCancelledEmail;
+//# sourceMappingURL=SubscriptionCancelledEmail.js.map

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -116,11 +116,11 @@ export const AdminLoginPage = () => {
                 </Button>
             </form>
 
-            <div className="text-center text-sm text-slate-500 dark:text-slate-400">
+            <div className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
                  Are you a Student or Teacher?{' '}
-                <a href="/auth/login" className="font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 transition-colors">
+                <Link to="/login" className="font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 transition-colors">
                     Back to portal
-                </a>
+                </Link>
             </div>
         </div>
     );

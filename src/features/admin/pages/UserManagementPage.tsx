@@ -11,7 +11,8 @@ import {
   FileCheck2,
   MoreVertical,
   Ban,
-  UserCheck
+  UserCheck,
+  BrainCircuit
 } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, where, getDocs, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -63,6 +64,16 @@ export const UserManagementPage = () => {
     const [rejectReason, setRejectReason] = useState('');
     const [enrolledCourses, setEnrolledCourses] = useState<{id: string, title: string}[]>([]);
     const [loadingCourses, setLoadingCourses] = useState(false);
+    
+    // Usage Statistics
+    const [stats, setStats] = useState({
+        aiQueries: 0,
+        studyPlans: 0,
+        mockExams: 0,
+        flashcards: 0,
+        createdCourses: 0
+    });
+    const [loadingStats, setLoadingStats] = useState(false);
 
     useEffect(() => {
         // Stream all active users down
@@ -127,7 +138,59 @@ export const UserManagementPage = () => {
             }
         };
 
+        const fetchUserStats = async () => {
+            if (!selectedUser) return;
+            setLoadingStats(true);
+            try {
+                let aiQueries = 0;
+                let studyPlans = 0;
+                let mockExams = 0;
+                let flashcards = 0;
+                let createdCourses = 0;
+
+                // AI Queries
+                const aiQ = query(collection(db, 'ai_sessions'), where('studentId', '==', selectedUser.uid));
+                const aiSnap = await getDocs(aiQ);
+                aiSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.messages && Array.isArray(data.messages)) {
+                         // Approximating queries by (messages / 2) because it contains user & bot
+                         aiQueries += Math.floor(data.messages.length / 2);
+                    }
+                });
+
+                // Study Plans
+                const plansQ = query(collection(db, 'study_plans'), where('userId', '==', selectedUser.uid));
+                const plansSnap = await getDocs(plansQ);
+                studyPlans = plansSnap.size;
+
+                // Mock Exams (from exams or quiz attempts)
+                const mockQ = query(collection(db, 'quiz_attempts'), where('studentId', '==', selectedUser.uid));
+                const mockSnap = await getDocs(mockQ);
+                mockExams = mockSnap.size;
+
+                // Flashcards
+                const flashQ = query(collection(db, 'flashcard_decks'), where('userId', '==', selectedUser.uid));
+                const flashSnap = await getDocs(flashQ);
+                flashcards = flashSnap.size;
+
+                // Created Courses (If teacher)
+                if (selectedUser.role === 'teacher' || selectedUser.role === 'admin') {
+                     const coursesQ = query(collection(db, 'courses'), where('teacherId', '==', selectedUser.uid));
+                     const coursesSnap = await getDocs(coursesQ);
+                     createdCourses = coursesSnap.size;
+                }
+
+                setStats({ aiQueries, studyPlans, mockExams, flashcards, createdCourses });
+            } catch (err) {
+                console.error("Error fetching stats", err);
+            } finally {
+                setLoadingStats(false);
+            }
+        };
+
         fetchEnrolledCourses();
+        fetchUserStats();
     }, [selectedUser]);
 
     // Handle Local Filtering
@@ -487,6 +550,52 @@ export const UserManagementPage = () => {
                                             </div>
                                         </>
                                     )}
+
+                                    {/* USAGE STATISTICS */}
+                                    <div className="pt-6 mt-6 border-t border-slate-200 dark:border-slate-800">
+                                        <p className="font-bold text-slate-900 dark:text-slate-100 mb-4 text-xs uppercase tracking-wider flex items-center gap-2">
+                                            <BrainCircuit className="w-4 h-4 text-primary" /> 
+                                            Platform Usage
+                                        </p>
+                                        {loadingStats ? (
+                                            <div className="flex items-center justify-center p-4">
+                                                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {selectedUser.role === 'student' && (
+                                                    <>
+                                                        <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                                                            <p className="text-xs text-slate-500 mb-1">AI Queries</p>
+                                                            <p className="text-lg font-semibold text-slate-900 dark:text-white">{stats.aiQueries || 0}</p>
+                                                        </div>
+                                                        <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                                                            <p className="text-xs text-slate-500 mb-1">Study Plans</p>
+                                                            <p className="text-lg font-semibold text-slate-900 dark:text-white">{stats.studyPlans || 0}</p>
+                                                        </div>
+                                                        <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                                                            <p className="text-xs text-slate-500 mb-1">Mock Exams</p>
+                                                            <p className="text-lg font-semibold text-slate-900 dark:text-white">{stats.mockExams || 0}</p>
+                                                        </div>
+                                                        <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                                                            <p className="text-xs text-slate-500 mb-1">Flashcard Decks</p>
+                                                            <p className="text-lg font-semibold text-slate-900 dark:text-white">{stats.flashcards || 0}</p>
+                                                        </div>
+                                                        <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                                                            <p className="text-xs text-slate-500 mb-1">Enrolled Courses</p>
+                                                            <p className="text-lg font-semibold text-slate-900 dark:text-white">{enrolledCourses.length || 0}</p>
+                                                        </div>
+                                                    </>
+                                                )}
+                                                {(selectedUser.role === 'teacher' || selectedUser.role === 'admin') && (
+                                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800 col-span-2">
+                                                        <p className="text-xs text-slate-500 mb-1">Created Courses</p>
+                                                        <p className="text-lg font-semibold text-slate-900 dark:text-white">{stats.createdCourses || 0}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </CardContent>
                             

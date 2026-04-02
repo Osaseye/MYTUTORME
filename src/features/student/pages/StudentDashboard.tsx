@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { useNavigate } from 'react-router-dom';
 import { 
   PlayCircle, 
   ArrowRight, 
@@ -13,13 +14,16 @@ import { Badge } from '@/components/ui/badge';
 import { PerformanceChart } from '../components/PerformanceChart';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 import type { StudentProfile } from '@/types/user';
-import { db } from '@/lib/firebase';
+import { db, functions } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { calculateCumulativeGPA } from '../utils/gpaUtils';
+import { httpsCallable } from 'firebase/functions';
+import { toast } from 'sonner';
 
 export const StudentDashboard = () => {
   const { user } = useAuthStore();
   const studentProfile = user as StudentProfile;
+  const navigate = useNavigate();a
 
   // Dynamic States
   const [currentCGPA, setCurrentCGPA] = useState(studentProfile?.currentCGPA || 0.0);
@@ -27,7 +31,35 @@ export const StudentDashboard = () => {
   const [gradingScale, setGradingScale] = useState(studentProfile?.gradingSystem || "5.0");
   const [performanceData, setPerformanceData] = useState<number[]>([]);
   const [performanceLabels, setPerformanceLabels] = useState<string[]>([]);
-  const [recentCourses, setRecentCourses] = useState<Array<{ title: string; progress: number; lastAccessed: string; color: string; code: string; }>>([]);
+  const [recentCourses, setRecentCourses] = useState<Array<{ id: string; title: string; progress: number; lastAccessed: string; color: string; code: string; }>>([]);
+
+  useEffect(() => {
+    const checkPaymentStatus = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const transactionId = params.get('transaction_id');
+      const status = params.get('status');
+
+      if (transactionId && status) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        const verifyPayment = httpsCallable(functions, 'verifySubscription');
+        const verifyToast = toast.loading("Verifying your payment...");
+        
+        try {
+          const result: any = await verifyPayment({ transactionId, status });
+          if (result.data?.success) {
+            toast.success("Payment verified! Your subscription has been updated.", { id: verifyToast });
+            setTimeout(() => window.location.reload(), 1500);
+          } else {
+            toast.error("Payment verification pending or failed. Please check back later.", { id: verifyToast });
+          }
+        } catch (error: any) {
+          toast.error("Error verifying payment", { description: error.message, id: verifyToast });
+        }
+      }
+    };
+    checkPaymentStatus();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -90,6 +122,7 @@ export const StudentDashboard = () => {
            const randomColor = colors[Math.floor(Math.random() * colors.length)];
            
            return {
+              id: enrData.courseId,
               title: cData.title,
               progress: enrData.progress || Math.floor(Math.random() * 40) + 10,
               lastAccessed: 'Recently',
@@ -138,10 +171,10 @@ export const StudentDashboard = () => {
               </div>
 
               <div className="flex flex-wrap gap-4 mt-4">
-                 <Button size="lg" className="bg-primary hover:bg-primary-dark text-white border-0 shadow-lg shadow-primary/20 gap-2 font-medium px-6 h-12 rounded-xl transition-all hover:scale-105 active:scale-95">
+                 <Button onClick={() => navigate('/student/courses')} size="lg" className="bg-primary hover:bg-primary-dark text-white border-0 shadow-lg shadow-primary/20 gap-2 font-medium px-6 h-12 rounded-xl transition-all hover:scale-105 active:scale-95">
                     <PlayCircle className="w-5 h-5 fill-current" /> Resume Learning
                  </Button>
-                 <Button size="lg" variant="outline" className="text-black border-white/20 hover:bg-white/10 gap-2 h-12 rounded-xl px-6">
+                 <Button onClick={() => navigate('/student/exam-prep')} size="lg" variant="outline" className="text-black border-white/20 hover:bg-white/10 gap-2 h-12 rounded-xl px-6">
                     Daily Quiz <ArrowRight className="w-4 h-4" />
                  </Button>
               </div>
@@ -208,12 +241,12 @@ export const StudentDashboard = () => {
           <div className="space-y-4">
              <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white font-display">Pick up where you left off</h2>
-                <Button variant="link" className="text-primary font-medium hover:text-primary-dark">View All Courses</Button>
+                <Button onClick={() => navigate('/student/courses')} variant="link" className="text-primary font-medium hover:text-primary-dark">View All Courses</Button>
              </div>
              
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {recentCourses.length > 0 ? recentCourses.map((course, idx) => (
-                  <div key={idx} className="group p-5 bg-white dark:bg-card-bg-dark border border-slate-200 dark:border-slate-800 rounded-3xl hover:border-primary/50 transition-all shadow-sm hover:shadow-md cursor-pointer relative overflow-hidden">
+                  <div key={idx} onClick={() => navigate(`/student/courses/${course.id}`)} className="group p-5 bg-white dark:bg-card-bg-dark border border-slate-200 dark:border-slate-800 rounded-3xl hover:border-primary/50 transition-all shadow-sm hover:shadow-md cursor-pointer relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-transparent to-slate-50 dark:to-slate-800/50 rounded-bl-full pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity" />
                     
                     <div className="flex justify-between items-start mb-4 relative z-10">
@@ -245,7 +278,7 @@ export const StudentDashboard = () => {
                   <div className="col-span-1 sm:col-span-2 py-10 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
                     <BookOpen className="w-10 h-10 text-slate-400 mb-3" />
                     <p className="text-slate-500 font-medium">You haven't started any courses yet.</p>
-                    <Button variant="link" className="mt-2">Browse Courses</Button>
+                    <Button onClick={() => navigate('/student/courses')} variant="link" className="mt-2">Browse Courses</Button>
                   </div>
                 )}
              </div>
@@ -266,7 +299,7 @@ export const StudentDashboard = () => {
               <p className="text-sm text-indigo-100 mb-6 max-w-[200px] leading-relaxed">
                 Snap a photo or type your question. Your AI Tutor is ready.
               </p>
-              <Button size="lg" className="bg-white text-indigo-700 hover:bg-indigo-50 w-full font-bold shadow-xl border-0 h-11 rounded-xl">
+              <Button onClick={() => navigate('/student/ai-tutor')} size="lg" className="bg-white text-indigo-700 hover:bg-indigo-50 w-full font-bold shadow-xl border-0 h-11 rounded-xl">
                 Ask AI Tutor
               </Button>
             </div>

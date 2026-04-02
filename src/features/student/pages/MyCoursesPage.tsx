@@ -126,7 +126,7 @@ export const MyCoursesPage = () => {
     });
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
             <div className="mb-8 md:mb-12">
                 <h1 className="font-display text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
                     Your Learning <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Hub</span>
@@ -137,7 +137,7 @@ export const MyCoursesPage = () => {
             </div>
 
             <Tabs defaultValue="explore" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 lg:w-[400px] mb-8 bg-slate-100 dark:bg-slate-800 p-1">
+                <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 lg:w-[400px] mb-8 bg-slate-100 dark:bg-slate-800 p-1 h-auto gap-y-1">
                     <TabsTrigger value="explore" className="flex items-center gap-2">
                         <Search className="w-4 h-4" /> Explore Catalog
                     </TabsTrigger>
@@ -212,7 +212,7 @@ export const MyCoursesPage = () => {
                             onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+                        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide max-w-[calc(100vw-2.5rem)] md:max-w-none">
                             <select 
                                 value={levelFilter} 
                                 onChange={(e) => setLevelFilter(e.target.value)} 

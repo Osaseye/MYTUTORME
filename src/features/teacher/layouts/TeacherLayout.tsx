@@ -6,7 +6,6 @@ import {
   MessageSquare, 
   Settings, 
   LogOut,
-  Bell,
   Search,
   Menu,
   X,
@@ -18,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { NotificationDropdown } from '@/components/shared/NotificationDropdown';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -172,10 +172,7 @@ export const TeacherLayout = () => {
                             </div>
                         )}
 
-                        <Button variant="ghost" size="icon" className="relative">
-                            <Bell className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-                            <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-                        </Button>
+                        <NotificationDropdown userRole="teacher" />
                         
                         <div className="h-6 w-px bg-slate-200 dark:bg-slate-800"></div>
                         

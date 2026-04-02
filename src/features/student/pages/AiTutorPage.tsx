@@ -20,6 +20,7 @@ import { ScrollToTop } from '@/components/ui/scroll-to-top';
 import { useAiTutor } from '@/features/ai-tutor/hooks/useAiTutor';
 import ReactMarkdown from 'react-markdown';
 import { usePlanGate } from '@/hooks/usePlanGate';
+import { toast } from 'sonner';
 
 
 
@@ -48,7 +49,9 @@ export const AiTutorPage = () => {
         streamingContent,
         sendMessage,
         initializeChat,
-        currentSessionId
+        currentSessionId,
+        queriesUsed,
+        maxQueries,
     } = useAiTutor(activeSubject, activeTopic);
 
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -91,7 +94,13 @@ export const AiTutorPage = () => {
 
         // Soft limit for free users: restrict to a certain number of messages per session
         if (!hasAccess && messages.length >= 6) {
-            alert('Free tier AI limit reached for this session. Please upgrade your plan in Settings to unlock unlimited AI queries.');
+            toast.info('Free tier AI limit reached for this session.', {
+              description: 'Please upgrade your plan in Settings to unlock unlimited AI queries.',
+              action: {
+                label: 'Upgrade',
+                onClick: () => navigate('/student/settings'),
+              },
+            });
             return;
         }
 
@@ -170,8 +179,12 @@ export const AiTutorPage = () => {
 
                     <div className="flex-1 overflow-y-auto space-y-2">
                         <button 
-                            onClick={() => {
-                                initializeChat();
+                            onClick={async () => {
+                                const info = await initializeChat();
+                                if (info) {
+                                    setActiveSubject(info.subject || '');
+                                    setActiveTopic(info.topic || '');
+                                }
                                 setShowHistory(false);
                             }}
                             className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-all mb-4"
@@ -185,8 +198,12 @@ export const AiTutorPage = () => {
                                 sessionHistory.map((session) => (
                                     <button 
                                         key={session.id}
-                                        onClick={() => {
-                                            initializeChat(session.id);
+                                        onClick={async () => {
+                                            const info = await initializeChat(session.id);
+                                            if (info) {
+                                                setActiveSubject(info.subject || '');
+                                                setActiveTopic(info.topic || '');
+                                            }
                                             setShowHistory(false);
                                         }}
                                         className={cn(
@@ -211,7 +228,13 @@ export const AiTutorPage = () => {
             )}>
                 <div className="p-4 flex-1 flex flex-col min-h-0">
                     <button 
-                        onClick={() => initializeChat()}
+                        onClick={async () => {
+                            const info = await initializeChat();
+                            if (info) {
+                                setActiveSubject(info.subject || '');
+                                setActiveTopic(info.topic || '');
+                            }
+                        }}
                         className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-primary text-white font-medium hover:bg-primary/90 transition-all mb-6 shadow-sm"
                     >
                         <PlusCircle className="w-5 h-5" /> New Chat
@@ -226,7 +249,13 @@ export const AiTutorPage = () => {
                                 sessionHistory.map((session) => (
                                     <button 
                                         key={session.id}
-                                        onClick={() => initializeChat(session.id)}
+                                        onClick={async () => {
+                                            const info = await initializeChat(session.id);
+                                            if (info) {
+                                                setActiveSubject(info.subject || '');
+                                                setActiveTopic(info.topic || '');
+                                            }
+                                        }}
                                         className={cn(
                                             "w-full text-left p-2 rounded-lg text-sm truncate transition-colors",
                                             currentSessionId === session.id 
@@ -257,7 +286,7 @@ export const AiTutorPage = () => {
             </aside>
 
             {/* Main Chat Area */}
-            <main className="flex-1 flex flex-col relative h-full bg-white dark:bg-slate-950">
+            <main className="flex-1 flex flex-col relative bg-white dark:bg-slate-950 min-h-0 w-full overflow-hidden">
                 {/* Desktop Toggle Sidebar Button */}
                 <div className="hidden md:flex flex-col absolute top-4 left-4 z-10 gap-1">
                     <div className="flex items-center gap-4">
@@ -294,7 +323,7 @@ export const AiTutorPage = () => {
                 {/* Messages Area */}
                 <div
                     ref={scrollRef}
-                    className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 pt-4 md:pt-20 pb-32 md:pb-8 flex flex-col"
+                    className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 pt-4 md:pt-20 pb-20 md:pb-4 flex flex-col"
                 >
                     {!hasAccess && (
                         <div className="w-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-500 p-3 rounded-lg text-sm flex items-center justify-center gap-2 mt-4 md:mt-0">
@@ -341,7 +370,7 @@ export const AiTutorPage = () => {
                                         msg.role === 'user' ? "text-right" : ""
                                     )}>
                                         <div className={cn(
-                                            "p-4 rounded-2xl md:prose-base prose-sm prose dark:prose-invert max-w-none flex flex-col gap-3",
+                                            "p-4 rounded-2xl md:prose-lg prose-sm prose dark:prose-invert max-w-none flex flex-col gap-3",
                                             msg.role === 'assistant'
                                                 ? "bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-slate-800 rounded-tl-sm shadow-sm"
                                                 : "bg-primary text-white rounded-tr-sm shadow-md text-left"
@@ -362,7 +391,7 @@ export const AiTutorPage = () => {
                                                 <button className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-100 dark:hover:bg-slate-800">
                                                     <Volume2 className="w-4 h-4" />
                                                 </button>
-                                                <button className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-100 dark:hover:bg-slate-800">
+                                                <button onClick={() => navigator.clipboard.writeText(msg.content)} className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-100 dark:hover:bg-slate-800">
                                                     <Copy className="w-4 h-4" />
                                                 </button>
                                             </div>
@@ -377,7 +406,7 @@ export const AiTutorPage = () => {
                                         <Bot className="w-5 h-5 animate-pulse" />
                                     </div>
                                     <div className="max-w-[85%] md:max-w-3xl">
-                                        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-slate-800 rounded-tl-sm shadow-sm md:prose-base prose-sm prose dark:prose-invert max-w-none">
+                                        <div className="p-4 rounded-2xl bg-slate-50 da              rk:bg-slate-900 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-slate-800 rounded-tl-sm shadow-sm md:prose-lg prose-sm prose dark:prose-invert max-w-none">
                                             {streamingContent ? (
                                                 <ReactMarkdown>{streamingContent}</ReactMarkdown>
                                             ) : (
@@ -392,7 +421,7 @@ export const AiTutorPage = () => {
                 </div>
 
                 {/* Input Area */}
-                <div className="p-4 md:p-6 bg-transparent z-10 max-w-4xl mx-auto w-full sticky bottom-0">
+                <div className="p-4 md:px-6 md:pb-2 md:pt-4 bg-transparent z-10 max-w-4xl mx-auto w-full sticky bottom-0">
                     <div className="relative flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg focus-within:ring-2 focus-within:ring-primary/50 focus-within:border-primary transition-all">
                         
                         {/* Selected Images Preview */}
@@ -452,7 +481,14 @@ export const AiTutorPage = () => {
                             </div>
                         </div>
                     </div>
-                    <p className="text-center text-xs text-slate-400 mt-3 hidden md:block">AI can make mistakes. Consider verifying important information.</p>
+                    <div className="flex justify-between items-center">
+                      <p className="text-center text-xs text-slate-400 mt-1.5 hidden md:block">AI can make mistakes. Consider verifying important information.</p>
+                      {!hasAccess && (
+                        <p className="text-center text-xs text-slate-400 mt-1.5 hidden md:block">
+                          Queries used today: {queriesUsed}/{maxQueries}
+                        </p>
+                      )}
+                    </div>
                 </div>
             </main>
         </div>

@@ -19,6 +19,7 @@ import { httpsCallable } from "firebase/functions";
 import { db, functions } from '@/lib/firebase';
 import { useAuth, useAuthStore } from '@/features/auth/hooks/useAuth';
 import { toast } from "sonner";
+import { PaymentModal } from '@/components/shared/PaymentModal';
 
 // Defined interface for form data
 interface StudentFormData {
@@ -43,6 +44,8 @@ export const StudentOnboarding = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<'pro_monthly' | 'pro_yearly' | null>(null);
   
   // Form State
   const [formData, setFormData] = useState<StudentFormData>(() => {
@@ -110,7 +113,7 @@ export const StudentOnboarding = () => {
   const nextStep = () => setStep(prev => prev + 1);
   const prevStep = () => setStep(prev => prev - 1);
 
-  const handleComplete = async (selectedPlan?: 'free' | 'pro_monthly' | 'pro_yearly' | React.MouseEvent) => {
+  const handleComplete = async (selectedPlan?: 'free' | 'pro_monthly' | 'pro_yearly' | React.MouseEvent, paymentProvider?: 'flutterwave' | 'paystack') => {
     // If it's a mouse event, set to undefined or just ignore it for the string check
     const plan = typeof selectedPlan === 'string' ? selectedPlan : undefined;
     if (!user) return;
@@ -144,16 +147,18 @@ export const StudentOnboarding = () => {
       // If plan is selected handle payout transition
       if (plan && (plan === 'pro_monthly' || plan === 'pro_yearly')) {
         const initializeSubscription = httpsCallable(functions, 'initializeSubscription');
-        const planCode = plan === 'pro_monthly' ? "PLN_6txydrn1y6vh7pl" : "PLN_c879xjnliprqly3";
+        const planCode = plan === 'pro_monthly' ? "FW_PLAN_STUDENT_MONTHLY" : "FW_PLAN_STUDENT_YEARLY";
         const result = await initializeSubscription({
           planCode,
           email: user?.email,
-          userId: user?.uid
+          userId: user?.uid,
+          provider: paymentProvider || 'flutterwave',
+          redirectUrl: window.location.origin + '/student/dashboard'
         });
 
         const data: any = result.data;
         if (data?.authorizationUrl) {
-          window.location.href = data.authorizationUrl; // Redirect to Paystack
+          window.location.href = data.authorizationUrl; // Redirect to Payment Provider
           return;
         } else {
            toast.error("Error initializing payment URL.");
@@ -533,7 +538,7 @@ export const StudentOnboarding = () => {
                       <CheckCircle2 className="w-4 h-4 text-primary" /> Advanced Analytics
                     </li>
                   </ul>
-                  <Button className="w-full gap-2 shadow-md shadow-primary/20 mt-auto" onClick={() => handleComplete('pro_monthly')} disabled={isSubmitting}>
+                  <Button className="w-full gap-2 shadow-md shadow-primary/20 mt-auto" onClick={() => { setSelectedPlanForPayment('pro_monthly'); setIsPaymentModalOpen(true); }} disabled={isSubmitting}>
                     <Sparkles className="w-4 h-4" /> Upgrade Monthly
                   </Button>
                 </motion.div>
@@ -562,7 +567,7 @@ export const StudentOnboarding = () => {
                       <CheckCircle2 className="w-4 h-4 text-amber-500" /> Priority Support
                     </li>
                   </ul>
-                  <Button className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20 mt-auto" onClick={() => handleComplete('pro_yearly')} disabled={isSubmitting}>
+                  <Button className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20 mt-auto" onClick={() => { setSelectedPlanForPayment('pro_yearly'); setIsPaymentModalOpen(true); }} disabled={isSubmitting}>
                     <Sparkles className="w-4 h-4" /> Upgrade Yearly
                   </Button>
                 </motion.div>
@@ -595,7 +600,7 @@ export const StudentOnboarding = () => {
               <Button 
                 size="lg" 
                 className="w-full max-w-xs shadow-lg shadow-primary/20" 
-                onClick={handleComplete}
+                onClick={() => handleComplete('free')}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Saving...' : 'Go to Dashboard'}
@@ -604,6 +609,18 @@ export const StudentOnboarding = () => {
           )}
         </AnimatePresence>
       </div>
+
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onConfirm={async (provider) => {
+          setIsPaymentModalOpen(false);
+          if (selectedPlanForPayment) {
+            await handleComplete(selectedPlanForPayment, provider);
+          }
+        }}
+        planName={selectedPlanForPayment === 'pro_yearly' ? 'Pro Yearly' : 'Pro Monthly'}
+      />
     </div>
   );
 };

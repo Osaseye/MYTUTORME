@@ -34,7 +34,7 @@ export const sendEmail = async ({ to, subject, react, replyTo }: EmailOptions) =
       to,
       subject,
       react,
-      reply_to: replyTo,
+      replyTo: replyTo as any,
     });
     
     functions.logger.info(`Email sent successfully to ${to}. ID: ${data.data?.id}`);

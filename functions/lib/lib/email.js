@@ -33,37 +33,38 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendEmail = void 0;
+exports.sendEmail = exports.DEFAULT_SENDER = exports.resend = void 0;
 const resend_1 = require("resend");
 const dotenv = __importStar(require("dotenv"));
-const render_1 = require("@react-email/render");
+const functions = __importStar(require("firebase-functions"));
 dotenv.config();
-const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-const resend = new resend_1.Resend(RESEND_API_KEY);
-const DEFAULT_FROM_EMAIL = 'MyTutorMe <noreply@mytutorme.com>'; // Replace with actual verified domain
-const sendEmail = async ({ to, subject, react, html }) => {
+const resendApiKey = process.env.RESEND_API_KEY || '';
+if (!resendApiKey) {
+    functions.logger.warn('RESEND_API_KEY is not set in environment variables');
+}
+exports.resend = new resend_1.Resend(resendApiKey);
+// A standard sender address that matches your verified domain
+exports.DEFAULT_SENDER = 'MyTutorMe <hello@mytutorme.org>';
+const sendEmail = async ({ to, subject, react, replyTo }) => {
     var _a;
-    if (!RESEND_API_KEY) {
-        console.warn('RESEND_API_KEY is not set. Email not sent.', { to, subject });
-        return { success: false, error: 'Missing API key' };
+    if (!resendApiKey) {
+        functions.logger.warn('Attempted to send email without RESEND_API_KEY. Aborting.');
+        return null;
     }
     try {
-        let htmlContent = html;
-        if (react) {
-            htmlContent = await (0, render_1.render)(react);
-        }
-        const data = await resend.emails.send({
-            from: DEFAULT_FROM_EMAIL,
+        const data = await exports.resend.emails.send({
+            from: exports.DEFAULT_SENDER,
             to,
             subject,
-            html: htmlContent || '',
+            react,
+            replyTo: replyTo,
         });
-        console.log(`Email sent successfully to ${to}. ID:`, (_a = data.data) === null || _a === void 0 ? void 0 : _a.id);
-        return { success: true, data };
+        functions.logger.info(`Email sent successfully to ${to}. ID: ${(_a = data.data) === null || _a === void 0 ? void 0 : _a.id}`);
+        return data;
     }
     catch (error) {
-        console.error('Error sending email:', error);
-        return { success: false, error };
+        functions.logger.error('Error sending email via Resend:', error);
+        throw error;
     }
 };
 exports.sendEmail = sendEmail;
