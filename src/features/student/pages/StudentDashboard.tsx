@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
@@ -24,7 +24,6 @@ export const StudentDashboard = () => {
   const { user } = useAuthStore();
   const studentProfile = user as StudentProfile;
   const navigate = useNavigate();
-
   // Dynamic States
   const [currentCGPA, setCurrentCGPA] = useState(studentProfile?.currentCGPA || 0.0);
   const [targetCGPA, setTargetCGPA] = useState(studentProfile?.targetCGPA || 0.0);

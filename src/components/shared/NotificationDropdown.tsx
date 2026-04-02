@@ -74,7 +74,7 @@ export const NotificationDropdown = ({ userRole }: { userRole: 'student' | 'teac
                     )}
                 </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] sm:w-80 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md shadow-2xl">
                 <DropdownMenuLabel className="flex justify-between items-center">
                     <span>Notifications</span>
                     {unreadCount > 0 && (
