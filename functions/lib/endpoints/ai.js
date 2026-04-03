@@ -41,7 +41,7 @@ const ai_context_1 = require("../lib/ai-context");
 const db = admin.firestore();
 // Initialize the Vertex AI API seamlessly via Google Cloud Service Accounts
 // No manual GEMINI_API_KEY required.
-const vertexAi = new vertexai_1.VertexAI({
+const getVertexAi = () => new vertexai_1.VertexAI({
     project: process.env.GCLOUD_PROJECT || admin.app().options.projectId,
     location: "us-central1" // Vertex AI endpoints are region-specific
 });
@@ -125,7 +125,8 @@ exports.askAiTutor = functions.https.onCall(async (request) => {
     2. DO NOT spontaneously recite the user's profile details (university, CGPA, courses, goals) in your greeting. Only use their context when explicitly relevant to answering an academic question.
     3. Keep responses concise and focused on the user's immediate prompt.`;
     const fullSystemPrompt = `${userContext}\n\n${systemPrompt}`;
-    const model = vertexAi.preview.getGenerativeModel({
+    const vertexAiClient = getVertexAi();
+    const model = vertexAiClient.preview.getGenerativeModel({
         model: 'gemini-2.5-flash',
         systemInstruction: { role: 'system', parts: [{ text: fullSystemPrompt }] },
         generationConfig: {

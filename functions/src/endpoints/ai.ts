@@ -7,7 +7,7 @@ const db = admin.firestore();
 
 // Initialize the Vertex AI API seamlessly via Google Cloud Service Accounts
 // No manual GEMINI_API_KEY required.
-const vertexAi = new VertexAI({
+const getVertexAi = () => new VertexAI({
   project: process.env.GCLOUD_PROJECT || admin.app().options.projectId!,
   location: "us-central1" // Vertex AI endpoints are region-specific
 });
@@ -105,7 +105,8 @@ export const askAiTutor = functions.https.onCall(async (request) => {
 
     const fullSystemPrompt = `${userContext}\n\n${systemPrompt}`;
 
-    const model = vertexAi.preview.getGenerativeModel({
+    const vertexAiClient = getVertexAi();
+    const model = vertexAiClient.preview.getGenerativeModel({
         model: 'gemini-2.5-flash',
         systemInstruction: { role: 'system', parts: [{ text: fullSystemPrompt }] },
         generationConfig: {

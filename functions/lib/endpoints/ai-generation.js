@@ -38,7 +38,7 @@ const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const vertexai_1 = require("@google-cloud/vertexai");
 const db = admin.firestore();
-const vertexAi = new vertexai_1.VertexAI({
+const getVertexAi = () => new vertexai_1.VertexAI({
     project: process.env.GCLOUD_PROJECT || admin.app().options.projectId,
     location: "us-central1"
 });
@@ -119,7 +119,7 @@ exports.generateMockExam = functions.https.onCall(async (request) => {
                 "correctAnswer": "The exact string of the correct option",
                 "explanation": "A short, helpful explanation of why this answer is correct."
             }`;
-            const model = vertexAi.preview.getGenerativeModel({
+            const model = getVertexAi().preview.getGenerativeModel({
                 model: 'gemini-2.5-flash',
                 generationConfig: {
                     temperature: 0.6,
@@ -239,7 +239,7 @@ exports.generateStudyPlan = functions.https.onCall(async (request) => {
                 }
               ]
             }`;
-            const model = vertexAi.preview.getGenerativeModel({
+            const model = getVertexAi().preview.getGenerativeModel({
                 model: 'gemini-2.5-flash',
                 generationConfig: {
                     temperature: 0.5,
@@ -339,7 +339,7 @@ exports.generateFlashcardDeck = functions.https.onCall(async (request) => {
                 "back": "The clear, concise answer, definition, or explanation",
                 "hint": "A short optional hint to help the student remember (max 10 words)"
             }`;
-            const model = vertexAi.preview.getGenerativeModel({
+            const model = getVertexAi().preview.getGenerativeModel({
                 model: 'gemini-2.5-flash',
                 generationConfig: {
                     temperature: 0.6,
@@ -427,7 +427,7 @@ exports.generateCourseCurriculum = functions.https.onCall(async (request) => {
                "videoTopics": ["Topic 1", "Topic 2"] 
             }
         ]`;
-        const model = vertexAi.preview.getGenerativeModel({
+        const model = getVertexAi().preview.getGenerativeModel({
             model: 'gemini-2.5-flash',
             generationConfig: {
                 temperature: 0.7,
@@ -478,7 +478,7 @@ exports.generateCourseQuiz = functions.https.onCall(async (request) => {
             "correctAnswer": 0
           }
         ]`;
-        const model = vertexAi.preview.getGenerativeModel({
+        const model = getVertexAi().preview.getGenerativeModel({
             model: 'gemini-2.5-flash',
             generationConfig: {
                 temperature: 0.7,
@@ -536,7 +536,7 @@ exports.processAssignmentHelp = functions.https.onCall(async (request) => {
                 }
             });
         }
-        const model = vertexAi.preview.getGenerativeModel({
+        const model = getVertexAi().preview.getGenerativeModel({
             model: 'gemini-2.5-pro',
             systemInstruction: SYSTEM_INSTRUCTION,
             generationConfig: {
