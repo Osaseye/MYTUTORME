@@ -147,8 +147,10 @@ export const loginWithGoogle = async () => {
   }
 
   if (!userDoc.exists()) {
-    // First Google auth via login defaults to student profile.
-    await setDoc(doc(db, 'users', user.uid), buildUserDoc(user, 'student'));
+    // Force new users to use the Register page so they can select their role.
+    await user.delete().catch(() => {});
+    await signOut(auth);
+    throw { code: 'auth/user-not-found', message: 'No account found. Please sign up to choose your account type (Student or Teacher).' };
   }
 
   return result;

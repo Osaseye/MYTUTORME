@@ -6,10 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Sparkles, CheckCircle2, ChevronRight, ChevronLeft, UploadCloud, Video, BrainCircuit, Loader2, FileText, FileQuestion, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { getModel } from '@/lib/ai';
+import { httpsCallable } from 'firebase/functions';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
-import { storage, db } from '@/lib/firebase';
+import { storage, db, functions } from '@/lib/firebase';
 import { v4 as uuidv4 } from 'uuid';
 
 type ModuleItem = {
@@ -203,20 +203,20 @@ export const CourseCreationPage = () => {
 
     while (attempts < maxAttempts) {
       try {
-        const prompt = `Generate a 4-module curriculum for a course titled "${formData.title}" in the subject "${formData.subject}" for ${formData.level} level students. 
-        Return ONLY a complete, valid JSON array of module objects. Each module object must have two properties: 'title' (string) and 'items' (an array of empty items. Just return an empty array for items: []). Do not include any other markdown or text. Ensure the JSON is well-formed. Example: [{"title": "Module 1", "items": []}]`;
+        const generateCourseCurriculum = httpsCallable(functions, 'generateCourseCurriculum');
+        const response: any = await generateCourseCurriculum({
+          title: formData.title,
+          subject: formData.subject,
+          level: formData.level
+        });
 
-        const model = getModel({ jsonMode: true, temperature: 0.7 });
-        const response = await model.generateContent(prompt);
-        const output = response.response.text();
-        
-        const parsedModules = JSON.parse(output);
+        const parsedModules = response.data?.curriculum || [];
         
         if (!Array.isArray(parsedModules)) {
              throw new Error("AI returned invalid JSON format (not an array)");
         }
 
-        const processedModules = parsedModules.map(m => ({
+        const processedModules = parsedModules.map((m: any) => ({
             id: uuidv4(),
             title: m.title || 'Untitled Module',
             items: []
@@ -242,11 +242,11 @@ export const CourseCreationPage = () => {
         }
 
         break; // Success, exit loop
-      } catch (error) {
+      } catch (error: any) {
         console.error(`AI Generation Error (Attempt ${attempts + 1}):`, error);
         attempts++;
         if (attempts >= maxAttempts) {
-            toast.error('Failed to generate curriculum after multiple attempts. Please try again.');
+            toast.error(error.message || 'Failed to generate curriculum after multiple attempts. Please try again.');
         } else {
              // Smart pooling delay before retry
             await new Promise(r => setTimeout(r, 2000 * attempts));
@@ -308,28 +308,31 @@ export const CourseCreationPage = () => {
 
     while (attempts < maxAttempts) {
       try {
-        const prompt = `Generate a 3-question multiple choice quiz for a specific module in a ${formData.level} level ${formData.subject} course.
-        The module title is: "${moduleTitle}". The overall course title is "${formData.title}".
-        Return ONLY a complete, valid JSON array of question objects. 
-        Each object must exactly match this format:
-        { "question": "The question text?", "options": ["Option A", "Option B", "Option C", "Option D"], "correctAnswer": "" }
-        Leave "correctAnswer" as an empty string. The teacher will manually select the correct answer later. Do not include any other markdown or text.`;
+        const generateCourseQuiz = httpsCallable(functions, 'generateCourseQuiz');
+        const response: any = await generateCourseQuiz({
+            level: formData.level,
+            subject: formData.subject,
+            moduleId: moduleId,
+            moduleTitle: moduleTitle
+        });
 
-        const model = getModel({ jsonMode: true, temperature: 0.7 });
-        const response = await model.generateContent(prompt);
-        const output = response.response.text();
-        
-        const questions = JSON.parse(output);
+        const questions = response.data?.quiz || [];
 
         if (!Array.isArray(questions)) {
             throw new Error("AI returned invalid JSON format");
         }
         
+        // Ensure correctAnswer exists on the client for the UI
+        const normalizedQuestions = questions.map((q: any) => ({
+            ...q,
+            correctAnswer: q.correctAnswer ?? ""
+        }));
+
         const newQuizItem: ModuleItem = {
             id: uuidv4(),
             type: 'quiz',
             title: `${moduleTitle} Quiz`,
-            questions: questions
+            questions: normalizedQuestions
         };
 
         const updatedModules = formData.modules.map(mod => 

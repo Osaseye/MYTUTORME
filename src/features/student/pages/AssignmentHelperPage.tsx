@@ -13,8 +13,8 @@ import {
   Clock,
   Trash2
 } from 'lucide-react';
-import { getGenerativeModel } from 'firebase/ai';
-import { ai } from '@/lib/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -22,19 +22,7 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { usePlanGate } from '@/hooks/usePlanGate';
 
-const SYSTEM_INSTRUCTION = `You are an expert AI Assignment Helper. Your goal is to guide students to the answer, rather than just giving it to them outright.
-- Break down the problem into smaller, understandable steps.
-- Explain the underlying concepts briefly.
-- Use clear formatting with valid markdown. Use tables where appropriate.
-- For math equations, use LaTeX wrapped in $ for inline and $$ for blocks.
-- Be concise and avoid over-explaining simple concepts. Focus on the core of the problem.
-- Ask questions at the end of sections to gauge understanding if appropriate.`;
-
-// Create a GenerativeModel instance with gemini-2.5-pro for reasoning tasks
-const model = getGenerativeModel(ai, { 
-  model: 'gemini-2.5-pro',
-  systemInstruction: SYSTEM_INSTRUCTION
-});
+// UI component code
 
 interface SelectedFile {
   name: string;
@@ -141,32 +129,21 @@ export const AssignmentHelperPage = () => {
     setIsAnalyzing(true);
 
     try {
-      const parts: any[] = [];
-      
-      if (question.trim()) {
-        parts.push(question);
-      }
-      
+      const payload: any = { question };
       if (selectedFile) {
-        parts.push({
-          inlineData: {
-             data: selectedFile.data.split(',')[1],
-             mimeType: selectedFile.mimeType
-          }
-        });
+        payload.fileData = {
+          data: selectedFile.data,
+          mimeType: selectedFile.mimeType
+        };
       }
 
-      // Stream the response for a better user experience
-      const responseStream = await model.generateContentStream(parts);
+      const processAssignmentHelp = httpsCallable(functions, 'processAssignmentHelp');
+      const response: any = await processAssignmentHelp(payload);
       
-      let fullResponse = '';
-      for await (const chunk of responseStream.stream) {
-        const chunkText = chunk.text();
-        fullResponse += chunkText;
-        setResult(fullResponse);
-      }
+      const fullResponse = response.data?.result || "No detailed output was given by the AI.";
+      setResult(fullResponse);
 
-      // Save to history once fully streamed
+      // Save to history once returned
       if (fullResponse) {
          saveToHistory(question || (selectedFile?.name || 'File Upload'), fullResponse);
       }

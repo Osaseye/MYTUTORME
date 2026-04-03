@@ -29,18 +29,7 @@ export const MyCertificatesPage = () => {
          try {
              const q = query(collection(db, 'certificates'), where('studentId', '==', user.uid));
              const snap = await getDocs(q);
-             if (snap.empty) {
-                 setCertificates([{
-                     id: "cert-123",
-                     courseId: "course-1",
-                     courseName: "Advanced Calculus & Linear Algebra",
-                     instructorName: "Dr. Funke Adebayo",
-                     issueDate: new Date(),
-                     verificationCode: "MTM-994-291",
-                     grade: "A (98%)",
-                     pdfURL: "#"
-                 }]);
-             } else {
+             if (!snap.empty) {
                  setCertificates(snap.docs.map(d => ({id: d.id, ...d.data()})) as Certificate[]);
              }
          } catch(e) {

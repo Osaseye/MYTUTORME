@@ -45,22 +45,6 @@ export const VerifyCertificatePage = () => {
     setSearchParams({ code: verificationCode });
 
     try {
-      if (verificationCode === 'MTM-994-291') {
-        // Mock data fallback for testing
-        setTimeout(() => {
-          setResult({
-            id: 'cert-123',
-            studentName: 'Student Name',
-            courseName: 'Advanced Calculus & Linear Algebra',
-            instructorName: 'Dr. Funke Adebayo',
-            issueDate: new Date(),
-            verificationCode: 'MTM-994-291'
-          });
-          setIsVerifying(false);
-        }, 1000);
-        return;
-      }
-
       const q = query(collection(db, 'certificates'), where('verificationCode', '==', verificationCode));
       const snap = await getDocs(q);
       

@@ -9,6 +9,7 @@ interface ExamGenerationOptions {
   difficulty: 'easy' | 'medium' | 'hard' | 'adaptive';
   count: number;
   mode: 'standard' | 'practice';
+  fileData?: { data: string, mimeType: string }[];
 }
 
 export const useExamGenerator = () => {

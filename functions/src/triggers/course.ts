@@ -6,6 +6,8 @@ import { CourseApprovalEmail } from '../emails/templates/CourseApprovalEmail';
 import { CourseRejectionEmail } from '../emails/templates/CourseRejectionEmail';
 import { StudentEnrollmentEmail } from '../emails/templates/StudentEnrollmentEmail';
 
+import { CertificateAwardEmail } from '../emails/templates/CertificateAwardEmail';
+
 export const onCourseUpdated = functions.firestore
   .document('courses/{courseId}')
   .onUpdate(async (change, context) => {
@@ -93,5 +95,35 @@ export const onEnrollmentCreated = functions.firestore
       console.error('Error sending enrollment email', e);
     }
 
+    return null;
+  });
+
+export const onCertificateCreated = functions.firestore
+  .document('certificates/{certificateId}')
+  .onCreate(async (snap, context) => {
+    const data = snap.data();
+    const certId = context.params.certificateId;
+
+    try {
+      if (!data.studentId || !data.courseId) return null;
+
+      const studentDoc = await admin.firestore().collection('users').doc(data.studentId).get();
+      if (!studentDoc.exists) return null;
+      
+      const studentData = studentDoc.data();
+      if (!studentData?.email) return null;
+
+      await sendEmail({
+        to: studentData.email,
+        subject: `Congratulations! You've earned a certificate in ${data.courseName || 'your course'}`,
+        react: React.createElement(CertificateAwardEmail, {
+          studentName: studentData.displayName || 'Student',
+          courseTitle: data.courseName || 'Your Course',
+          certificateUrl: `https://mytutorme.com/certificates/${certId}`,
+        }),
+      });
+    } catch (e) {
+      console.error('Error sending certificate award email', e);
+    }
     return null;
   });

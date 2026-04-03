@@ -3,8 +3,10 @@ import {
   Shield, 
   Globe,
   Loader2,
-  Upload
+  Upload,
+  Smartphone
 } from 'lucide-react';
+import { PWAInstallPopup } from '@/components/shared/PWAInstallPopup';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -189,10 +191,11 @@ export const SettingsPage = () => {
             </div>
 
             <Tabs defaultValue="account" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+                <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
                     <TabsTrigger value="account">Account</TabsTrigger>
                     <TabsTrigger value="notifications">Notifications</TabsTrigger>
                     <TabsTrigger value="system">System</TabsTrigger>
+                    <TabsTrigger value="app">App</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="account">
@@ -347,6 +350,32 @@ export const SettingsPage = () => {
                                 Save System Configuration
                             </Button>
                         </CardFooter>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="app" className="animate-in fade-in duration-300">
+                    <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                            <CardTitle className="text-xl flex items-center gap-2">
+                                <Smartphone className="h-5 w-5 text-primary" />
+                                App Installation
+                            </CardTitle>
+                            <CardDescription>Install MyTutorMe on your device for the best offline and instant loading experience.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-6 space-y-6">
+                            <div className="flex flex-col md:flex-row items-center gap-4 border border-slate-100 dark:border-slate-800 rounded-lg p-6 bg-white dark:bg-slate-900/50">
+                                <div className="w-16 h-16 shrink-0 bg-primary/10 rounded-2xl flex items-center justify-center p-3 shadow-inner">
+                                    <img src="/icon.png" alt="MyTutorMe App" className="w-full h-full object-contain" />
+                                </div>
+                                <div className="flex-1 text-center md:text-left space-y-1">
+                                    <h4 className="font-semibold text-slate-900 dark:text-white">MyTutorMe Admin Portal</h4>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">Maintain full administrative controls securely directly from your homescreen.</p>
+                                </div>
+                                <div className="shrink-0 w-full md:w-auto flex flex-col md:items-end justify-center">
+                                    <PWAInstallPopup asMenuItem={true} />
+                                </div>
+                            </div>
+                        </CardContent>
                     </Card>
                 </TabsContent>
             </Tabs>

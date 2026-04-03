@@ -29,17 +29,6 @@ export const CertificatePage = () => {
              const snap = await getDoc(docRef);
              if (snap.exists()) {
                  setCert({ id: snap.id, ...snap.data() } as Certificate);
-             } else {
-                 if (id === 'cert-123') {
-                     setCert({
-                         id: "cert-123",
-                         studentName: "Student Name",
-                         courseName: "Advanced Calculus & Linear Algebra",
-                         instructorName: "Dr. Funke Adebayo",
-                         issueDate: new Date(),
-                         verificationCode: "MTM-994-291"
-                     });
-                 }
              }
          } catch(e) {
              console.error(e);

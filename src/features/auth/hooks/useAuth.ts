@@ -41,8 +41,15 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
 
         if (!userDoc.exists()) {
-          const intendedRole = localStorage.getItem('oauth_intended_role') as 'student' | 'teacher' || 'student';
-          await setDoc(userDocRef, buildUserDoc(user, intendedRole));
+          const intendedRole = localStorage.getItem('oauth_intended_role');
+          if (intendedRole === 'student' || intendedRole === 'teacher') {
+            await setDoc(userDocRef, buildUserDoc(user, intendedRole));
+          } else {
+            // New user from Login page redirect, delete user and error out
+            await user.delete().catch(() => {});
+            await firebaseSignOut(auth);
+            return;
+          }
         }
         localStorage.removeItem('oauth_intended_role');
       }

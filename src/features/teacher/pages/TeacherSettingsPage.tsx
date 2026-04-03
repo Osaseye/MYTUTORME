@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Lock, User, Globe, CreditCard, Sparkles, Check } from "lucide-react";
+import { Bell, Lock, User, Globe, CreditCard, Sparkles, Check, Smartphone } from "lucide-react";
+import { PWAInstallPopup } from "@/components/shared/PWAInstallPopup";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useState, useEffect, useRef } from "react";
 import { updateDoc, doc } from "firebase/firestore";
@@ -15,7 +16,7 @@ import { toast } from "sonner";
 
 export const TeacherSettingsPage = () => {
   const { user, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'security' | 'subscription'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'security' | 'subscription' | 'app'>('profile');
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -232,12 +233,18 @@ export const TeacherSettingsPage = () => {
             >
               <CreditCard className="h-4 w-4" /> Subscription
             </Button>
-          </nav>
+              <Button
+                  variant="ghost"
+                  className={`justify-start gap-2 font-medium ${activeTab === 'app' ? 'bg-secondary/10 text-primary' : 'text-slate-600 hover:text-slate-900'}`}
+                  onClick={() => setActiveTab('app')}
+              >
+                <Smartphone className="h-4 w-4" /> App
+              </Button>
+            </nav>
         </div>
 
-        {/* Main Content Area */}
-        <div className="md:col-span-9 space-y-8">
-
+        {/* Content Area */}
+        <div className="md:col-span-9 space-y-6">
           {activeTab === 'profile' && (
             <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-4 text-slate-900">Public Profile</h2>
@@ -409,6 +416,32 @@ export const TeacherSettingsPage = () => {
                   ) : (
                     <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white" onClick={() => handleUpdateSubscription('premium_tools')}>Upgrade to Premium</Button>
                   )}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {activeTab === 'app' && (
+            <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden animate-in fade-in duration-300">
+              <div className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 -mx-6 -mt-6 p-6 mb-6">
+                <h2 className="text-xl font-semibold mb-2 text-slate-900 flex items-center gap-2">
+                  <Smartphone className="h-5 w-5 text-primary" />
+                  App Installation
+                </h2>
+                <p className="text-slate-500 text-sm">Install MyTutorMe on your device for the best offline and instant loading experience.</p>
+              </div>
+              <div className="space-y-6">
+                <div className="flex flex-col md:flex-row items-center gap-4 border border-slate-100 dark:border-slate-800 rounded-lg p-6 bg-white dark:bg-slate-900/50">
+                  <div className="w-16 h-16 shrink-0 bg-primary/10 rounded-2xl flex items-center justify-center p-3 shadow-inner">
+                    <img src="/icon.png" alt="MyTutorMe App" className="w-full h-full object-contain" />
+                  </div>
+                  <div className="flex-1 text-center md:text-left space-y-1">
+                    <h4 className="font-semibold text-slate-900 dark:text-white">MyTutorMe Instructor App</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Takes up barely any storage. Access your classes smoothly from your homescreen.</p>
+                  </div>
+                  <div className="shrink-0 w-full md:w-auto flex flex-col md:items-end justify-center">
+                    <PWAInstallPopup asMenuItem={true} />
+                  </div>
                 </div>
               </div>
             </section>

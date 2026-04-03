@@ -8,6 +8,7 @@ interface FlashcardGenerationOptions {
   topic: string;
   difficulty: 'easy' | 'medium' | 'hard' | 'adaptive';
   count: number;
+  fileData?: { data: string, mimeType: string }[];
 }
 
 export const useFlashcardGenerator = () => {

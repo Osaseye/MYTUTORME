@@ -46,6 +46,7 @@ const axios_1 = __importDefault(require("axios"));
 const react_1 = __importDefault(require("react"));
 const email_1 = require("./lib/email");
 const SubscriptionSuccessEmail_1 = require("./emails/templates/SubscriptionSuccessEmail");
+const CourseReceiptEmail_1 = require("./emails/templates/CourseReceiptEmail");
 const SubscriptionCancelledEmail_1 = require("./emails/templates/SubscriptionCancelledEmail");
 admin.initializeApp();
 const db = admin.firestore();
@@ -457,6 +458,29 @@ exports.verifyCoursePayment = functions.https.onCall(async (request, context) =>
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
         await batch.commit();
+        // Send Receipt Email to Student
+        try {
+            const studentSnap = await db.collection("users").doc(userId).get();
+            if (studentSnap.exists) {
+                const studentData = studentSnap.data();
+                if (studentData === null || studentData === void 0 ? void 0 : studentData.email) {
+                    await (0, email_1.sendEmail)({
+                        to: studentData.email,
+                        subject: `Receipt for ${courseData.title} - MyTutorMe`,
+                        react: react_1.default.createElement(CourseReceiptEmail_1.CourseReceiptEmail, {
+                            studentName: studentData.displayName || 'Student',
+                            courseTitle: courseData.title,
+                            amount: price,
+                            transactionId: transactionId,
+                            date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                        }),
+                    });
+                }
+            }
+        }
+        catch (e) {
+            console.error("Error sending course receipt email:", e);
+        }
         return { success: true };
     }
     catch (error) {

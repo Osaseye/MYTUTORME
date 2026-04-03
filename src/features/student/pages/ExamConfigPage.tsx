@@ -1,25 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   BookOpen, 
   Clock, 
   Settings,
   Layers,
-    Sparkles,
+  Sparkles,
   ChevronRight,
   HelpCircle,
-  Loader2
+  Loader2,
+  UploadCloud,
+  X,
+  FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
-import { Link} from 'react-router-dom'
 import { useExamGenerator } from '../hooks/useExamGenerator';
 
 export const ExamConfigPage = () => {
@@ -35,6 +36,36 @@ export const ExamConfigPage = () => {
   const [selectedTopic, setSelectedTopic] = useState<string>('');
   const [selectedDeck, setSelectedDeck] = useState<string>('');
   const [selectedPlan, setSelectedPlan] = useState<string>('');
+  
+  const [selectedFiles, setSelectedFiles] = useState<{data: string, mimeType: string, name: string}[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            if (event.target?.result && typeof event.target.result === 'string') {
+                setSelectedFiles(prev => [...prev, {
+                    data: event.target!.result as string,
+                    mimeType: file.type,
+                    name: file.name
+                }]);
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -129,12 +160,15 @@ export const ExamConfigPage = () => {
     // The hook creates the pool and quiz document
     const loadingToastId = toast.loading('Generating your custom exam... Please wait.');
     try {
+        const fileDataForApi = selectedFiles.map(f => ({ data: f.data, mimeType: f.mimeType }));
+
         const quizId = await generateExam({
           subject: finalSub,
           topic: finalTop,
           difficulty,
           count: questionCount[0],
-          mode
+          mode,
+          fileData: fileDataForApi.length > 0 ? fileDataForApi : undefined
         });
 
         if (quizId) {
@@ -249,6 +283,53 @@ export const ExamConfigPage = () => {
                                         <option value="" disabled>No study plans found</option>
                                     )}
                                 </select>
+                            </div>
+                        )}
+                        
+                        {sourceType === 'ai' && (
+                            <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-6">
+                                <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-2 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <UploadCloud className="w-4 h-4 text-primary" />
+                                        Upload Study Material (Optional)
+                                    </div>
+                                </h2>
+                                <p className="text-xs text-slate-500 mb-4">Upload past question papers or notes to base your exam on.</p>
+                                
+                                <div 
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-6 text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex flex-col items-center justify-center gap-2"
+                                >
+                                    <UploadCloud className="w-6 h-6 text-slate-400" />
+                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Click to upload images/documents</p>
+                                    <input 
+                                        type="file" 
+                                        className="hidden" 
+                                        ref={fileInputRef} 
+                                        accept="image/*" 
+                                        multiple
+                                        onChange={handleFileChange}
+                                    />
+                                </div>
+
+                                {selectedFiles.length > 0 && (
+                                    <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                        {selectedFiles.map((file, idx) => (
+                                            <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
+                                                {file.mimeType.startsWith('image/') ? (
+                                                    <img src={file.data} alt="Upload" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <FileText className="w-8 h-8 text-slate-400" />
+                                                )}
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <button onClick={(e) => { e.stopPropagation(); removeFile(idx); }} className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600">
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

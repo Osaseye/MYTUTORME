@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Layers, Sparkles, BookOpen, ChevronRight, BrainCircuit } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Layers, Sparkles, BookOpen, ChevronRight, BrainCircuit, UploadCloud, X, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useNavigate, Link } from 'react-router-dom';
@@ -14,8 +14,37 @@ export const FlashcardConfigPage = () => {
   const [topic, setTopic] = useState('');
   const [cardCount, setCardCount] = useState([10]);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard' | 'adaptive'>('medium');
+  const [selectedFiles, setSelectedFiles] = useState<{data: string, mimeType: string, name: string}[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { generateDeck, isGenerating } = useFlashcardGenerator();
   const { user } = useAuthStore();
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            if (event.target?.result && typeof event.target.result === 'string') {
+                setSelectedFiles(prev => [...prev, {
+                    data: event.target!.result as string,
+                    mimeType: file.type,
+                    name: file.name
+                }]);
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
   const handleGenerate = async () => {
     if (!subject || !topic) {
@@ -23,11 +52,14 @@ export const FlashcardConfigPage = () => {
       return;
     }
 
+    const fileDataForApi = selectedFiles.map(f => ({ data: f.data, mimeType: f.mimeType }));
+
     const deckId = await generateDeck({
       subject: subject.trim(),
       topic: topic.trim(),
       difficulty,
-      count: cardCount[0]
+      count: cardCount[0],
+      fileData: fileDataForApi.length > 0 ? fileDataForApi : undefined
     });
 
     if (deckId) {
@@ -102,6 +134,55 @@ export const FlashcardConfigPage = () => {
                     </button>
                  ))}
               </div>
+           </div>
+
+           {/* File Upload (Optional) */}
+           <div className="space-y-4">
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                 <UploadCloud className="w-5 h-5 text-primary" />
+                 Upload Source Material (Optional)
+              </h2>
+              <p className="text-sm text-slate-500">Upload a photo of your notes or a past paper to base your flashcards on.</p>
+              
+              <div 
+                 onClick={() => fileInputRef.current?.click()}
+                 className="mt-2 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex flex-col items-center justify-center gap-4"
+              >
+                 <div className="p-3 bg-primary/10 rounded-full text-primary">
+                    <UploadCloud className="w-6 h-6" />
+                 </div>
+                 <div>
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Click to upload images</p>
+                    <p className="text-xs text-slate-500 mt-1">JPEG, PNG up to 5MB</p>
+                 </div>
+                 <input 
+                    type="file" 
+                    className="hidden" 
+                    ref={fileInputRef} 
+                    accept="image/*" 
+                    multiple
+                    onChange={handleFileChange}
+                 />
+              </div>
+
+              {selectedFiles.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {selectedFiles.map((file, idx) => (
+                          <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
+                              {file.mimeType.startsWith('image/') ? (
+                                  <img src={file.data} alt="Upload" className="w-full h-full object-cover" />
+                              ) : (
+                                  <FileText className="w-8 h-8 text-slate-400" />
+                              )}
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <button onClick={(e) => { e.stopPropagation(); removeFile(idx); }} className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600">
+                                      <X className="w-4 h-4" />
+                                  </button>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+              )}
            </div>
 
            {/* Count */}

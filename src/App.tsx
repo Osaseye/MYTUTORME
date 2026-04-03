@@ -3,6 +3,7 @@ import { AppProvider } from './app/providers/app-provider';
 import { AppRoutes } from './app/routes';
 import { GlobalLoader } from './components/ui/global-loader';
 import { AnimatePresence, motion } from 'framer-motion';
+import { PWAInstallPopup } from '@/components/shared/PWAInstallPopup';
 
 function App() {
   const [isInitializing, setIsInitializing] = useState(true);
@@ -36,6 +37,7 @@ function App() {
             transition={{ duration: 0.6 }}
           >
             <AppRoutes />
+            <PWAInstallPopup hideButton={true} />
           </motion.div>
         )}
       </AnimatePresence>

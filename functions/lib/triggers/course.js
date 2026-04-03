@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onEnrollmentCreated = exports.onCourseUpdated = void 0;
+exports.onCertificateCreated = exports.onEnrollmentCreated = exports.onCourseUpdated = void 0;
 const functions = __importStar(require("firebase-functions/v1"));
 const admin = __importStar(require("firebase-admin"));
 const react_1 = __importDefault(require("react"));
@@ -44,6 +44,7 @@ const email_1 = require("../lib/email");
 const CourseApprovalEmail_1 = require("../emails/templates/CourseApprovalEmail");
 const CourseRejectionEmail_1 = require("../emails/templates/CourseRejectionEmail");
 const StudentEnrollmentEmail_1 = require("../emails/templates/StudentEnrollmentEmail");
+const CertificateAwardEmail_1 = require("../emails/templates/CertificateAwardEmail");
 exports.onCourseUpdated = functions.firestore
     .document('courses/{courseId}')
     .onUpdate(async (change, context) => {
@@ -125,6 +126,35 @@ exports.onEnrollmentCreated = functions.firestore
     }
     catch (e) {
         console.error('Error sending enrollment email', e);
+    }
+    return null;
+});
+exports.onCertificateCreated = functions.firestore
+    .document('certificates/{certificateId}')
+    .onCreate(async (snap, context) => {
+    const data = snap.data();
+    const certId = context.params.certificateId;
+    try {
+        if (!data.studentId || !data.courseId)
+            return null;
+        const studentDoc = await admin.firestore().collection('users').doc(data.studentId).get();
+        if (!studentDoc.exists)
+            return null;
+        const studentData = studentDoc.data();
+        if (!(studentData === null || studentData === void 0 ? void 0 : studentData.email))
+            return null;
+        await (0, email_1.sendEmail)({
+            to: studentData.email,
+            subject: `Congratulations! You've earned a certificate in ${data.courseName || 'your course'}`,
+            react: react_1.default.createElement(CertificateAwardEmail_1.CertificateAwardEmail, {
+                studentName: studentData.displayName || 'Student',
+                courseTitle: data.courseName || 'Your Course',
+                certificateUrl: `https://mytutorme.com/certificates/${certId}`,
+            }),
+        });
+    }
+    catch (e) {
+        console.error('Error sending certificate award email', e);
     }
     return null;
 });

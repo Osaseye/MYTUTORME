@@ -5,6 +5,7 @@ import axios from "axios";
 import React from 'react';
 import { sendEmail } from "./lib/email";
 import { SubscriptionSuccessEmail } from "./emails/templates/SubscriptionSuccessEmail";
+import { CourseReceiptEmail } from "./emails/templates/CourseReceiptEmail";
 
 import { SubscriptionCancelledEmail } from "./emails/templates/SubscriptionCancelledEmail";
 
@@ -468,6 +469,29 @@ export const verifyCoursePayment = functions.https.onCall(async (request: any, c
     });
 
     await batch.commit();
+
+    // Send Receipt Email to Student
+    try {
+      const studentSnap = await db.collection("users").doc(userId).get();
+      if (studentSnap.exists) {
+        const studentData = studentSnap.data();
+        if (studentData?.email) {
+          await sendEmail({
+            to: studentData.email,
+            subject: `Receipt for ${courseData.title} - MyTutorMe`,
+            react: React.createElement(CourseReceiptEmail, {
+              studentName: studentData.displayName || 'Student',
+              courseTitle: courseData.title,
+              amount: price,
+              transactionId: transactionId,
+              date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+            }),
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Error sending course receipt email:", e);
+    }
 
     return { success: true };
   } catch (error: any) {
