@@ -226,6 +226,25 @@ import { PWAInstallPopup } from '@/components/shared/PWAInstallPopup';
   const handleChangePlan = async (newPlan: 'free' | 'pro_monthly' | 'pro_yearly') => {
     if (!user) return;
     
+    // Any down-level plan should be treated as a scheduled downgrade
+    const isDowngrade = 
+      (normalizedPlan === 'pro_yearly' && (newPlan === 'pro_monthly' || newPlan === 'free')) ||
+      (normalizedPlan === 'pro_monthly' && newPlan === 'free');
+
+    if (isDowngrade) {
+      const toastId = toast.loading('Scheduling your downgrade...');
+      try {
+        const scheduleDowngrade = httpsCallable(functions, 'scheduleDowngrade');
+        await scheduleDowngrade({ newPlan });
+        toast.success(`Downgrade scheduled! You will keep Pro features until the end of your current cycle.`, { id: toastId });
+        setShowPlans(false);
+      } catch (err: any) {
+        console.error(err);
+        toast.error(err.message || 'Failed to schedule downgrade', { id: toastId });
+      }
+      return;
+    }
+
     if (newPlan !== 'free') {
       setSelectedPlanForPayment(newPlan);
       setIsPaymentModalOpen(true);

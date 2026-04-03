@@ -308,21 +308,142 @@ export const paymentWebhook = functions.https.onRequest(async (req, res) => {
  */
 export const cancelSubscription = functions.https.onCall(async (request: any) => {
   const data = request.data || request;
+  const context = request; // In v2, auth is directly on the request object
   const { subscriptionId } = data;
 
-  // With our abstract format, we passed subscriptionId from frontend
   if (!subscriptionId) {
      throw new functions.https.HttpsError("invalid-argument", "Missing subscription ID.");
   }
 
   try {
-    // Note: To cancel a subscription in Flutterwave by id: 
     await axiosInstance.put(`/subscriptions/${subscriptionId}/cancel`);
+    
+    // Send cancellation email if user authentication context is present
+    const userId = context?.auth?.uid;
+    if (userId) {
+      const userSnapshot = await db.collection("users").doc(userId).get();
+      if (userSnapshot.exists) {
+        const userData = userSnapshot.data();
+        if (userData?.email) {
+          try {
+            await sendEmail({
+              to: userData.email,
+              subject: "Your MyTutorMe Subscription is Cancelled",
+              react: SubscriptionCancelledEmail({ 
+                name: userData.name || userData.displayName || "Student" 
+              })
+            });
+          } catch (emailErr) {
+            console.error("Failed to send cancellation email:", emailErr);
+          }
+        }
+      }
+    }
     
     return { success: true, message: "Subscription cancelled successfully." };
   } catch (error: any) {
     console.error("Cancel Subscription Error:", error.response?.data || error.message);
+    
+    // Gracefully handle 400 or 404 errors (e.g., "Non existent or invalid subscription")
+    const status = error.response?.status;
+    if (status === 400 || status === 404) {
+      console.log(`Subscription ${subscriptionId} treated as cancelled (Flutterwave returned ${status}).`);
+      
+      const userId = context?.auth?.uid;
+      if (userId) {
+        const userSnapshot = await db.collection("users").doc(userId).get();
+        if (userSnapshot.exists) {
+          const userData = userSnapshot.data();
+          if (userData?.email) {
+            try {
+              await sendEmail({
+                to: userData.email,
+                subject: "Your MyTutorMe Subscription is Cancelled",
+                react: SubscriptionCancelledEmail({ 
+                  name: userData.name || userData.displayName || "Student" 
+                })
+              });
+            } catch (emailErr) {
+              console.error("Failed to send cancellation email:", emailErr);
+            }
+          }
+        }
+      }
+      
+      return { success: true, message: "Subscription already inactive or cancelled." };
+    }
+
     throw new functions.https.HttpsError("internal", "Unable to cancel subscription.");
+  }
+});
+
+/**
+ * Callable function to process Teacher payouts
+ */
+export const requestPayout = functions.https.onCall(async (request: any) => {
+  const data = request.data || request;
+  const context = request;
+  
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in.');
+  }
+
+  const uid = context.auth.uid;
+  const { amount, bankCode, accountNumber } = data;
+
+  if (!amount || amount <= 0 || !bankCode || !accountNumber) {
+    throw new functions.https.HttpsError('invalid-argument', 'Missing or invalid parameters.');
+  }
+
+  const userRef = db.collection('users').doc(uid);
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      const userDoc = await transaction.get(userRef);
+      if (!userDoc.exists) {
+        throw new functions.https.HttpsError('not-found', 'User profile not found.');
+      }
+
+      const currentBalance = userDoc.data()?.balance || 0;
+
+      if (currentBalance < amount) {
+        throw new functions.https.HttpsError('failed-precondition', 'Insufficient balance.');
+      }
+
+      transaction.update(userRef, {
+        balance: admin.firestore.FieldValue.increment(-amount),
+      });
+    });
+
+    const transferPayload = {
+      account_bank: bankCode,
+      account_number: accountNumber,
+      amount: amount,
+      narration: 'Teacher Payout',
+      currency: 'NGN',
+      reference: `payout_${uid}_${Date.now()}`,
+      debit_currency: 'NGN'
+    };
+
+    const response = await axiosInstance.post('/transfers', transferPayload);
+
+    if (response.data.status !== 'success') {
+      await userRef.update({
+        balance: admin.firestore.FieldValue.increment(amount),
+      });
+      throw new functions.https.HttpsError('internal', `Transfer failed: ${response.data.message}`);
+    }
+
+    return { 
+      success: true, 
+      message: 'Payout requested successfully.', 
+      data: response.data.data 
+    };
+
+  } catch (error: any) {
+    console.error('Error processing payout:', error);
+    if (error instanceof functions.https.HttpsError) throw error;
+    throw new functions.https.HttpsError('internal', 'An error occurred while processing the payout.');
   }
 });
 
@@ -498,6 +619,74 @@ export const verifyCoursePayment = functions.https.onCall(async (request: any, c
     console.error("Flutterwave Course Verify Error:", error.response?.data || error.message);
     throw new functions.https.HttpsError("internal", "Unable to verify course payment.");
   }
+});
+
+/**
+ * Callable function to schedule a subscription downgrade.
+ */
+export const scheduleDowngrade = functions.https.onCall(async (request: any) => {
+  const data = request.data || request;
+  const context = request; // For v2 auth mapping
+  const { newPlan } = data;
+  const userId = context?.auth?.uid;
+
+  if (!userId) throw new functions.https.HttpsError("unauthenticated", "User must be authenticated.");
+
+  const userRef = db.collection("users").doc(userId);
+  const userSnap = await userRef.get();
+  const userData = userSnap.data();
+
+  if (!userData || !["pro_yearly", "pro_monthly", "premium_tools"].includes(userData.plan || userData.teacherSubscriptionPlan)) {
+    throw new functions.https.HttpsError("failed-precondition", "Only premium users can schedule a downgrade.");
+  }
+
+  if (userData.subscriptionId) {
+    try {
+      await axiosInstance.put(`/subscriptions/${userData.subscriptionId}/cancel`);
+    } catch (e: any) {
+      console.log(`Cancel schedule: could not cancel flutterwave sub immediately. Status: ${e?.response?.status}`);
+    }
+  }
+
+  const effectiveDate = userData.currentPeriodEnd || admin.firestore.Timestamp.now();
+  await userRef.update({
+    pendingDowngrade: {
+      plan: newPlan,
+      effectiveDate: effectiveDate
+    }
+  });
+
+  return { success: true, message: `Downgrade to ${newPlan} scheduled successfully.` };
+});
+
+/**
+ * Scheduled function to process pending downgrades daily.
+ */
+import { onSchedule } from "firebase-functions/v2/scheduler";
+
+export const processPendingDowngrades = onSchedule("every 24 hours", async (event) => {
+  const now = admin.firestore.Timestamp.now();
+
+  const usersSnapshot = await db.collection("users")
+    .where("pendingDowngrade.effectiveDate", "<=", now)
+    .get();
+
+  if (usersSnapshot.empty) return;
+
+  const batch = db.batch();
+  
+  usersSnapshot.forEach((doc) => {
+    const pendingDowngrade = doc.data().pendingDowngrade;
+
+    batch.update(doc.ref, {
+      plan: pendingDowngrade.plan,
+      subscriptionId: admin.firestore.FieldValue.delete(),
+      pendingDowngrade: admin.firestore.FieldValue.delete(),
+    });
+  });
+
+  await batch.commit();
+  console.log(`Successfully processed ${usersSnapshot.size} downgrades.`);
 });
 
 export * from "./triggers/user";
