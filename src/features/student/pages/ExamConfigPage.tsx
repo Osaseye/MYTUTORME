@@ -22,11 +22,33 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { useExamGenerator } from '../hooks/useExamGenerator';
+import { useTourStore } from '@/app/stores/tourStore';
 
 export const ExamConfigPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { generateExam, isGenerating } = useExamGenerator();
+  const { startTour } = useTourStore();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      startTour('student-exam-config', [
+        {
+          target: '[data-tour-target="exam-config-settings"]',
+          title: 'Exam Configuration',
+          content: 'Customize your exam source, difficulty, and duration to target specific goals.',
+          placement: 'right'
+        },
+        {
+          target: '[data-tour-target="exam-config-summary"]',
+          title: 'Session Summary',
+          content: 'Review the details of your mock exam before starting. Ready, set, go!',
+          placement: 'left'
+        }
+      ]);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [startTour]);
   
   const [userDecks, setUserDecks] = useState<any[]>([]);
   const [userPlans, setUserPlans] = useState<any[]>([]);
@@ -194,7 +216,7 @@ export const ExamConfigPage = () => {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Configuration Panel */}
-                <div className="lg:col-span-2 space-y-6">
+                  <div data-tour-target="exam-config-settings" className="lg:col-span-2 space-y-6">
                     
                     {/* Source Selection */}
                     <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
@@ -435,7 +457,7 @@ export const ExamConfigPage = () => {
                 </div>
 
                 {/* Summary Panel */}
-                <div className="lg:col-span-1">
+                <div data-tour-target="exam-config-summary" className="lg:col-span-1">
                     <div className="sticky top-28 bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-xl border border-slate-200 dark:border-slate-800">
                         <div className="mb-6 pb-6 border-b border-slate-100 dark:border-slate-800">
                             <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-1">Session Summary</h3>

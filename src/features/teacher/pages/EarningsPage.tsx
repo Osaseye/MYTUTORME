@@ -14,14 +14,59 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from "@/lib/firebase";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export const EarningsPage = () => {
   const { user } = useAuth();
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [transactions, setTransactions] = useState<any[]>([]);
   const hasPremium = user?.teacherSubscriptionPlan === 'premium_tools' || user?.teacherSubscriptionPlan === 'enterprise';
+
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [bankCode, setBankCode] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  const handleWithdraw = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!withdrawAmount || !bankCode || !accountNumber) return;
+
+    const amount = Number(withdrawAmount);
+    if (amount > (user?.balance || 0)) {
+      toast.error("Insufficient balance for this withdrawal.");
+      return;
+    }
+    if (amount < 100) {
+      toast.error("Minimum withdrawal amount is ₦100.");
+      return;
+    }
+
+    setIsWithdrawing(true);
+    const toastId = toast.loading("Processing payout request...");
+
+    try {
+      const requestPayout = httpsCallable(functions, "requestPayout");
+      await requestPayout({ amount, bankCode, accountNumber });
+      
+      toast.success("Payout requested successfully!", { id: toastId });
+      setIsWithdrawModalOpen(false);
+      setWithdrawAmount("");
+      setBankCode("");
+      setAccountNumber("");
+      // optionally trigger a re-fetch of user balance here
+    } catch (err: any) {
+      console.error("Payout error:", err);
+      toast.error(err.message || "Failed to process payout.", { id: toastId });
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
 
   useEffect(() => {
     const fetchEarnings = async () => {
@@ -102,12 +147,86 @@ export const EarningsPage = () => {
               <Calendar className="w-4 h-4" />
               This Month
             </Button>
-            <Button className="inline-flex items-center gap-2 bg-primary hover:bg-green-700 text-white">
+            <Button onClick={() => setIsWithdrawModalOpen(true)} className="inline-flex items-center gap-2 bg-primary hover:bg-green-700 text-white">
               <DollarSign className="w-4 h-4" />
               Withdraw Funds
             </Button>
           </div>
         </div>
+
+        {isWithdrawModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-white dark:bg-slate-900 rounded-xl max-w-md w-full p-6 shadow-2xl relative">
+              <button 
+                onClick={() => setIsWithdrawModalOpen(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+              >
+                ✕
+              </button>
+              <div className="mb-6">
+                <h2 className="text-xl font-bold font-display text-slate-900 dark:text-white mb-2">Request Payout</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Submit your withdrawal details to initiate a transfer using Flutterwave.<br/>
+                  Current Wallet Balance: <strong className="text-slate-900 dark:text-white">₦{Number(user?.balance || 0).toLocaleString()}</strong>
+                </p>
+              </div>
+              <form onSubmit={handleWithdraw} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Withdrawal Amount (NGN)</Label>
+                  <Input 
+                    id="amount" 
+                    type="number" 
+                    min="100" 
+                    value={withdrawAmount} 
+                    onChange={(e) => setWithdrawAmount(e.target.value)} 
+                    placeholder="e.g. 5000" 
+                    required 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bankCode">Bank Code</Label>
+                  <Input 
+                    id="bankCode" 
+                    type="text" 
+                    value={bankCode} 
+                    onChange={(e) => setBankCode(e.target.value)} 
+                    placeholder="e.g. 044 (Access Bank)" 
+                    required 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="accountNumber">Account Number</Label>
+                  <Input 
+                    id="accountNumber" 
+                    type="text" 
+                    maxLength={10}
+                    value={accountNumber} 
+                    onChange={(e) => setAccountNumber(e.target.value)} 
+                    placeholder="10-digit account number" 
+                    required 
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsWithdrawModalOpen(false)}
+                    className="w-full"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isWithdrawing || !withdrawAmount || !bankCode || !accountNumber} 
+                    className="w-full"
+                  >
+                    {isWithdrawing ? 'Processing...' : 'Withdraw'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-gradient-to-br from-primary to-secondary rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
@@ -120,7 +239,7 @@ export const EarningsPage = () => {
                 <p className="text-primary-100 text-sm font-medium mb-1">
                   Available Balance
                 </p>
-                <h3 className="text-3xl font-display font-bold">₦{totalEarnings.toLocaleString()}</h3>
+                <h3 className="text-3xl font-display font-bold">₦{Number(user?.balance || 0).toLocaleString()}</h3>
                 <div className="flex items-center gap-1 mt-2 text-emerald-100 text-xs bg-white/10 w-fit px-2 py-1 rounded-full">
                   <span className="material-symbols-outlined text-xs">
                     verified

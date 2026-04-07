@@ -15,12 +15,40 @@ import { Button } from '@/components/ui/button';
 import { Link, useParams } from 'react-router-dom';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { useTourStore } from '@/app/stores/tourStore';
 
 export const ExamResultsPage = () => {
   const { attemptId } = useParams();
   const [attemptData, setAttemptData] = useState<any>(null);
   const [quizData, setQuizData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { startTour } = useTourStore();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      startTour('student-exam-results', [
+        {
+          target: '[data-tour-target="exam-score-overview"]',
+          title: 'Score Overview',
+          content: 'See how well you did overall, including your final score and passed/failed status.',
+          placement: 'bottom'
+        },
+        {
+          target: '[data-tour-target="exam-topic-breakdown"]',
+          title: 'Topic Breakdown',
+          content: 'Find out which specific topics you mastered and which ones need more review.',
+          placement: 'left'
+        },
+        {
+          target: '[data-tour-target="exam-question-review"]',
+          title: 'Question Review',
+          content: 'Review each question to see what you got right or wrong, and read explanations to learn from your mistakes.',
+          placement: 'top'
+        }
+      ]);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [startTour]);
 
   useEffect(() => {
     const fetchResults = async () => {

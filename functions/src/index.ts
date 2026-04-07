@@ -306,9 +306,7 @@ export const paymentWebhook = functions.https.onRequest(async (req, res) => {
 /**
  * Callable function to cancel a Flutterwave subscription.
  */
-export const cancelSubscription = functions.https.onCall(async (request: any) => {
-  const data = request.data || request;
-  const context = request; // In v2, auth is directly on the request object
+export const cancelSubscription = functions.https.onCall(async (data: any, context: any) => {
   const { subscriptionId } = data;
 
   if (!subscriptionId) {
@@ -380,10 +378,7 @@ export const cancelSubscription = functions.https.onCall(async (request: any) =>
 /**
  * Callable function to process Teacher payouts
  */
-export const requestPayout = functions.https.onCall(async (request: any) => {
-  const data = request.data || request;
-  const context = request;
-  
+export const requestPayout = functions.https.onCall(async (data: any, context: any) => {
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'User must be logged in.');
   }
@@ -624,9 +619,7 @@ export const verifyCoursePayment = functions.https.onCall(async (request: any, c
 /**
  * Callable function to schedule a subscription downgrade.
  */
-export const scheduleDowngrade = functions.https.onCall(async (request: any) => {
-  const data = request.data || request;
-  const context = request; // For v2 auth mapping
+export const scheduleDowngrade = functions.https.onCall(async (data: any, context: any) => {
   const { newPlan } = data;
   const userId = context?.auth?.uid;
 

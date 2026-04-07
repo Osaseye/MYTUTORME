@@ -25,11 +25,39 @@ import {
   updateDoc
 } from 'firebase/firestore';
 import { toast } from 'sonner';
+import { useTourStore } from '@/app/stores/tourStore';
 
 export const ExamTakingPage = () => {
   const { quizId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { startTour } = useTourStore();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      startTour('student-exam-taking', [
+        {
+          target: '[data-tour-target="exam-question-area"]',
+          title: 'Question Area',
+          content: 'Read the question carefully. You can also view any associated materials or notes if present.',
+          placement: 'bottom'
+        },
+        {
+          target: '[data-tour-target="exam-timer"]',
+          title: 'Exam Timer & Controls',
+          content: 'Keep an eye on the remaining time. Use these controls to submit your mock exam.',
+          placement: 'left'
+        },
+        {
+          target: '[data-tour-target="exam-question-nav"]',
+          title: 'Question Navigation',
+          content: 'Navigate between questions quickly. You can flag questions for review or skip around.',
+          placement: 'top'
+        }
+      ]);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [startTour]);
   
   const [examData, setExamData] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
@@ -219,7 +247,7 @@ export const ExamTakingPage = () => {
                     <span className="font-display font-bold text-lg">{examData.title}</span>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div data-tour-target="exam-timer" className="flex items-center gap-4">
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono font-medium ${
                         timeLeft < 300 
                             ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' 
@@ -568,3 +596,5 @@ export const ExamTakingPage = () => {
     </div>
   );
 };
+
+

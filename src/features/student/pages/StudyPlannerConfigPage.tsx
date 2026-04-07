@@ -7,16 +7,32 @@ import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useStudyPlanGenerator } from '../hooks/useStudyPlanGenerator';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
+import { useTourStore } from '@/app/stores/useTourStore';
 
 export const StudyPlannerConfigPage = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { startTour } = useTourStore();
   const [subject, setSubject] = useState('');
   const [targetExam, setTargetExam] = useState('');
   const [durationWeeks, setDurationWeeks] = useState([4]);
   const [proficiency, setProficiency] = useState<'beginner' | 'intermediate' | 'advanced'>('intermediate');
   
   const { generatePlan, isGenerating } = useStudyPlanGenerator();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      startTour('study-config-tour', [
+        {
+          target: 'plan-config-form',
+          title: 'Design Your Plan',
+          content: 'Fill in your subject, target exam, and preferred timeframe to generate a tailored study schedule powered by AI.',
+          placement: 'bottom'
+        }
+      ]);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [startTour]);
 
   const handleGenerate = async () => {
     if (!subject.trim() || !targetExam.trim()) {
@@ -55,7 +71,7 @@ export const StudyPlannerConfigPage = () => {
            </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-8 space-y-8">
+        <div data-tour-target="plan-config-form" className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-8 space-y-8">
            
            {/* Subject & Exam */}
            <div className="space-y-4">

@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, doc, updateDoc, increment } from 'firebase/firestore';
+import { useTourStore, TourStep } from '@/app/stores/useTourStore';
 
 /**
  * Community / Forums Page
@@ -42,6 +43,7 @@ interface Reply {
 
 export const CommunityPage = () => {
   const { user } = useAuth();
+  const { startTour } = useTourStore();
   const [activeTab, setActiveTab] = useState('latest');
   const [activeCategory, setActiveCategory] = useState('All Topics');
   const [isCreating, setIsCreating] = useState(false);
@@ -71,8 +73,34 @@ export const CommunityPage = () => {
       setIsLoading(false);
     });
 
-    return () => unsubscribe();
-  }, []);
+    const timer = setTimeout(() => {
+      const steps: TourStep[] = [
+        {
+          title: "Community Forums",
+          content: "Welcome to the Community! Here you can ask questions, share resources, and connect with other students.",
+          placement: "center"
+        },
+        {
+          targetId: "create-post-btn",
+          title: "Start a Discussion",
+          content: "Click here to create a new post or ask a question.",
+          placement: "left"
+        },
+        {
+          targetId: "category-filters",
+          title: "Filter by Subject",
+          content: "Use these filters to easily find topics related to specific courses or subjects.",
+          placement: "bottom"
+        }
+      ];
+      startTour('community_page_v1', steps);
+    }, 1000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timer);
+    };
+  }, [startTour]);
 
   // Fetch replies real-time when a discussion is active
   useEffect(() => {
@@ -174,6 +202,7 @@ export const CommunityPage = () => {
         </div>
         {!isCreating && !activeDiscussion && (
           <Button 
+              data-tour-target="create-post-btn"
               className="bg-primary hover:bg-green-700 text-white gap-2 shadow-lg shadow-primary/20 w-full md:w-auto"
               onClick={() => setIsCreating(true)}
           >
@@ -185,7 +214,7 @@ export const CommunityPage = () => {
       <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6 sm:gap-8">
         
         {/* Left Sidebar: Navigation & Filters */}
-        <div className={`lg:col-span-1 space-y-6 ${activeDiscussion || isCreating ? 'hidden lg:block' : 'block'}`}>
+        <div data-tour-target="category-filters" className={`lg:col-span-1 space-y-6 ${activeDiscussion || isCreating ? 'hidden lg:block' : 'block'}`}>
            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
               <div className="relative mb-6">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />

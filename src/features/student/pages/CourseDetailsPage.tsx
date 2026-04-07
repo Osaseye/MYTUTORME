@@ -16,6 +16,7 @@ import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, serv
 import { db, functions } from '@/lib/firebase';
 import { httpsCallable } from 'firebase/functions';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
+import { useTourStore, TourStep } from '@/app/stores/useTourStore';
 
 const MOCK_QUIZ: Quiz = {
   id: 'quiz-1',
@@ -63,6 +64,7 @@ interface Course {
 export const CourseDetailsPage = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const { user } = useAuthStore();
+  const { startTour } = useTourStore();
   
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
@@ -110,7 +112,32 @@ export const CourseDetailsPage = () => {
       }
     };
     checkPaymentStatus();
-  }, []);
+
+    const timer = setTimeout(() => {
+      const steps: TourStep[] = [
+        {
+          title: "Course Overview",
+          content: "Welcome to the course details page. Here you can explore everything you need to start learning.",
+          placement: "center"
+        },
+        {
+          targetId: "course-enroll-btn",
+          title: "Enroll in this Course",
+          content: "Click here to enroll and get immediate access to all the course modules and materials.",
+          placement: "left"
+        },
+        {
+          targetId: "course-curriculum-tab",
+          title: "Curriculum",
+          content: "Switch over to the curriculum tab to view the modules, lessons, and quizzes.",
+          placement: "bottom"
+        }
+      ];
+      startTour('course_details_page_v1', steps);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [startTour]);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -355,7 +382,7 @@ export const CourseDetailsPage = () => {
 
           {isEnrolled ? (
              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden min-h-[500px]">
-                <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto scrollbar-hide bg-slate-50 dark:bg-slate-900">
+                <div data-tour-target="course-curriculum-tab" className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto scrollbar-hide bg-slate-50 dark:bg-slate-900">
                    {['overview', 'curriculum', 'quizzes', 'certificate'].map((t: any) => (
                         <button key={t} onClick={() => setActiveTab(t)} className={`whitespace-nowrap px-6 py-4 text-sm font-medium border-b-2 transition-colors flex-shrink-0 capitalize ${activeTab === t ? 'border-primary text-primary bg-white dark:bg-slate-800' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
                             {t}
@@ -521,10 +548,10 @@ export const CourseDetailsPage = () => {
               </div>
               <div className="space-y-3 mb-6">
                  {isEnrolled ? (
-                   <Button className="w-full h-12 text-base font-bold bg-green-600 hover:bg-green-700" onClick={() => setActiveTab('curriculum')}>Continue Learning <PlayCircle className="w-5 h-5 ml-2" /></Button>
+                   <Button data-tour-target="course-enroll-btn" className="w-full h-12 text-base font-bold bg-green-600 hover:bg-green-700" onClick={() => setActiveTab('curriculum')}>Continue Learning <PlayCircle className="w-5 h-5 ml-2" /></Button>
                  ) : (
                    <div className="space-y-2">
-                     <Button className="w-full h-12 text-base font-bold bg-primary hover:bg-green-700" onClick={() => {
+                     <Button data-tour-target="course-enroll-btn" className="w-full h-12 text-base font-bold bg-primary hover:bg-green-700" onClick={() => {
                         setIsPurchaseModalOpen(true);
                      }}>Enroll Now <ArrowRight className="w-5 h-5 ml-2" /></Button>
                    </div>

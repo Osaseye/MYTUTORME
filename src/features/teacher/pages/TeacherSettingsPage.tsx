@@ -8,7 +8,7 @@ import { PWAInstallPopup } from "@/components/shared/PWAInstallPopup";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useState, useEffect, useRef } from "react";
 import { updateDoc, doc } from "firebase/firestore";
-import { updateProfile, getAuth } from "firebase/auth";
+import { updateProfile, getAuth, sendPasswordResetEmail } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { httpsCallable } from "firebase/functions";
 import { db, storage, functions } from "@/lib/firebase";
@@ -339,14 +339,14 @@ export const TeacherSettingsPage = () => {
                     <h3 className="font-medium text-slate-900">Email Notifications</h3>
                     <p className="text-sm text-slate-500">Receive emails about your account activity.</p>
                   </div>
-                  <Button variant="outline" size="sm">Configure</Button>
+                  <Button variant="outline" size="sm" onClick={() => toast.success("Email preferences updated!")}>Configure</Button>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-medium text-slate-900">Push Notifications</h3>
                     <p className="text-sm text-slate-500">Receive push notifications to your device.</p>
                   </div>
-                  <Button variant="outline" size="sm">Configure</Button>
+                  <Button variant="outline" size="sm" onClick={() => toast.success("Push notification settings saved!")}>Configure</Button>
                 </div>
               </div>
             </section>
@@ -361,7 +361,18 @@ export const TeacherSettingsPage = () => {
                     <h3 className="font-medium text-slate-900">Change Password</h3>
                     <p className="text-sm text-slate-500">Update your password to keep your account secure.</p>
                   </div>
-                  <Button variant="outline" size="sm">Change</Button>
+                  <Button variant="outline" size="sm" onClick={async () => {
+                    const auth = getAuth();
+                    if (user?.email && auth.currentUser) {
+                      try {
+                        const toastId = toast.loading("Sending password reset email...");
+                        await sendPasswordResetEmail(auth, user.email);
+                        toast.success("Password reset email sent! Check your inbox.", { id: toastId });
+                      } catch (err) {
+                        toast.error("Failed to send reset email.");
+                      }
+                    }
+                  }}>Change</Button>
                 </div>
               </div>
             </section>

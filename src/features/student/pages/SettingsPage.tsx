@@ -19,9 +19,11 @@ import { User, Bell, Lock, GraduationCap, Upload, ShieldCheck, Loader2, CreditCa
 import { Switch } from '@/components/ui/switch';
 import { PaymentModal } from '@/components/shared/PaymentModal';
 import { PWAInstallPopup } from '@/components/shared/PWAInstallPopup';
+import { useTourStore } from '@/app/stores/useTourStore';
 
   export const SettingsPage = () => {
     const { user, setUser } = useAuthStore();
+    const { startTour } = useTourStore();
     const studentProfile = user as StudentProfile;
 
     // Normalize legacy plans from earlier webhook payload
@@ -305,6 +307,20 @@ import { PWAInstallPopup } from '@/components/shared/PWAInstallPopup';
     }
   };
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      startTour('settings-tour', [
+        {
+          target: 'settings-tabs',
+          title: 'Account Settings',
+          content: 'Navigate between different sections to manage your profile, security, notifications, and subscription.',
+          placement: 'bottom'
+        }
+      ]);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [startTour]);
+
   return (
     <div className="container max-w-5xl mx-auto py-8 px-4 md:px-8">
       <div className="mb-8">
@@ -313,7 +329,7 @@ import { PWAInstallPopup } from '@/components/shared/PWAInstallPopup';
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-flow-col max-w-2xl bg-slate-100 dark:bg-slate-800/50 p-1 mb-8 gap-y-2 h-auto">
+        <TabsList data-tour-target="settings-tabs" className="grid w-full grid-cols-2 md:grid-flow-col max-w-2xl bg-slate-100 dark:bg-slate-800/50 p-1 mb-8 gap-y-2 h-auto">
           <TabsTrigger value="profile" className="flex gap-2">
             <User className="h-4 w-4" /> Profile
           </TabsTrigger>

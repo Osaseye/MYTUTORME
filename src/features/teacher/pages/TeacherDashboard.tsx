@@ -17,6 +17,7 @@ import { db, functions } from '@/lib/firebase';
 import { Sparkles, Zap, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { PaymentModal } from '@/components/shared/PaymentModal';
+import { useTourStore, TourStep } from '@/app/stores/useTourStore';
 
 const mockData = [
   { name: 'Mon', revenue: 0 },
@@ -30,6 +31,7 @@ const mockData = [
 
 export const TeacherDashboard = () => {
     const { user } = useAuth();
+    const { startTour } = useTourStore();
     
     const [stats, setStats] = useState({
         totalEarnings: (user as any)?.lifetimeEarnings || 0,
@@ -114,6 +116,33 @@ export const TeacherDashboard = () => {
         fetchDashboardStats();
     }, [user]);
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const steps: TourStep[] = [
+                {
+                    title: "Instructor Dashboard",
+                    content: "Welcome! Here is your powerful hub to manage your courses and earnings.",
+                    placement: "center"
+                },
+                {
+                    targetId: "premium-upgrade",
+                    title: "Premium Tools",
+                    content: "Upgrade to premium to access priority listing, enhanced analytics, and better revenue splits.",
+                    placement: "bottom"
+                },
+                {
+                    targetId: "stats-overview",
+                    title: "Performance Snapshot",
+                    content: "Keep track of active students, courses, and total earnings easily.",
+                    placement: "top"
+                }
+            ];
+            startTour('teacher_dashboard_v1', steps);
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [startTour]);
+
     const executeUpgrade = async (paymentProvider?: 'flutterwave' | 'paystack') => {
         if (!user) return;
         setIsUpgrading(true);
@@ -162,7 +191,7 @@ export const TeacherDashboard = () => {
         <div className="bg-background-light dark:bg-background-dark font-body text-slate-800 dark:text-slate-100 transition-colors duration-300">
             {/* Upgrade Banner for Free Users */}
             {!isPremium && (
-                <div className="mb-8 bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div data-tour-target="premium-upgrade" className="mb-8 bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <div className="p-3 bg-amber-500/20 text-amber-600 rounded-xl relative overflow-hidden group">
                            <Zap className="w-6 h-6 animate-pulse" />
@@ -209,7 +238,7 @@ export const TeacherDashboard = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div data-tour-target="stats-overview" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 {/* Revenue Card */}
                 <div className="bg-gradient-to-br from-primary to-secondary rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
                     <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>

@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useTourStore } from '@/app/stores/useTourStore';
 
 interface Course {
   id: string;
@@ -46,6 +47,7 @@ interface Enrollment {
 
 export const MyCoursesPage = () => {
     const { user } = useAuthStore();
+    const { startTour } = useTourStore();
     const [courses, setCourses] = useState<Course[]>([]);
     const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
     const [loadingCourses, setLoadingCourses] = useState(true);
@@ -125,6 +127,32 @@ export const MyCoursesPage = () => {
         return matchesSearch && matchesLevel && matchesSubject && matchesCategory;
     });
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            startTour('my-courses-tour', [
+                {
+                    target: 'course-tabs',
+                    title: 'Your Learning Hub',
+                    content: 'Switch between browsing the entire course catalog and viewing the courses you have already enrolled in.',
+                    placement: 'bottom'
+                },
+                {
+                    target: 'course-filters',
+                    title: 'Search & Refine',
+                    content: 'Use this bar to search by keyword, level, or category to find exactly what you want to learn.',
+                    placement: 'bottom'
+                },
+                {
+                    target: 'course-grid',
+                    title: 'Course Catalog',
+                    content: 'Click on any course card to view its curriculum, price, and enroll to start your learning journey.',
+                    placement: 'top'
+                }
+            ]);
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, [startTour]);
+
     return (
         <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
             <div className="mb-8 md:mb-12">
@@ -137,7 +165,7 @@ export const MyCoursesPage = () => {
             </div>
 
             <Tabs defaultValue="explore" className="w-full">
-                <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 lg:w-[400px] mb-8 bg-slate-100 dark:bg-slate-800 p-1 h-auto gap-y-1">
+                <TabsList data-tour-target="course-tabs" className="grid w-full grid-cols-1 sm:grid-cols-2 lg:w-[400px] mb-8 bg-slate-100 dark:bg-slate-800 p-1 h-auto gap-y-1">
                     <TabsTrigger value="explore" className="flex items-center gap-2">
                         <Search className="w-4 h-4" /> Explore Catalog
                     </TabsTrigger>
@@ -198,7 +226,7 @@ export const MyCoursesPage = () => {
                 {/* EXPLORE CATALOG TAB */}
                 <TabsContent value="explore" className="mt-0">
                     {/* Search & Filter Bar */}
-                    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 mb-8 sticky top-20 z-30">
+                    <div data-tour-target="course-filters" className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 mb-8 sticky top-20 z-30">
                         <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-grow relative">
                             <span className="absolute inset-y-0 left-0 flex items-center pl-3">
@@ -267,7 +295,7 @@ export const MyCoursesPage = () => {
                         </aside>
 
                         {/* Content Grid */}
-                        <div className="flex-grow">
+                        <div data-tour-target="course-grid" className="flex-grow">
                             {loadingCourses ? (
                                 <div className="py-20 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
                             ) : filteredCourses.length === 0 ? (

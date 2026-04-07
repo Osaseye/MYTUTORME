@@ -316,10 +316,8 @@ exports.paymentWebhook = functions.https.onRequest(async (req, res) => {
 /**
  * Callable function to cancel a Flutterwave subscription.
  */
-exports.cancelSubscription = functions.https.onCall(async (request) => {
+exports.cancelSubscription = functions.https.onCall(async (data, context) => {
     var _a, _b, _c, _d;
-    const data = request.data || request;
-    const context = request; // In v2, auth is directly on the request object
     const { subscriptionId } = data;
     if (!subscriptionId) {
         throw new functions.https.HttpsError("invalid-argument", "Missing subscription ID.");
@@ -385,9 +383,7 @@ exports.cancelSubscription = functions.https.onCall(async (request) => {
 /**
  * Callable function to process Teacher payouts
  */
-exports.requestPayout = functions.https.onCall(async (request) => {
-    const data = request.data || request;
-    const context = request;
+exports.requestPayout = functions.https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be logged in.');
     }
@@ -598,10 +594,8 @@ exports.verifyCoursePayment = functions.https.onCall(async (request, context) =>
 /**
  * Callable function to schedule a subscription downgrade.
  */
-exports.scheduleDowngrade = functions.https.onCall(async (request) => {
+exports.scheduleDowngrade = functions.https.onCall(async (data, context) => {
     var _a, _b;
-    const data = request.data || request;
-    const context = request; // For v2 auth mapping
     const { newPlan } = data;
     const userId = (_a = context === null || context === void 0 ? void 0 : context.auth) === null || _a === void 0 ? void 0 : _a.uid;
     if (!userId)

@@ -21,17 +21,11 @@ import { useAiTutor } from '@/features/ai-tutor/hooks/useAiTutor';
 import ReactMarkdown from 'react-markdown';
 import { usePlanGate } from '@/hooks/usePlanGate';
 import { toast } from 'sonner';
-
-
-
-
-
-
-
-
+import { useTourStore, TourStep } from '@/app/stores/useTourStore';
 
 export const AiTutorPage = () => {
     const navigate = useNavigate();
+    const { startTour } = useTourStore();
     const [showHistory, setShowHistory] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [inputValue, setInputValue] = useState('');
@@ -64,6 +58,33 @@ export const AiTutorPage = () => {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [messages, streamingContent]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const steps: TourStep[] = [
+                {
+                    title: "AI Tutor",
+                    content: "This is your personal AI Tutor. You can ask any question, and get personalized explanations instantly.",
+                    placement: "center"
+                },
+                {
+                    targetId: "ai-chat-input",
+                    title: "Ask a Question",
+                    content: "Type your questions here. You can also upload images of your homework or diagrams for the AI to analyze.",
+                    placement: "top"
+                },
+                {
+                    targetId: "ai-history-toggle",
+                    title: "Chat History",
+                    content: "Access your previous conversations with the AI Tutor here to review concepts.",
+                    placement: "right"
+                }
+            ];
+            startTour('ai_tutor_page_v1', steps);
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [startTour]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -141,6 +162,7 @@ export const AiTutorPage = () => {
                     </button>
                     <span className="font-bold text-slate-900 dark:text-white">AI Tutor</span>
                     <button 
+                        data-tour-target="ai-history-toggle"
                         onClick={() => setShowHistory(!showHistory)}
                         className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
                     >

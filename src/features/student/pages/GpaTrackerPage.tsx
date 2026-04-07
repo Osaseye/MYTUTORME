@@ -32,10 +32,12 @@ import {
   getGradePoints
 } from '../utils/gpaUtils';
 import { usePlanGate } from '@/hooks/usePlanGate';
+import { useTourStore, TourStep } from '@/app/stores/useTourStore';
 
 export const GpaTrackerPage = () => {
   const { hasAccess } = usePlanGate('gpa_simulator');
   const { user } = useAuthStore();
+  const { startTour } = useTourStore();
   
   // State
   const [scale, setScale] = useState<GradeScaleType>('4.0');
@@ -90,7 +92,32 @@ export const GpaTrackerPage = () => {
       }
     };
     loadData();
-  }, [user]);
+
+    const timer = setTimeout(() => {
+      const steps: TourStep[] = [
+        {
+          title: "GPA Tracker",
+          content: "Keep track of your grades across all your semesters in one easy place.",
+          placement: "center"
+        },
+        {
+          targetId: "add-semester-btn",
+          title: "Add a Semester",
+          content: "Click here to add a new semester and start inputting your courses and grades.",
+          placement: "bottom"
+        },
+        {
+          targetId: "gpa-calculator",
+          title: "GPA Simulator",
+          content: "Input hypothetical grades to see what you need to score to hit your Target CGPA.",
+          placement: "top"
+        }
+      ];
+      startTour('gpa_tracker_page_v1', steps);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [user, startTour]);
 
   // Auto-Save
   useEffect(() => {

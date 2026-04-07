@@ -27,6 +27,7 @@ export interface User {
   permissions?: string[];
   teacherSubscriptionPlan?: string;
   currentCommissionRate?: number;
+  balance?: number;
   generationStats?: {
     date: string;
     mockExams: number;

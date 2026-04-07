@@ -7,9 +7,11 @@ import { toast } from 'sonner';
 import { useFlashcardGenerator } from '../hooks/useFlashcardGenerator';
 import { Input } from '@/components/ui/input';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
+import { useTourStore } from '@/app/stores/useTourStore';
 
 export const FlashcardConfigPage = () => {
   const navigate = useNavigate();
+  const { startTour } = useTourStore();
   const [subject, setSubject] = useState('');
   const [topic, setTopic] = useState('');
   const [cardCount, setCardCount] = useState([10]);
@@ -45,6 +47,20 @@ export const FlashcardConfigPage = () => {
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      startTour('flashcard-config-tour', [
+        {
+          target: 'flashcard-config-form',
+          title: 'Customize Your Deck',
+          content: 'Fill out this form or upload your notes to generate a set of smart, structured flashcards tailored to what you need to study.',
+          placement: 'bottom'
+        }
+      ]);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [startTour]);
 
   const handleGenerate = async () => {
     if (!subject || !topic) {
@@ -86,7 +102,7 @@ export const FlashcardConfigPage = () => {
            </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-8 space-y-8">
+<div data-tour-target="flashcard-config-form" className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-8 space-y-8">
            
            {/* Subject & Topic */}
            <div className="space-y-4">

@@ -23,11 +23,13 @@ import { toast } from 'sonner';
 
 import { Link, useNavigate } from 'react-router-dom';
 import { usePlanGate } from '@/hooks/usePlanGate';
+import { useTourStore, TourStep } from '@/app/stores/useTourStore';
 
 export const ExamPrepPage = () => {
   const { hasAccess } = usePlanGate('premium_mock_exams');
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { startTour } = useTourStore();
   const [activeTab, setActiveTab] = useState<'exams' | 'flashcards' | 'planner'>('exams');
   
   
@@ -172,7 +174,32 @@ export const ExamPrepPage = () => {
       }
     };
     fetchStats();
-  }, [user]);
+
+    const timer = setTimeout(() => {
+      const steps: TourStep[] = [
+        {
+          title: "Exam Hub",
+          content: "Welcome to Exam Prep! This is where you can test your knowledge, prepare for exams, and build study tools.",
+          placement: "center"
+        },
+        {
+          targetId: "exam-menu-tabs",
+          title: "Prep Tools",
+          content: "Switch between Mock Exams, Flashcards, and Study Planning.",
+          placement: "bottom"
+        },
+        {
+          targetId: "create-resource-btn",
+          title: "Generate Materials",
+          content: "Use AI to automatically generate challenging quizzes and custom flashcards directly from your topics.",
+          placement: "left"
+        }
+      ];
+      startTour('exam_prep_page_v1', steps);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [user, startTour]);
 
   const formatTime = (seconds: number) => {
       const h = Math.floor(seconds / 3600);
@@ -275,6 +302,7 @@ export const ExamPrepPage = () => {
            </div>
            {(!hasAccess && studyPlans.length >= 2) ? (
              <Button
+               data-tour-target="create-resource-btn"
                className="bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed"
                title="Upgrade to create more study sessions"
              >
@@ -282,7 +310,7 @@ export const ExamPrepPage = () => {
                 New Study Session
              </Button>
            ) : (
-             <div onClick={(e) => handleCreateClick(e, '/student/exam-prep/config', 'mockExams')}>
+             <div data-tour-target="create-resource-btn" onClick={(e) => handleCreateClick(e, '/student/exam-prep/config', 'mockExams')}>
                <Button className="bg-primary hover:bg-primary/90">
                   <Plus className="w-4 h-4 mr-2" />
                   New Study Session
@@ -339,7 +367,7 @@ export const ExamPrepPage = () => {
         <div className="flex-1 space-y-6">
            
            {/* Navigation Tabs */}
-           <div className="flex border-b border-slate-200 dark:border-slate-800 space-x-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
+           <div data-tour-target="exam-menu-tabs" className="flex border-b border-slate-200 dark:border-slate-800 space-x-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
               <button 
                 onClick={() => setActiveTab('exams')}
                 className={`pb-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'exams' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
