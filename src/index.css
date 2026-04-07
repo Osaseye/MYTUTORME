@@ -29,3 +29,71 @@
     scrollbar-width: none;  /* Firefox */
   }
 }
+
+/* Material Icons Boneyard (Skeleton Loading) */
+body:not(.fonts-loaded) .material-symbols-outlined,
+body:not(.fonts-loaded) .material-icons,
+body:not(.fonts-loaded) .material-icons-round {
+  color: transparent !important;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  display: inline-block;
+  min-width: 24px;
+  min-height: 24px;
+  overflow: hidden;
+  position: relative;
+  user-select: none;
+}
+
+body:not(.fonts-loaded) .material-symbols-outlined::after,
+body:not(.fonts-loaded) .material-icons::after,
+body:not(.fonts-loaded) .material-icons-round::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    left: 100%;
+  }
+}
+
+/* Material Icons Boneyard (Skeleton Loading) */
+body:not(.fonts-loaded) .material-symbols-outlined,
+body:not(.fonts-loaded) .material-icons,
+body:not(.fonts-loaded) .material-icons-round {
+  color: transparent !important;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  display: inline-block;
+  min-width: 24px;
+  min-height: 24px;
+  overflow: hidden;
+  position: relative;
+  user-select: none;
+}
+
+body:not(.fonts-loaded) .material-symbols-outlined::after,
+body:not(.fonts-loaded) .material-icons::after,
+body:not(.fonts-loaded) .material-icons-round::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    left: 100%;
+  }
+}
