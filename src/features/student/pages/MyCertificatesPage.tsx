@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +6,6 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 import { Link } from 'react-router-dom';
-import { useTourStore } from '@/app/stores/useTourStore';
 
 interface Certificate {
     id: string;
@@ -21,29 +20,8 @@ interface Certificate {
 
 export const MyCertificatesPage = () => {
   const { user } = useAuthStore();
-  const { startTour } = useTourStore();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      startTour('my-certificates-tour', [
-        {
-          target: 'cert-header',
-          title: 'Certificates & Achievements',
-          content: 'View all the accomplishments and certificates you have earned upon completing courses.',
-          placement: 'bottom'
-        },
-        {
-          target: 'cert-grid',
-          title: 'Your Awards',
-          content: 'Click to view, download, or share verified certificates validating your skills.',
-          placement: 'top'
-        }
-      ]);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [startTour]);
 
   useEffect(() => {
      const fetchCerts = async () => {
@@ -69,7 +47,7 @@ export const MyCertificatesPage = () => {
         <div>
           
           <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div data-tour-target="cert-header">
+            <div>
               <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-white">My Certificates</h1>
             </div>
           </div>
@@ -81,7 +59,7 @@ export const MyCertificatesPage = () => {
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Certificates</h3>
             </div>
           ) : (
-            <div data-tour-target="cert-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {certificates.map(cert => (
                    <div key={cert.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
                         <div className="flex justify-between items-start mb-4">

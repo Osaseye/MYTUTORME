@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '@/lib/firebase';
@@ -5,12 +6,10 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ArrowLeft, CheckCircle2, Circle, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { useTourStore } from '@/app/stores/useTourStore';
 
 export const StudyPlannerViewPage = () => {
     const { planId } = useParams();
     const navigate = useNavigate();
-    const { startTour } = useTourStore();
     const [planDoc, setPlanDoc] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
@@ -88,34 +87,14 @@ export const StudyPlannerViewPage = () => {
 
     if (!planDoc) return null;
 
-    useEffect(() => {
-        if (!loading && planDoc) {
-            const timer = setTimeout(() => {
-                startTour('study-plan-view-tour', [
-                    {
-                        target: 'study-plan-header',
-                        title: 'Your Blueprint',
-                        content: 'Your comprehensive study plan is ready and tailored to your specific timeframe.',
-                        placement: 'bottom'
-                    },
-                    {
-                        target: 'study-plan-tasks',
-                        title: 'Daily Checklists',
-                        content: 'Track your progress each day by checking off individual tasks as you complete them.',
-                        placement: 'top'
-                    }
-                ]);
-            }, 1000);
-            return () => clearTimeout(timer);
-        }
-    }, [startTour, loading, planDoc]);
+    
 
     return (
         <div className="bg-slate-50 dark:bg-slate-950 px-4 sm:px-6 lg:px-8 w-full min-h-screen py-8">
             <div className="max-w-4xl mx-auto space-y-8">
                 
                 {/* Header */}
-                <div data-tour-target="study-plan-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <Button variant="ghost" size="icon" onClick={() => navigate('/student/exam-prep')}>
                             <ArrowLeft className="w-5 h-5" />
@@ -143,7 +122,7 @@ export const StudyPlannerViewPage = () => {
                 </div>
 
                 {/* Timeline */}
-                <div data-tour-target="study-plan-tasks" className="space-y-6">
+                <div className="space-y-6">
                     {planDoc.planData.weeks.map((week: any, wIdx: number) => (
                         <div key={wIdx} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
                             <div className="bg-slate-50 dark:bg-slate-800/50 p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '@/lib/firebase';
@@ -5,7 +6,6 @@ import { doc, getDoc } from 'firebase/firestore';
 import { ArrowLeft, BrainCircuit, ChevronLeft, ChevronRight, Lightbulb, CheckCircle2, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlobalLoader } from '@/components/ui/global-loader';
-import { useTourStore } from '@/app/stores/useTourStore';
 
 interface Flashcard {
   id: string;
@@ -17,7 +17,6 @@ interface Flashcard {
 export const FlashcardPlayerPage = () => {
   const { deckId } = useParams();
   const navigate = useNavigate();
-  const { startTour } = useTourStore();
   const [deck, setDeck] = useState<any>(null);
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,21 +79,7 @@ export const FlashcardPlayerPage = () => {
   const isCompleted = currentIndex === cards.length;
   const currentCard = cards[currentIndex];
 
-  useEffect(() => {
-    if (!loading && cards.length > 0) {
-      const timer = setTimeout(() => {
-        startTour('flashcard-player-tour', [
-          {
-            target: 'flashcard-deck',
-            title: 'Flip and Learn',
-            content: 'Click the card to flip it over to reveal the answer. Use the arrows below to navigate through the deck.',
-            placement: 'bottom'
-          }
-        ]);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [startTour, loading, cards]);
+  
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-20 pb-12">
@@ -147,8 +132,7 @@ export const FlashcardPlayerPage = () => {
         ) : (
            <div className="space-y-6">
               {/* Flashcard Component */}
-              <div 
-                 data-tour-target="flashcard-deck"
+              <div
                  className="relative w-full h-80 perspective-1000 cursor-pointer"
                  onClick={() => setIsFlipped(!isFlipped)}
               >

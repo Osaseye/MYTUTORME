@@ -22,7 +22,6 @@ interface CertificateResult {
 export const VerifyCertificatePage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryCode = searchParams.get('code') || '';
-  
   const [code, setCode] = useState(queryCode);
   const [isVerifying, setIsVerifying] = useState(false);
   const [result, setResult] = useState<CertificateResult | null>(null);

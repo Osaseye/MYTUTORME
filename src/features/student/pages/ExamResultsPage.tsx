@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { 
   BarChart,
   Map,
@@ -9,46 +10,31 @@ import {
   ArrowRight,
   Loader2,
   XCircle,
-  BookOpen
+  BookOpen,
+  Sparkles,
+  Share2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useParams } from 'react-router-dom';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { useTourStore } from '@/app/stores/tourStore';
+import { toast } from 'sonner';
 
 export const ExamResultsPage = () => {
   const { attemptId } = useParams();
   const [attemptData, setAttemptData] = useState<any>(null);
   const [quizData, setQuizData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { startTour } = useTourStore();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      startTour('student-exam-results', [
-        {
-          target: '[data-tour-target="exam-score-overview"]',
-          title: 'Score Overview',
-          content: 'See how well you did overall, including your final score and passed/failed status.',
-          placement: 'bottom'
-        },
-        {
-          target: '[data-tour-target="exam-topic-breakdown"]',
-          title: 'Topic Breakdown',
-          content: 'Find out which specific topics you mastered and which ones need more review.',
-          placement: 'left'
-        },
-        {
-          target: '[data-tour-target="exam-question-review"]',
-          title: 'Question Review',
-          content: 'Review each question to see what you got right or wrong, and read explanations to learn from your mistakes.',
-          placement: 'top'
-        }
-      ]);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [startTour]);
+  const handleShare = () => {
+    if (!attemptData?.quizId) {
+      toast.error('Quiz ID not found');
+      return;
+    }
+    const shareUrl = `${window.location.origin}/public/exam/${attemptData.quizId}`;
+    navigator.clipboard.writeText(shareUrl);
+    toast.success('Share link copied to clipboard!');
+  };
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -238,7 +224,9 @@ export const ExamResultsPage = () => {
                                       {i + 1}
                                    </div>
                                    <div className="flex-1">
-                                      <p className="text-slate-900 dark:text-white font-medium mb-3">{q.question}</p>
+                                        <div className="text-slate-900 dark:text-white font-medium mb-3 prose dark:prose-invert max-w-none">
+                                            <ReactMarkdown>{q.question}</ReactMarkdown>
+                                        </div>
                                       
                                       <div className={`text-sm p-3 rounded-lg mb-2 ${isCorrect ? 'bg-green-100/50 text-green-800' : 'bg-red-100/50 text-red-800'}`}>
                                          <span className="font-bold mr-2">Your Answer:</span>
@@ -247,18 +235,28 @@ export const ExamResultsPage = () => {
                                       </div>
 
                                       {!isCorrect && (
-                                         <div className="text-sm p-3 rounded-lg bg-green-100/50 text-green-800 border border-green-200">
+                                         <div className="text-sm p-3 rounded-lg bg-green-100/50 text-green-800 border border-green-200 mb-2">
                                             <span className="font-bold mr-2">Correct Answer:</span>
                                             {q.correctAnswer}
                                             <CheckCircle className="w-4 h-4 inline ml-2"/>
                                          </div>
                                       )}
 
-                                      {q.explanation && !isCorrect && (
-                                         <div className="mt-3 text-sm text-slate-600 dark:text-slate-400 italic">
-                                            <span className="font-semibold not-italic">Explanation: </span>
-                                            {q.explanation}
-                                         </div>
+                                      {(!isCorrect && q.explanation) && (
+                                           <div className="text-sm text-slate-600 dark:text-slate-400 italic prose prose-sm dark:prose-invert max-w-none">
+                                              <span className="font-semibold not-italic text-slate-800 dark:text-slate-200 block mb-1">Explanation: </span>
+                                              <ReactMarkdown>{q.explanation}</ReactMarkdown>
+                                           </div>
+                                      )}
+                                      
+                                      {!isCorrect && (
+                                        <div className="mt-3">
+                                            <Link to={`/student/ai-tutor?topic=${encodeURIComponent(q.topic || (quizData.subject + ' ' + quizData.topic))}&question=${encodeURIComponent(q.question)}`}>
+                                                <Button size="sm" variant="outline" className="bg-indigo-50 border-blue-200 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">
+                                                    <Sparkles className="w-4 h-4 mr-2" /> AI Deep Dive
+                                                </Button>
+                                            </Link>
+                                        </div>
                                       )}
                                    </div>
                                 </div>
@@ -341,13 +339,20 @@ export const ExamResultsPage = () => {
 
         </div>
 
-        <div className="mt-8 flex justify-center gap-4">
-           <Link to="/student/dashboard">
-               <Button variant="secondary" className="px-6 py-6 rounded-full text-base">
-                   Back to Dashboard
+        <div className="mt-8 flex flex-col md:flex-row justify-center gap-4">
+           <Link to="/student/dashboard" className="w-full md:w-auto">
+               <Button variant="secondary" className="px-6 py-6 rounded-[2rem] text-base w-full">
+                  Back to Dashboard
                </Button>
            </Link>
-           <Button className="px-6 py-6 rounded-full text-base bg-primary hover:bg-green-700 flex items-center gap-2 shadow-lg shadow-primary/30">
+           <Button 
+             onClick={handleShare}
+             variant="outline" 
+             className="px-6 py-6 rounded-[2rem] text-base flex w-full md:w-auto items-center justify-center gap-2 border-primary/20 text-primary hover:bg-primary/5"
+           >
+             <Share2 className="w-5 h-5" /> Share Exam
+           </Button>
+           <Button className="px-6 py-6 rounded-[2rem] text-base w-full md:w-auto bg-primary hover:bg-green-700 flex items-center justify-center gap-2 shadow-lg shadow-primary/30">
                Start Next Topic <ArrowRight className="w-5 h-5" />
            </Button>
         </div>

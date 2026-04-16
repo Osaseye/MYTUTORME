@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
@@ -19,14 +19,11 @@ import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firesto
 import { calculateCumulativeGPA } from '../utils/gpaUtils';
 import { httpsCallable } from 'firebase/functions';
 import { toast } from 'sonner';
-import { useTourStore, TourStep } from '@/app/stores/useTourStore';
 
 export const StudentDashboard = () => {
   const { user } = useAuthStore();
   const studentProfile = user as StudentProfile;
   const navigate = useNavigate();
-  const { startTour } = useTourStore();
-  
   // Dynamic States
   const [currentCGPA, setCurrentCGPA] = useState(studentProfile?.currentCGPA || 0.0);
   const [targetCGPA, setTargetCGPA] = useState(studentProfile?.targetCGPA || 0.0);
@@ -141,40 +138,6 @@ export const StudentDashboard = () => {
     fetchData();
   }, [user]);
 
-  useEffect(() => {
-    // Give elements a tiny bit of time to render, then potentially start the tour
-    const timer = setTimeout(() => {
-      const studentSteps: TourStep[] = [
-        {
-          title: "Welcome to MyTutorMe!",
-          content: "Let's take a quick tour of your student dashboard to help you get started.",
-          placement: "center"
-        },
-        {
-          targetId: "gpa-tracker",
-          title: "Track your GPA",
-          content: "Keep an eye on your academic performance right from your dashboard.",
-          placement: "bottom"
-        },
-        {
-          targetId: "recent-courses",
-          title: "Pick up where you left off",
-          content: "Access your recently viewed and active courses here.",
-          placement: "top"
-        },
-        {
-          targetId: "performance-chart",
-          title: "Analyze your progress",
-          content: "Your quiz scores and overall performance are visualized here to help you identify areas for improvement.",
-          placement: "left"
-        }
-      ];
-      startTour('student_dashboard_v1', studentSteps);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [startTour]);
-
   const student = {
     name: studentProfile?.username || studentProfile?.displayName || "Student",
     currentCGPA: currentCGPA,
@@ -218,7 +181,7 @@ export const StudentDashboard = () => {
         </div>
 
         {/* Target CGPA Widget */}
-        <div data-tour-target="gpa-tracker" className="bg-white dark:bg-card-bg-dark rounded-3xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between shadow-sm relative overflow-hidden h-full min-h-[280px]">
+        <div className="bg-white dark:bg-card-bg-dark rounded-3xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between shadow-sm relative overflow-hidden h-full min-h-[280px]">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white font-display">Target CGPA</h3>
@@ -251,7 +214,7 @@ export const StudentDashboard = () => {
         <div className="lg:col-span-2 space-y-8">
           
           {/* Chart Section */}
-          <div data-tour-target="performance-chart" className="bg-white dark:bg-card-bg-dark border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm">
+          <div className="bg-white dark:bg-card-bg-dark border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm">
              <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
                 <div>
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white font-display">Performance Overview</h2>
@@ -274,7 +237,7 @@ export const StudentDashboard = () => {
           </div>
 
           {/* Recent Courses */}
-          <div data-tour-target="recent-courses" className="space-y-4">
+          <div className="space-y-4">
              <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white font-display">Pick up where you left off</h2>
                 <Button onClick={() => navigate('/student/courses')} variant="link" className="text-primary font-medium hover:text-primary-dark">View All Courses</Button>

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, getCountFromServer, getAggregateFromServer, sum, or } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { 
@@ -133,7 +133,7 @@ export const AdminDashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 font-display">
-            Admin Overview 🇳🇬
+            Admin Overview ????
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
             Monitoring MyTutorMe growth across Nigeria.
@@ -190,14 +190,14 @@ export const AdminDashboard = () => {
           <CardContent>
             <div className="flex items-baseline justify-between">
               <div>
-                <div className="text-2xl font-bold font-display">₦{(stats?.platformCuts || 0).toLocaleString()}</div>
+                <div className="text-2xl font-bold font-display">?{(stats?.platformCuts || 0).toLocaleString()}</div>
                 <p className="text-xs text-green-600 flex items-center gap-1 font-medium mt-1">
                   <TrendingUp className="w-3 h-3" />
                   Net Income (Platform)
                 </p>
               </div>
               <div className="text-right">
-                <div className="text-sm font-bold text-slate-400">Gross: ₦{(stats?.totalRevenue || 0).toLocaleString()}</div>
+                <div className="text-sm font-bold text-slate-400">Gross: ?{(stats?.totalRevenue || 0).toLocaleString()}</div>
               </div>
             </div>
           </CardContent>

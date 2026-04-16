@@ -21,7 +21,6 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { usePlanGate } from '@/hooks/usePlanGate';
-import { useTourStore, TourStep } from '@/app/stores/useTourStore';
 
 // UI component code
 
@@ -40,7 +39,6 @@ interface HistoryItem {
 
 export const AssignmentHelperPage = () => {
   const { hasAccess } = usePlanGate('guided_assignments');
-  const { startTour } = useTourStore();
   const [question, setQuestion] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -60,37 +58,12 @@ export const AssignmentHelperPage = () => {
         console.error('Failed to parse history');
       }
     }
-
-    const timer = setTimeout(() => {
-      const steps: TourStep[] = [
-        {
-          title: "Assignment Helper",
-          content: "Stuck on a tricky problem? Get guided step-by-step solutions instead of just answers.",
-          placement: "center"
-        },
-        {
-          targetId: "upload-area",
-          title: "Upload or Type",
-          content: "Upload a picture of your assignment, or type out the math/science equation manually.",
-          placement: "bottom"
-        },
-        {
-          targetId: "solve-button",
-          title: "Solve",
-          content: "Click analyzing, and AI will break down the specific concepts required to solve it.",
-          placement: "top"
-        }
-      ];
-      startTour('assignment_helper_page_v1', steps);
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, [startTour]);
+  }, []);
 
   const saveToHistory = (q: string, res: string) => {
     const newItem: HistoryItem = {
       id: Date.now().toString(),
-      question: q.substring(0, 150) + (q.length > 150 ? '...' : ''), // Save question summary
+      question: q.substring(0, 150) + (q.length > 150 ? '...' : ''), // Save question summarys
       result: res,
       date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };

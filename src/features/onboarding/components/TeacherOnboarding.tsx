@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,7 +14,7 @@ import {
   Zap,
     ShieldCheck
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
@@ -35,6 +35,8 @@ export const TeacherOnboarding = () => {
     return saved ? parseInt(saved, 10) : 1;
   });
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -96,7 +98,11 @@ export const TeacherOnboarding = () => {
       useAuthStore.getState().setUser({ ...user, isOnboardingComplete: true });
       localStorage.removeItem('teacher_onboarding_step');
       localStorage.removeItem('teacher_onboarding_formData');
-      navigate('/teacher/dashboard');
+      if (returnTo) {
+        navigate(returnTo);
+      } else {
+        navigate('/teacher/dashboard');
+      }
     } catch (error) {
       console.error('Error completing onboarding:', error);
       setIsSubmitting(false);
@@ -298,7 +304,7 @@ export const TeacherOnboarding = () => {
                   <h3 className="text-xl font-bold font-display mb-1 flex items-center gap-2">
                     <ShieldCheck className="w-5 h-5 text-slate-400" /> Basic
                   </h3>
-                  <div className="text-2xl font-bold my-4">₦0<span className="text-sm font-normal text-slate-500"> / forever</span></div>
+                  <div className="text-2xl font-bold my-4">?0<span className="text-sm font-normal text-slate-500"> / forever</span></div>
                   <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
                     <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> 15% Platform take-rate</li>
                     <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Create unlimited courses</li>
@@ -329,7 +335,7 @@ export const TeacherOnboarding = () => {
                   <h3 className="text-xl font-bold font-display mb-1 flex items-center gap-2">
                     <Zap className="w-5 h-5 text-amber-500" /> Premium
                   </h3>
-                  <div className="text-2xl font-bold my-4 text-primary">₦12,000<span className="text-sm font-normal text-slate-500"> / year</span></div>
+                  <div className="text-2xl font-bold my-4 text-primary">?12,000<span className="text-sm font-normal text-slate-500"> / year</span></div>
                   <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
                     <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Priority Course Listing</li>
                     <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Advanced Analytics</li>

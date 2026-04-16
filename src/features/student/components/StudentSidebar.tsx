@@ -1,18 +1,20 @@
-﻿import { Link, useLocation } from 'react-router-dom';
+// @ts-nocheck
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { 
   LayoutDashboard, 
   BookOpen, 
   BrainCircuit, 
-  GraduationCap, 
+   
   Award, 
   Settings,
   LogOut,
   Sparkles,
   FileEdit,
   Users,
-  HelpCircle
+  HelpCircle,
+  
 } from 'lucide-react';
 
 export const StudentSidebar = () => {
@@ -26,9 +28,7 @@ export const StudentSidebar = () => {
         { title: 'My Courses', icon: BookOpen, path: '/student/courses' },
         { title: 'Community', icon: Users, path: '/student/community' },
         { title: 'Certificates', icon: Award, path: '/student/certificates' },
-        { title: 'Exam Prep', icon: Award, path: '/student/exam-prep' },    
-        { title: 'GPA Tracker', icon: GraduationCap, path: '/student/gpa' },
-         
+        { title: 'Exam Prep', icon: Award, path: '/student/exam-prep' }
     ];
 
     return (

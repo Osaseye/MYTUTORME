@@ -1,4 +1,4 @@
-﻿import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { ProtectedRoute } from './protected-route';
 import { paths } from './paths';
@@ -13,6 +13,8 @@ import { TeacherLayout, TeacherDashboard, TeacherCoursesPage, TeacherCourseDetai
 import { AdminLayout, AdminDashboard, AdminLoginPage, UserManagementPage, CourseModerationPage, AdminCourseDetailsPage, FinancialsPage, SettingsPage as AdminSettingsPage, AdminSupportPage } from '@/features/admin';
 import { SupportPage } from '@/pages/SupportPage';
 import { VerifyCertificatePage } from '@/pages/VerifyCertificatePage';
+import { PublicExamPage } from '@/pages/PublicExamPage';
+import { NotificationsPage } from '@/pages/NotificationsPage';
 
 export const AppRoutes = () => {
   return (
@@ -23,6 +25,7 @@ export const AppRoutes = () => {
         <Route path="/" element={<LandingPage />} />
         <Route path={paths.support} element={<SupportPage />} />
         <Route path={paths.verifyCertificate} element={<VerifyCertificatePage />} />
+        <Route path="/public/exam/:quizId" element={<PublicExamPage />} />
         <Route element={<AuthLayout />}>
           <Route path={paths.auth.login} element={<LoginPage />} />
           <Route path={paths.auth.register} element={<RegisterPage />} />
@@ -51,11 +54,14 @@ export const AppRoutes = () => {
           <Route path={paths.student.certificates} element={<MyCertificatesPage />} />
           <Route path="/student/certificates/:id" element={<CertificatePage />} />
           <Route path={paths.student.examPrep} element={<ExamPrepPage />} />
+
           <Route path="/student/exam-prep/config" element={<ExamConfigPage />} />
           <Route path="/student/exam-prep/active/:quizId" element={<ExamTakingPage />} />
           <Route path="/student/exam-prep/results/:attemptId" element={<ExamResultsPage />} />            <Route path="/student/exam-prep/flashcards" element={<FlashcardConfigPage />} />
             <Route path="/student/exam-prep/flashcards/:deckId" element={<FlashcardPlayerPage />} />          <Route path="/student/exam-prep/planner-config" element={<StudyPlannerConfigPage />} />
-          <Route path="/student/exam-prep/planner/:planId" element={<StudyPlannerViewPage />} />          <Route path={paths.student.settings} element={<SettingsPage />} />
+          <Route path="/student/exam-prep/planner/:planId" element={<StudyPlannerViewPage />} />
+          <Route path={paths.student.settings} element={<SettingsPage />} />
+          <Route path={paths.student.notifications} element={<NotificationsPage userRole="student" />} />
         </Route>
       </Route>
 
@@ -70,6 +76,7 @@ export const AppRoutes = () => {
           <Route path={paths.teacher.earnings} element={<EarningsPage />} />
           <Route path={paths.teacher.community} element={<TeacherCommunityPage />} />
           <Route path={paths.teacher.settings} element={<TeacherSettingsPage />} />
+          <Route path={paths.teacher.notifications} element={<NotificationsPage userRole="teacher" />} />
           {/* Add other teacher routes here as we build them */}
         </Route>
       </Route>

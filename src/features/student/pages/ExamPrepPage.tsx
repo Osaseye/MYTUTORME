@@ -23,14 +23,12 @@ import { toast } from 'sonner';
 
 import { Link, useNavigate } from 'react-router-dom';
 import { usePlanGate } from '@/hooks/usePlanGate';
-import { useTourStore, TourStep } from '@/app/stores/useTourStore';
 
 export const ExamPrepPage = () => {
   const { hasAccess } = usePlanGate('premium_mock_exams');
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { startTour } = useTourStore();
-  const [activeTab, setActiveTab] = useState<'exams' | 'flashcards' | 'planner'>('exams');
+  const [activeTab, setActiveTab] = useState<'exams' | 'flashcards' | 'history' | 'planner'>('exams');
   
   
   const [studyPlans, setStudyPlans] = useState<any[]>([]);
@@ -46,6 +44,7 @@ export const ExamPrepPage = () => {
     focusArea: 'None',
     streak: 0
   });
+  const [examHistory, setExamHistory] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchDecks = async () => {
@@ -87,8 +86,10 @@ export const ExamPrepPage = () => {
         let attemptCount = 0;
         const topicScores: Record<string, {score: number, count: number}> = {};
         const activityDates: Set<string> = new Set();
+        const examDocs: any[] = [];
 
         snapshot.forEach(doc => {
+          examDocs.push({ id: doc.id, ...doc.data() });
           const data = doc.data();
           totalTime += data.timeTaken || 0;
           const qCount = data.answers ? Object.keys(data.answers).length : 0;
@@ -169,37 +170,20 @@ export const ExamPrepPage = () => {
             streak
         });
 
+        // Sort exam history by completedAt (or lastUpdated if paused) descending
+        const sortedExams = examDocs.sort((a: any, b: any) => {
+          const dateA = (a.completedAt?.toMillis?.() || a.lastUpdated?.toMillis?.()) || 0;
+          const dateB = (b.completedAt?.toMillis?.() || b.lastUpdated?.toMillis?.()) || 0;
+          return dateB - dateA;
+        });
+        setExamHistory(sortedExams);
+
       } catch (err) {
         console.error("Failed to load stats", err);
       }
     };
     fetchStats();
-
-    const timer = setTimeout(() => {
-      const steps: TourStep[] = [
-        {
-          title: "Exam Hub",
-          content: "Welcome to Exam Prep! This is where you can test your knowledge, prepare for exams, and build study tools.",
-          placement: "center"
-        },
-        {
-          targetId: "exam-menu-tabs",
-          title: "Prep Tools",
-          content: "Switch between Mock Exams, Flashcards, and Study Planning.",
-          placement: "bottom"
-        },
-        {
-          targetId: "create-resource-btn",
-          title: "Generate Materials",
-          content: "Use AI to automatically generate challenging quizzes and custom flashcards directly from your topics.",
-          placement: "left"
-        }
-      ];
-      startTour('exam_prep_page_v1', steps);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [user, startTour]);
+  }, [user]);
 
   const formatTime = (seconds: number) => {
       const h = Math.floor(seconds / 3600);
@@ -302,7 +286,6 @@ export const ExamPrepPage = () => {
            </div>
            {(!hasAccess && studyPlans.length >= 2) ? (
              <Button
-               data-tour-target="create-resource-btn"
                className="bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed"
                title="Upgrade to create more study sessions"
              >
@@ -310,7 +293,7 @@ export const ExamPrepPage = () => {
                 New Study Session
              </Button>
            ) : (
-             <div data-tour-target="create-resource-btn" onClick={(e) => handleCreateClick(e, '/student/exam-prep/config', 'mockExams')}>
+             <div onClick={(e) => handleCreateClick(e, '/student/exam-prep/config', 'mockExams')}>
                <Button className="bg-primary hover:bg-primary/90">
                   <Plus className="w-4 h-4 mr-2" />
                   New Study Session
@@ -321,41 +304,41 @@ export const ExamPrepPage = () => {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
-           <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">
-              <Clock className="w-6 h-6" />
-           </div>
-           <div>
-              <p className="text-xs text-slate-500 uppercase font-medium">Study Time</p>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{formatTime(stats.studyTime)}</h3>
-           </div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
-           <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center text-green-600 dark:text-green-400">
-              <CheckCircle className="w-6 h-6" />
-           </div>
-           <div>
-              <p className="text-xs text-slate-500 uppercase font-medium">Questions Solved</p>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{stats.questionsSolved}</h3>
-           </div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
-           <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center text-purple-600 dark:text-purple-400">
-              <TrendingUp className="w-6 h-6" />
-           </div>
-           <div>
-              <p className="text-xs text-slate-500 uppercase font-medium">Avg. Score</p>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{stats.avgScore}%</h3>
-           </div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4 overflow-hidden">
-           <div className="w-12 h-12 shrink-0 bg-orange-50 dark:bg-orange-900/20 rounded-full flex items-center justify-center text-orange-600 dark:text-orange-400">
-              <AlertCircle className="w-6 h-6" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="bg-white dark:bg-slate-900 p-3 md:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3 md:gap-4">
+           <div className="w-8 h-8 md:w-12 md:h-12 shrink-0 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">
+              <Clock className="w-4 h-4 md:w-6 md:h-6" />
            </div>
            <div className="min-w-0 flex-1">
-              <p className="text-xs text-slate-500 uppercase font-medium truncate">Focus Area</p>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white truncate" title={stats.focusArea}>{stats.focusArea}</h3>
+              <p className="text-[10px] md:text-xs text-slate-500 uppercase font-medium truncate">Study Time</p>
+              <h3 className="text-base md:text-xl font-bold text-slate-900 dark:text-white truncate">{formatTime(stats.studyTime)}</h3>
+           </div>
+        </div>
+        <div className="bg-white dark:bg-slate-900 p-3 md:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3 md:gap-4">
+           <div className="w-8 h-8 md:w-12 md:h-12 shrink-0 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center text-green-600 dark:text-green-400">
+              <CheckCircle className="w-4 h-4 md:w-6 md:h-6" />
+           </div>
+           <div className="min-w-0 flex-1">
+              <p className="text-[10px] md:text-xs text-slate-500 uppercase font-medium truncate">Questions</p>
+              <h3 className="text-base md:text-xl font-bold text-slate-900 dark:text-white truncate">{stats.questionsSolved}</h3>
+           </div>
+        </div>
+        <div className="bg-white dark:bg-slate-900 p-3 md:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3 md:gap-4">
+           <div className="w-8 h-8 md:w-12 md:h-12 shrink-0 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center text-purple-600 dark:text-purple-400">
+              <TrendingUp className="w-4 h-4 md:w-6 md:h-6" />
+           </div>
+           <div className="min-w-0 flex-1">
+              <p className="text-[10px] md:text-xs text-slate-500 uppercase font-medium truncate">Avg. Score</p>
+              <h3 className="text-base md:text-xl font-bold text-slate-900 dark:text-white truncate">{stats.avgScore}%</h3>
+           </div>
+        </div>
+        <div className="bg-white dark:bg-slate-900 p-3 md:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3 md:gap-4 overflow-hidden">
+           <div className="w-8 h-8 md:w-12 md:h-12 shrink-0 bg-orange-50 dark:bg-orange-900/20 rounded-full flex items-center justify-center text-orange-600 dark:text-orange-400">
+              <AlertCircle className="w-4 h-4 md:w-6 md:h-6" />
+           </div>
+           <div className="min-w-0 flex-1">
+              <p className="text-[10px] md:text-xs text-slate-500 uppercase font-medium truncate">Focus Area</p>
+              <h3 className="text-sm md:text-lg font-bold text-slate-900 dark:text-white truncate" title={stats.focusArea}>{stats.focusArea}</h3>
            </div>
         </div>
       </div>
@@ -367,7 +350,7 @@ export const ExamPrepPage = () => {
         <div className="flex-1 space-y-6">
            
            {/* Navigation Tabs */}
-           <div data-tour-target="exam-menu-tabs" className="flex border-b border-slate-200 dark:border-slate-800 space-x-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
+           <div className="flex border-b border-slate-200 dark:border-slate-800 space-x-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
               <button 
                 onClick={() => setActiveTab('exams')}
                 className={`pb-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'exams' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
@@ -379,6 +362,12 @@ export const ExamPrepPage = () => {
                 className={`pb-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'flashcards' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
               >
                 Flashcards
+              </button>
+              <button 
+                onClick={() => setActiveTab('history')}
+                className={`pb-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'history' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+              >
+                Exam History
               </button>
               <button 
                 onClick={() => setActiveTab('planner')}
@@ -410,6 +399,72 @@ export const ExamPrepPage = () => {
                          </Button>
                       </div>
                    </div>
+                </div>
+              )}
+
+              {activeTab === 'history' && (
+                <div className="space-y-6">
+                  {examHistory.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
+                        <Calendar className="w-10 h-10" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Exam History</h3>
+                      <p className="text-slate-500 max-w-md mx-auto">You haven't completed any mock exams yet. Start practicing to build your exam history.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <h3 className="font-bold text-slate-900 dark:text-white mb-4">Past Exams</h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="border-b border-slate-200 dark:border-slate-800">
+                            <tr className="text-slate-600 dark:text-slate-400">
+                              <th className="text-left py-3 px-4 font-medium">Exam</th>
+                              <th className="text-left py-3 px-4 font-medium">Score</th>
+                              <th className="text-left py-3 px-4 font-medium">Time Taken</th>
+                              <th className="text-left py-3 px-4 font-medium">Completed</th>
+                              <th className="text-left py-3 px-4 font-medium">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {examHistory.map((exam) => (
+                              <tr key={exam.id} className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                <td className="py-3 px-4 text-slate-900 dark:text-white font-medium capitalize">
+                                    <div className="flex flex-col gap-1">
+                                      <span>
+                                          {exam.subject || 'Mock Exam'}
+                                          {exam.topic ? ` - ${exam.topic}` : ''}
+                                      </span>
+                                      {exam.status === 'paused' && (
+                                        <span className="w-fit text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-500 rounded-full font-bold">
+                                          IN PROGRESS
+                                        </span>
+                                      )}
+                                    </div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full font-semibold">
+                                    {typeof exam.score === 'number' && exam.status !== 'paused' ? `${Math.round(exam.score)}%` : '-'}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{exam.status === 'paused' ? 'Incomplete' : formatTime(exam.timeTaken || 0)}</td>
+                                <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
+                                  {(exam.completedAt || exam.lastUpdated) ? new Date((exam.completedAt || exam.lastUpdated).toDate()).toLocaleDateString() : '-'}
+                                </td>
+                                <td className="py-3 px-4">
+                                      {exam.status === 'paused' ? (
+                                        <Link to={`/student/exam-prep/active/${exam.quizId}`} className="text-secondary hover:underline font-bold text-sm">Resume Exam</Link>
+                                      ) : (
+                                          <Link to={`/student/exam-prep/results/${exam.id}`} className="text-primary hover:underline font-medium text-sm">View Results</Link>
+                                      )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

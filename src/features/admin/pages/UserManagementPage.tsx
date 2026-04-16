@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Check,
   X,
@@ -477,7 +477,7 @@ export const UserManagementPage = () => {
                                                     </div>
                                                     <div>
                                                         <p className="font-medium text-slate-900 dark:text-slate-100">Academic Level</p>
-                                                        <p className="text-slate-500 capitalize">{selectedUser.level} • {selectedUser.institution || 'No school provided'}</p>
+                                                        <p className="text-slate-500 capitalize">{selectedUser.level} � {selectedUser.institution || 'No school provided'}</p>
                                                     </div>
                                                 </div>
                                             )}

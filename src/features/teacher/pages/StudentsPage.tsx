@@ -1,4 +1,4 @@
-﻿import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Search, Mail, MoreVertical, Filter, BrainCircuit, Lock, ExternalLink, Activity } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -293,3 +293,5 @@ export const StudentsPage = () => {
     </div>
   );
 };
+
+

@@ -1,4 +1,4 @@
-ï»¿import { useState } from 'react'; 
+import { useState } from 'react'; 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
@@ -158,7 +158,7 @@ export const LoginForm = () => {
             <div className="relative">
                 <Input
                 id="password"
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="••••••••"
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 {...register('password')}

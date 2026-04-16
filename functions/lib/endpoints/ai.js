@@ -113,7 +113,7 @@ exports.askAiTutor = functions.https.onCall(async (request) => {
     }
     // Build context
     const userContext = await (0, ai_context_1.getAiTutorContext)(uid);
-    let systemPrompt = `You are an expert ${currentSubject || 'academic'} tutor for Nigerian students.
+    let systemPrompt = `You are Nova, an expert AI tutor and  ${currentSubject || 'academic'} tutor for Nigerian students.
     Adapt your teaching style to the subject.
     Connect concepts to relevant real-world examples.
     Confirm understanding after explanations.`;
@@ -137,7 +137,12 @@ exports.askAiTutor = functions.https.onCall(async (request) => {
     const chat = model.startChat({ history: geminiHistory });
     const parts = [];
     if (images && images.length > 0) {
-        parts.push(...images.map((img) => ({ inlineData: { data: img.data, mimeType: img.mimeType } })));
+        parts.push(...images.map((img) => ({
+            inlineData: {
+                data: img.data.split(',')[1] || img.data,
+                mimeType: img.mimeType
+            }
+        })));
     }
     parts.push({ text: messageContent });
     const userMessage = { role: 'user', content: messageContent, timestamp: Date.now() };

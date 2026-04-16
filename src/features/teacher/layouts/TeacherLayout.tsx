@@ -13,11 +13,13 @@ import {
   FileText,
   Users,
   HelpCircle,
-  Sparkles
+  Sparkles,
+  Bell
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { NotificationDropdown } from '@/components/shared/NotificationDropdown';
+import { paths } from '@/app/routes/paths';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -172,7 +174,12 @@ export const TeacherLayout = () => {
                             </div>
                         )}
 
-                        <NotificationDropdown userRole="teacher" />
+                        <div className="hidden md:block">
+                            <NotificationDropdown userRole="teacher" />
+                        </div>
+                        <Link to={paths.teacher.notifications} className="md:hidden relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors dark:text-slate-400 dark:hover:bg-slate-800">
+                            <Bell className="w-5 h-5" />
+                        </Link>
                         
                         <div className="h-6 w-px bg-slate-200 dark:bg-slate-800"></div>
                         

@@ -1,4 +1,4 @@
-﻿export const paths = {
+export const paths = {
   support: '/support',
   verifyCertificate: '/verify',
   auth: {
@@ -18,8 +18,10 @@
     gpa: '/student/gpa',
     certificates: '/student/certificates',
     examPrep: '/student/exam-prep',
+    examHistory: '/student/exam-history',
     community: '/student/community',
     settings: '/student/settings',
+    notifications: '/student/notifications',
   },
   teacher: {
     dashboard: '/teacher/dashboard',
@@ -31,6 +33,7 @@
     resources: '/teacher/resources',
     community: '/teacher/community',
     settings: '/teacher/settings',
+    notifications: '/teacher/notifications',
     earnings: '/teacher/earnings',
     pending: '/teacher/pending',
   },

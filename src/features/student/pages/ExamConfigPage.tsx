@@ -22,33 +22,11 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { useExamGenerator } from '../hooks/useExamGenerator';
-import { useTourStore } from '@/app/stores/tourStore';
 
 export const ExamConfigPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { generateExam, isGenerating } = useExamGenerator();
-  const { startTour } = useTourStore();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      startTour('student-exam-config', [
-        {
-          target: '[data-tour-target="exam-config-settings"]',
-          title: 'Exam Configuration',
-          content: 'Customize your exam source, difficulty, and duration to target specific goals.',
-          placement: 'right'
-        },
-        {
-          target: '[data-tour-target="exam-config-summary"]',
-          title: 'Session Summary',
-          content: 'Review the details of your mock exam before starting. Ready, set, go!',
-          placement: 'left'
-        }
-      ]);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [startTour]);
   
   const [userDecks, setUserDecks] = useState<any[]>([]);
   const [userPlans, setUserPlans] = useState<any[]>([]);
@@ -216,7 +194,7 @@ export const ExamConfigPage = () => {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Configuration Panel */}
-                  <div data-tour-target="exam-config-settings" className="lg:col-span-2 space-y-6">
+                  <div className="lg:col-span-2 space-y-6">
                     
                     {/* Source Selection */}
                     <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
@@ -328,7 +306,7 @@ export const ExamConfigPage = () => {
                                         type="file" 
                                         className="hidden" 
                                         ref={fileInputRef} 
-                                        accept="image/*" 
+                                        accept="image/*, .pdf, .txt, .doc, .docx" 
                                         multiple
                                         onChange={handleFileChange}
                                     />
@@ -337,11 +315,14 @@ export const ExamConfigPage = () => {
                                 {selectedFiles.length > 0 && (
                                     <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                         {selectedFiles.map((file, idx) => (
-                                            <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
+                                            <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-2 text-center">
                                                 {file.mimeType.startsWith('image/') ? (
                                                     <img src={file.data} alt="Upload" className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <FileText className="w-8 h-8 text-slate-400" />
+                                                    <div className="flex flex-col items-center">
+                                                        <FileText className="w-8 h-8 text-slate-400 mb-2" />
+                                                        <span className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">{file.name || 'Document'}</span>
+                                                    </div>
                                                 )}
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                     <button onClick={(e) => { e.stopPropagation(); removeFile(idx); }} className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600">
@@ -457,7 +438,7 @@ export const ExamConfigPage = () => {
                 </div>
 
                 {/* Summary Panel */}
-                <div data-tour-target="exam-config-summary" className="lg:col-span-1">
+                <div className="lg:col-span-1">
                     <div className="sticky top-28 bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-xl border border-slate-200 dark:border-slate-800">
                         <div className="mb-6 pb-6 border-b border-slate-100 dark:border-slate-800">
                             <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-1">Session Summary</h3>

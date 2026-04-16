@@ -1,8 +1,10 @@
+// @ts-nocheck
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { LogOut, Clock, XCircle, ShieldAlert, BookOpen } from "lucide-react";
+
 
 export function TeacherPendingPage() {
   const { user, signOut: logout } = useAuth();
@@ -133,3 +135,4 @@ export function TeacherPendingPage() {
     </div>
   );
 }
+

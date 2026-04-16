@@ -115,8 +115,7 @@ export const CommunityPage = () => {
               Connect with others, share tips, and get help.
             </p>
           </div>
-          <Button 
-            onClick={() => setShowNewPost(!showNewPost)}
+          <Button onClick={() => setShowNewPost(!showNewPost)}
             className="inline-flex items-center gap-2 bg-primary hover:bg-green-700 text-white shadow-lg"
           >
             <MessageSquare className="w-4 h-4" />
@@ -254,3 +253,4 @@ export const CommunityPage = () => {
     </div>
   );
 };
+

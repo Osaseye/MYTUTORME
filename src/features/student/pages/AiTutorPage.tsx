@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Send, 
-  Bot, 
+  Sparkles, 
   History,
   Zap,
   Volume2,
@@ -13,7 +13,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Loader2,
-  ChevronLeft
+  ChevronLeft,
+  FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollToTop } from '@/components/ui/scroll-to-top';
@@ -21,17 +22,15 @@ import { useAiTutor } from '@/features/ai-tutor/hooks/useAiTutor';
 import ReactMarkdown from 'react-markdown';
 import { usePlanGate } from '@/hooks/usePlanGate';
 import { toast } from 'sonner';
-import { useTourStore, TourStep } from '@/app/stores/useTourStore';
 
 export const AiTutorPage = () => {
     const navigate = useNavigate();
-    const { startTour } = useTourStore();
     const [showHistory, setShowHistory] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [inputValue, setInputValue] = useState('');
     const [activeSubject, setActiveSubject] = useState(''); // E.g., Mathematics
     const [activeTopic, setActiveTopic] = useState('');
-    const [selectedImages, setSelectedImages] = useState<{data: string, mimeType: string}[]>([]);
+    const [selectedImages, setSelectedImages] = useState<{data: string, mimeType: string, name: string}[]>([]);
     
     const { hasAccess } = usePlanGate('unlimited_ai');
 
@@ -59,33 +58,6 @@ export const AiTutorPage = () => {
         }
     }, [messages, streamingContent]);
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            const steps: TourStep[] = [
-                {
-                    title: "AI Tutor",
-                    content: "This is your personal AI Tutor. You can ask any question, and get personalized explanations instantly.",
-                    placement: "center"
-                },
-                {
-                    targetId: "ai-chat-input",
-                    title: "Ask a Question",
-                    content: "Type your questions here. You can also upload images of your homework or diagrams for the AI to analyze.",
-                    placement: "top"
-                },
-                {
-                    targetId: "ai-history-toggle",
-                    title: "Chat History",
-                    content: "Access your previous conversations with the AI Tutor here to review concepts.",
-                    placement: "right"
-                }
-            ];
-            startTour('ai_tutor_page_v1', steps);
-        }, 1000);
-
-        return () => clearTimeout(timer);
-    }, [startTour]);
-
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files) return;
@@ -95,7 +67,7 @@ export const AiTutorPage = () => {
             reader.onload = (event) => {
                 if (event.target?.result) {
                     const base64String = (event.target.result as string).split(',')[1];
-                    setSelectedImages(prev => [...prev, { data: base64String, mimeType: file.type }]);
+                    setSelectedImages(prev => [...prev, { data: base64String, mimeType: file.type, name: file.name }]);
                 }
             };
             reader.readAsDataURL(file);
@@ -161,8 +133,7 @@ export const AiTutorPage = () => {
                         Back
                     </button>
                     <span className="font-bold text-slate-900 dark:text-white">AI Tutor</span>
-                    <button 
-                        data-tour-target="ai-history-toggle"
+                    <button
                         onClick={() => setShowHistory(!showHistory)}
                         className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
                     >
@@ -356,10 +327,10 @@ export const AiTutorPage = () => {
                     {messages.length === 0 ? (
                         <div className="my-auto flex flex-col items-center justify-center text-center max-w-2xl mx-auto px-4 w-full">
                             <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-8 shadow-sm">
-                                <Bot className="w-10 h-10" />
+                                <Sparkles className="w-10 h-10" />
                             </div>
                             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4 font-display">How can I help you today?</h2>
-                            <p className="text-slate-500 dark:text-slate-400 mb-10 text-lg">I'm your personal AI Tutor. Ask me anything, or try an example below.</p>
+                            <p className="text-slate-500 dark:text-slate-400 mb-10 text-lg">I'm Nova, your personal AI tutor. Ask me anything, or try an example below.</p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                                 <button onClick={() => sendMessage("Explain calculus limits to me like I'm 5.")} className="text-left p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 hover:border-primary/50 hover:shadow-md transition-all text-sm text-slate-600 dark:text-slate-400">
@@ -378,7 +349,7 @@ export const AiTutorPage = () => {
                                 <div key={msg.timestamp || index} className={cn("flex gap-4 group", msg.role === 'user' ? "flex-row-reverse" : "")}>
                                     {msg.role === 'assistant' && (
                                         <div className="w-8 h-8 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-white shadow-sm mt-1">
-                                            <Bot className="w-5 h-5" />
+                                            <Sparkles className="w-5 h-5" />
                                         </div>
                                     )}
                                     {msg.role === 'user' && (
@@ -425,7 +396,7 @@ export const AiTutorPage = () => {
                             {isStreaming && (
                                 <div className="flex gap-4 group">
                                     <div className="w-8 h-8 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-white shadow-sm mt-1">
-                                        <Bot className="w-5 h-5 animate-pulse" />
+                                        <Sparkles className="w-5 h-5 animate-pulse" />
                                     </div>
                                     <div className="max-w-[85%] md:max-w-3xl">
                                         <div className="p-4 rounded-2xl bg-slate-50 da              rk:bg-slate-900 text-slate-800 dark:text-slate-100 border border-slate-100 dark:border-slate-800 rounded-tl-sm shadow-sm md:prose-lg prose-sm prose dark:prose-invert max-w-none">
@@ -450,11 +421,18 @@ export const AiTutorPage = () => {
                         {selectedImages.length > 0 && (
                             <div className="flex gap-2 p-4 pb-0 overflow-x-auto">
                                 {selectedImages.map((img, idx) => (
-                                    <div key={idx} className="relative w-20 h-20 flex-shrink-0 group">
-                                        <img src={`data:${img.mimeType};base64,${img.data}`} alt="preview" className="w-full h-full object-cover rounded-lg border border-slate-200" />
+                                    <div key={idx} className="relative w-20 h-20 flex-shrink-0 group border border-slate-200 rounded-lg overflow-hidden flex items-center justify-center bg-slate-50 dark:bg-slate-800">
+                                        {img.mimeType.startsWith('image/') ? (
+                                            <img src={`data:${img.mimeType};base64,${img.data}`} alt="preview" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="flex flex-col items-center p-1 text-center">
+                                                <FileText className="w-6 h-6 text-slate-400 mb-1" />
+                                                <span className="text-[10px] text-slate-600 dark:text-slate-400 line-clamp-2 break-all">{img.name || 'File'}</span>
+                                            </div>
+                                        )}
                                         <button 
                                             onClick={() => removeImage(idx)}
-                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                                         >
                                             <X className="w-3 h-3" />
                                         </button>
@@ -471,7 +449,7 @@ export const AiTutorPage = () => {
                                 type="file" 
                                 ref={fileInputRef}
                                 className="hidden" 
-                                accept="image/*"
+                                accept="image/*, .pdf, .doc, .docx, .txt"
                                 multiple
                                 onChange={handleFileChange}
                             />

@@ -1,4 +1,4 @@
-﻿import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Download, UploadCloud, FileText, Video, Image as ImageIcon, Trash2 } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useState, useEffect, useRef } from "react";
@@ -143,13 +143,7 @@ export const ResourcesPage = () => {
           </div>
           
           <div>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              onChange={handleFileUpload}
-              disabled={uploading}
-            />
+            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} disabled={uploading} />
             <Button className="bg-primary hover:bg-primary/90 text-white gap-2" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                {uploading ? "Uploading..." : <><UploadCloud className="w-4 h-4" /> Upload New Asset</>}
             </Button>
@@ -245,3 +239,6 @@ export const ResourcesPage = () => {
     </div>
   );
 };
+
+
+

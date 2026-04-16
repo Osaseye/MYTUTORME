@@ -109,8 +109,7 @@ export const TeacherCourseDetailsPage = () => {
           </div>
 
           {/* Curriculum */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
+          <div>`n            <div className="flex items-center justify-between mb-4">
                <h2 className="text-xl font-bold font-display dark:text-white flex items-center gap-2">
                  Curriculum Overview
                </h2>
@@ -160,8 +159,7 @@ export const TeacherCourseDetailsPage = () => {
         {/* Sidebar */}
         <div className="space-y-6">
           
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-             <h3 className="font-bold text-slate-900 dark:text-white mb-4">Course Stats</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">`n             <h3 className="font-bold text-slate-900 dark:text-white mb-4">Course Stats</h3>
              <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                    <div className="flex items-center gap-3">

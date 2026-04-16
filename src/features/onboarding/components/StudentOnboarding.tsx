@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,7 +12,7 @@ import {
   BookOpen,
   Sparkles
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { doc, updateDoc } from 'firebase/firestore';
 import { httpsCallable } from "firebase/functions";
@@ -42,6 +42,8 @@ export const StudentOnboarding = () => {
     return saved ? parseInt(saved, 10) : 1;
   });
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -165,7 +167,11 @@ export const StudentOnboarding = () => {
         }
       }
 
-      navigate('/student/dashboard');
+      if (returnTo) {
+        navigate(returnTo);
+      } else {
+        navigate('/student/dashboard');
+      }
     } catch (error) {
       console.error('Error completing onboarding:', error);
       toast.error('Error completing onboarding');
@@ -496,7 +502,7 @@ export const StudentOnboarding = () => {
                 >
                   <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2">Free</h3>
                   <div className="flex items-baseline gap-1 mb-4">
-                    <span className="text-3xl font-bold">₦0</span>
+                    <span className="text-3xl font-bold">?0</span>
                   </div>
                   <ul className="space-y-3 mb-8 flex-1">
                     <li className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
@@ -524,7 +530,7 @@ export const StudentOnboarding = () => {
                   </div>
                   <h3 className="font-bold text-lg text-primary mb-2">Pro Monthly</h3>
                   <div className="flex items-baseline gap-1 mb-4">
-                    <span className="text-3xl font-bold">₦4,000</span>
+                    <span className="text-3xl font-bold">?4,000</span>
                     <span className="text-sm text-slate-500">/ month</span>
                   </div>
                   <ul className="space-y-3 mb-8 flex-1">
@@ -553,7 +559,7 @@ export const StudentOnboarding = () => {
                   </div>
                   <h3 className="font-bold text-lg text-amber-600 dark:text-amber-500 mb-2">Pro Yearly</h3>
                   <div className="flex items-baseline gap-1 mb-4">
-                    <span className="text-3xl font-bold">₦40,000</span>
+                    <span className="text-3xl font-bold">?40,000</span>
                     <span className="text-sm text-slate-500">/ year</span>
                   </div>
                   <ul className="space-y-3 mb-8 flex-1">

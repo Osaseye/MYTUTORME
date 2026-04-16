@@ -97,3 +97,6 @@ body:not(.fonts-loaded) .material-icons-round::after {
     left: 100%;
   }
 }
+code { background: #1e293b; color: #e2e8f0; padding: 2px 6px; border-radius: 4px; }
+pre { background: #0f172a; padding: 12px; border-radius: 8px; overflow-x: auto; }
+pre code { padding: 0; background: none; color: inherit; }

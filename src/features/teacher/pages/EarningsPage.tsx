@@ -426,3 +426,6 @@ export const EarningsPage = () => {
     </div>
   );
 };
+
+
+

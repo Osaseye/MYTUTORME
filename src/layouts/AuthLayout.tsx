@@ -1,4 +1,4 @@
-﻿import { Link, Outlet, Navigate } from "react-router-dom";
+import { Link, Outlet, Navigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,8 @@ const testimonials = [
 ];
 
 export const AuthLayout = () => {
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const { user, isAuthenticated, isLoading } = useAuth();
 
@@ -41,8 +43,13 @@ export const AuthLayout = () => {
   // If the user logs in or registers successfully, redirect them away from Auth screens
   if (isAuthenticated && user) {
     if (user.role !== 'admin' && !user.isOnboardingComplete) {
-      return <Navigate to={`/onboarding/${user.role === 'teacher' ? 'teacher' : 'student'}`} replace />;
+      return <Navigate to={`/onboarding/${user.role === 'teacher' ? 'teacher' : 'student'}${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`} replace />;
     }
+    
+    if (returnTo) {
+      return <Navigate to={returnTo} replace />;
+    }
+
     const dashboardMap = {
       student: '/student/dashboard',
       teacher: '/teacher/dashboard',

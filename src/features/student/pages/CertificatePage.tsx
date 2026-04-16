@@ -1,7 +1,6 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Download, Share2, ArrowLeft } from 'lucide-react';        
-import { useTourStore } from '@/app/stores/tourStore';
 import { Button } from '@/components/ui/button';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -21,27 +20,6 @@ export const CertificatePage = () => {
   const { id } = useParams<{ id: string }>();
   const [cert, setCert] = useState<Certificate | null>(null);
   const [loading, setLoading] = useState(true);
-  const { startTour } = useTourStore();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      startTour('student-certificate', [
-        {
-          target: '[data-tour-target="certificate-actions"]',
-          title: 'Share & Download',
-          content: 'You can share your achievement on social media or download a high-quality PDF version.',
-          placement: 'bottom'
-        },
-        {
-          target: '[data-tour-target="certificate-preview"]',
-          title: 'Your Certificate',
-          content: 'Here is the preview of your official certificate. It includes a unique verification code for authenticity.',
-          placement: 'top'
-        }
-      ]);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [startTour]);
 
   useEffect(() => {
      const fetchCert = async () => {
@@ -105,14 +83,14 @@ export const CertificatePage = () => {
             <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-white">Certificate of Completion</h1>
             <p className="text-slate-500">Verified and securely stored.</p>
           </div>
-          <div data-tour-target="certificate-actions" className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3">
              <Button variant="outline" className="flex items-center gap-2" onClick={handleShare}><Share2 className="w-4 h-4" /> Share</Button>
              <Button onClick={handleDownload} className="flex items-center gap-2 bg-primary hover:bg-green-700 text-white"><Download className="w-4 h-4" /> Download PDF</Button>
           </div>
         </div>
       </div>
 
-      <div data-tour-target="certificate-preview" className="bg-slate-100 dark:bg-slate-800 p-4 sm:p-8 rounded-2xl w-full max-w-[calc(100vw-2rem)] md:max-w-none overflow-x-auto shadow-inner flex md:justify-center">
+      <div className="bg-slate-100 dark:bg-slate-800 p-4 sm:p-8 rounded-2xl w-full max-w-[calc(100vw-2rem)] md:max-w-none overflow-x-auto shadow-inner flex md:justify-center">
         <div 
            id="certificate-node" 
            className="bg-white text-slate-900 relative w-[800px] h-[600px] flex flex-col items-center shadow-2xl shrink-0 overflow-hidden mx-auto"

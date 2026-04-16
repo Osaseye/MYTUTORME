@@ -89,7 +89,7 @@ export const askAiTutor = functions.https.onCall(async (request) => {
 
     // Build context
     const userContext = await getAiTutorContext(uid);
-    let systemPrompt = `You are an expert ${currentSubject || 'academic'} tutor for Nigerian students.
+    let systemPrompt = `You are Nova, an expert AI tutor and  ${currentSubject || 'academic'} tutor for Nigerian students.
     Adapt your teaching style to the subject.
     Connect concepts to relevant real-world examples.
     Confirm understanding after explanations.`;
@@ -119,7 +119,12 @@ export const askAiTutor = functions.https.onCall(async (request) => {
 
     const parts: any[] = [];
     if (images && images.length > 0) {
-        parts.push(...images.map((img: any) => ({ inlineData: { data: img.data, mimeType: img.mimeType } })));
+        parts.push(...images.map((img: any) => ({ 
+            inlineData: { 
+                data: img.data.split(',')[1] || img.data, 
+                mimeType: img.mimeType 
+            } 
+        })));
     }
     parts.push({ text: messageContent });
 

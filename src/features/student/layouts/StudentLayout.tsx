@@ -1,10 +1,11 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, Link } from 'react-router-dom';
 import { StudentSidebar } from '../components/StudentSidebar';
 import { MobileFloatingNav } from '../components/MobileFloatingNav';
-import { Search, UserCircle, Crown } from 'lucide-react';
+import { Search, UserCircle, Crown, Bell } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useAuthStore } from "@/features/auth/hooks/useAuth";
 import { NotificationDropdown } from '@/components/shared/NotificationDropdown';
+import { paths } from '@/app/routes/paths';
 
 export const StudentLayout = () => {
   const { user } = useAuthStore();
@@ -57,7 +58,13 @@ export const StudentLayout = () => {
                   </div>
                )}
 
-               <NotificationDropdown userRole="student" />
+               <div className="hidden md:block">
+                 <NotificationDropdown userRole="student" />
+               </div>
+               <Link to={paths.student.notifications} className="md:hidden relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors dark:text-slate-400 dark:hover:bg-slate-800">
+                 <Bell className="w-5 h-5" />
+                 {/* Optional: Add badge logic if unread count is available in this context, or rely on page */}
+               </Link>
 
                <div className="flex items-center gap-3">
                  <div className="hidden sm:flex flex-col items-end justify-center">
