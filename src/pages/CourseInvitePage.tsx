@@ -20,6 +20,12 @@ export const CourseInvitePage = () => {
     const [referrer, setReferrer] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+    const isAdminGeneratedCourse = (courseData: any) => {
+        const hasExamSections = Array.isArray(courseData?.mockExam?.sections) && courseData.mockExam.sections.length > 0;
+        const hasStudyMaterial = !!courseData?.studyMaterial || !!courseData?.mockExam?.studyMaterial;
+        return !!courseData?.generatedCourse || hasExamSections || hasStudyMaterial;
+    };
+
     useEffect(() => {
         const fetchInviteData = async () => {
             if (!courseId) return;
@@ -63,7 +69,7 @@ export const CourseInvitePage = () => {
     }, [course, referrer]);
 
     const handleAcceptInvite = () => {
-        const destination = course?.generatedCourse 
+        const destination = isAdminGeneratedCourse(course)
             ? `/student/courses/generated/${courseId}`
             : `/student/courses/${courseId}`;
 
@@ -98,7 +104,7 @@ export const CourseInvitePage = () => {
 
     const displayTitle = course.title || course.mockExam?.title || course.subject || 'Course';
     const inviterName = referrer?.displayName ? referrer.displayName.split(' ')[0] : 'A student';
-    const isGenerated = course.generatedCourse;
+    const isGenerated = isAdminGeneratedCourse(course);
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 relative overflow-hidden flex flex-col items-center justify-center p-4">
