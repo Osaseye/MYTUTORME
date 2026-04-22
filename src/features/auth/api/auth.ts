@@ -143,6 +143,7 @@ export const loginWithGoogle = async (): Promise<GoogleLoginResult | undefined> 
   
   if (isPWA) {
     console.log('[Google Auth] PWA mode detected for login, using signInWithRedirect');
+    markPendingOAuthRoleSelection();
     await signInWithRedirect(auth, provider);
     return;
   }
@@ -161,6 +162,7 @@ export const loginWithGoogle = async (): Promise<GoogleLoginResult | undefined> 
       error.message?.includes('Cross-Origin-Opener-Policy')
     ) {
       console.log('[Google Auth] Falling back to signInWithRedirect for login');
+      markPendingOAuthRoleSelection();
       await signInWithRedirect(auth, provider);
       return;
     }

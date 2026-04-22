@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { paths } from '@/app/routes/paths';
 import { loginSchema, type LoginCredentials } from '../types';
-import { clearPendingOAuthRoleSelection, loginUser, loginWithGoogle, markPendingOAuthRoleSelection } from '../api/auth';
+import { clearPendingOAuthRoleSelection, loginUser, loginWithGoogle } from '../api/auth';
 
 export const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +56,8 @@ export const LoginForm = () => {
     setSuspendedError(false);
     try {
       console.log('[LoginForm] Starting Google login');
-      markPendingOAuthRoleSelection();
+      // Reset any stale pending-role state from previous interrupted OAuth attempts.
+      clearPendingOAuthRoleSelection();
       const result = await loginWithGoogle();
       if (!result) {
         return;
