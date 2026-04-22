@@ -8,6 +8,7 @@ import LandingPage from '@/features/landing/LandingPage';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
+import { RoleSelectionPage } from '@/features/auth/pages/RoleSelectionPage';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
 import { OnboardingLayout, StudentOnboarding, TeacherOnboarding } from '@/features/onboarding';
 import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, GeneratedCourseDetailsPage, AssignmentHelperPage, GpaTrackerPage, CertificatePage, MyCertificatesPage, SettingsPage, ExamPrepPage, ExamConfigPage, ExamResultsPage, ExamTakingPage, FlashcardConfigPage, FlashcardPlayerPage, CommunityPage, StudyPlannerConfigPage, StudyPlannerViewPage } from '@/features/student';
@@ -52,6 +53,7 @@ export const AppRoutes = () => {
         <Route element={<AuthLayout />}>
           <Route path={paths.auth.login} element={<LoginPage />} />
           <Route path={paths.auth.register} element={<RegisterPage />} />
+          <Route path={paths.auth.selectRole} element={<RoleSelectionPage />} />
           <Route path={paths.auth.forgotPassword} element={<ForgotPasswordPage />} />
           <Route path={paths.admin.login} element={<AdminLoginPage />} />
         </Route>

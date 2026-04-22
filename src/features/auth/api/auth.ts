@@ -6,12 +6,30 @@ import {
   signInWithPopup,
   signInWithRedirect,
   GoogleAuthProvider,
-  signOut
+  signOut,
+  type User as FirebaseUser
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import type { LoginCredentials, RegisterCredentials } from '../types';
 
 type AuthRole = RegisterCredentials['role'];
+export type GoogleLoginResult = {
+  needsRoleSelection: boolean;
+  user: FirebaseUser;
+};
+const OAUTH_PENDING_ROLE_SELECTION_KEY = 'oauth_pending_role_selection';
+
+export const markPendingOAuthRoleSelection = () => {
+  localStorage.setItem(OAUTH_PENDING_ROLE_SELECTION_KEY, 'true');
+};
+
+export const clearPendingOAuthRoleSelection = () => {
+  localStorage.removeItem(OAUTH_PENDING_ROLE_SELECTION_KEY);
+};
+
+export const isPendingOAuthRoleSelection = () => {
+  return localStorage.getItem(OAUTH_PENDING_ROLE_SELECTION_KEY) === 'true';
+};
 
 export const buildUserDoc = (
   user: { uid: string; email: string | null; displayName: string | null; photoURL: string | null },
@@ -119,7 +137,7 @@ export const registerUser = async ({ email, password, name, role }: RegisterCred
 
 const isPWA = window.matchMedia("(display-mode: standalone)").matches;
 
-export const loginWithGoogle = async () => {
+export const loginWithGoogle = async (): Promise<GoogleLoginResult | undefined> => {
   const provider = new GoogleAuthProvider();
   let result;
   
@@ -165,17 +183,47 @@ export const loginWithGoogle = async () => {
 
     if (!userDoc.exists()) {
       console.warn('[Google Auth] No user document found during login - user must sign up first');
-      // Force new users to use the Register page so they can select their role.
-      await user.delete().catch(() => {});
-      await signOut(auth);
-      throw { code: 'auth/user-not-found', message: 'No account found. Please sign up to choose your account type (Student or Teacher).' };
+      markPendingOAuthRoleSelection();
+      return { needsRoleSelection: true as const, user };
     }
 
-    return result;
+    clearPendingOAuthRoleSelection();
+
+    return { needsRoleSelection: false as const, user };
   } catch (error: any) {
     console.error('[Google Auth] Error during login Firestore check:', error);
     throw error;
   }
+};
+
+export const completeGoogleRoleSelection = async (role: AuthRole) => {
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw { code: 'auth/no-current-user', message: 'Please sign in with Google again.' };
+  }
+
+  const userDocRef = doc(db, 'users', user.uid);
+  const userDoc = await getDoc(userDocRef);
+
+  if (!userDoc.exists()) {
+    const userData = buildUserDoc(
+      {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+      },
+      role,
+    );
+
+    await setDoc(userDocRef, userData);
+  }
+
+  clearPendingOAuthRoleSelection();
+  localStorage.removeItem('oauth_intended_role');
+
+  return user;
 };
 
 export const registerWithGoogle = async (role: AuthRole) => {

@@ -1,20 +1,24 @@
 import { useState } from 'react'; 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AlertCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { paths } from '@/app/routes/paths';
 import { loginSchema, type LoginCredentials } from '../types';
-import { loginUser, loginWithGoogle } from '../api/auth';
+import { clearPendingOAuthRoleSelection, loginUser, loginWithGoogle, markPendingOAuthRoleSelection } from '../api/auth';
 
 export const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [suspendedError, setSuspendedError] = useState(false);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
 
   const {
     register,
@@ -52,11 +56,22 @@ export const LoginForm = () => {
     setSuspendedError(false);
     try {
       console.log('[LoginForm] Starting Google login');
-      await loginWithGoogle();
+      markPendingOAuthRoleSelection();
+      const result = await loginWithGoogle();
+      if (!result) {
+        return;
+      }
+      if (result.needsRoleSelection) {
+        console.log('[LoginForm] New Google user needs role selection first');
+        navigate(`${paths.auth.selectRole}${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`, { replace: true });
+        toast.info('Choose your role to continue');
+        return;
+      }
       // onAuthStateChanged handles the rest
       console.log('[LoginForm] Google login call completed, waiting for auth state change');
       toast.success('Signing in with Google...', { description: 'Please wait.' });
     } catch (error: any) {
+      clearPendingOAuthRoleSelection();
       console.error('[LoginForm] Google login error:', error);
       if (error?.code === 'auth/account-suspended') {
         setSuspendedError(true);

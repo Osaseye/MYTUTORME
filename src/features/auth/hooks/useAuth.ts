@@ -3,7 +3,7 @@ import type { User } from '@/types/user';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, signOut as firebaseSignOut, getRedirectResult } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { buildUserDoc } from '../api/auth';
+import { buildUserDoc, clearPendingOAuthRoleSelection, isPendingOAuthRoleSelection } from '../api/auth';
 
 interface AuthState {
   user: User | null;
@@ -57,15 +57,18 @@ export const useAuthStore = create<AuthState>((set) => ({
                 console.error('[Auth] Error creating user document:', docError);
                 throw docError;
               }
+            } else if (isPendingOAuthRoleSelection()) {
+              console.log('[Auth] Waiting for role selection before creating user document');
+              set({ user: null, isAuthenticated: false, isLoading: false });
+              return;
             } else {
               console.error('[Auth] No intended role found in localStorage after redirect');
-              // New user from OAuth redirect without role selection
-              await user.delete().catch(() => {});
               await firebaseSignOut(auth);
               return;
             }
           }
           localStorage.removeItem('oauth_intended_role');
+          clearPendingOAuthRoleSelection();
         } else {
           console.log('[Auth] No redirect result found');
         }
@@ -113,6 +116,11 @@ export const useAuthStore = create<AuthState>((set) => ({
                 throw fallbackError;
               }
               localStorage.removeItem('oauth_intended_role');
+              clearPendingOAuthRoleSelection();
+            } else if (isPendingOAuthRoleSelection()) {
+              console.log('[Auth] Pending role selection detected, keeping Google session active');
+              set({ user: null, isAuthenticated: false, isLoading: false });
+              return;
             }
           }
 

@@ -1,68 +1,71 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeft, Check, ChevronRight, GraduationCap, Sparkles, Target, UserCircle } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { doc, updateDoc } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import { toast } from 'sonner';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  UserCircle, 
-   
-  Target, 
-  CheckCircle2,
-  ChevronRight,
-  ChevronLeft,
-  BookOpen,
-  Sparkles
-} from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { doc, updateDoc } from 'firebase/firestore';
-import { httpsCallable } from "firebase/functions";
 import { db, functions } from '@/lib/firebase';
 import { useAuth, useAuthStore } from '@/features/auth/hooks/useAuth';
-import { toast } from "sonner";
 import { PaymentModal } from '@/components/shared/PaymentModal';
 
-// Defined interface for form data
 interface StudentFormData {
   fullName: string;
   username: string;
-  educationLevel: string;
+  educationLevel: 'secondary' | 'tertiary';
   institution: string;
   courseOfStudy: string;
   classLevel: string;
-  gradingSystem: string;
+  gradingSystem: '4.0' | '5.0';
   cgpa: string;
   target_cgpa: string;
-  painPoint: '';
+  painPoint: string;
   subjects: string[];
 }
+
+const stepConfig = [
+  { title: 'Profile created', subtitle: 'Tell us about yourself', icon: UserCircle },
+  { title: 'Academic setup', subtitle: 'Your school details', icon: GraduationCap },
+  { title: 'Study focus', subtitle: 'What should we optimize', icon: Target },
+  { title: 'Choose your plan', subtitle: 'Start free or upgrade', icon: Sparkles },
+] as const;
 
 export const StudentOnboarding = () => {
   const [step, setStep] = useState(() => {
     const saved = localStorage.getItem('student_onboarding_step');
     return saved ? parseInt(saved, 10) : 1;
   });
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const returnTo = searchParams.get("returnTo");
-  const { user } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<'pro_monthly' | 'pro_yearly' | null>(null);
-  
-  // Form State
   const [formData, setFormData] = useState<StudentFormData>(() => {
     const saved = localStorage.getItem('student_onboarding_formData');
     if (saved) {
       try {
-        return JSON.parse(saved);
-      } catch (e) {
-        // ignore
+        const parsed = JSON.parse(saved);
+        return {
+          fullName: parsed.fullName ?? '',
+          username: parsed.username ?? '',
+          educationLevel: parsed.educationLevel === 'secondary' ? 'secondary' : 'tertiary',
+          institution: parsed.institution ?? '',
+          courseOfStudy: parsed.courseOfStudy ?? '',
+          classLevel: parsed.classLevel ?? '',
+          gradingSystem: parsed.gradingSystem === '4.0' ? '4.0' : '5.0',
+          cgpa: parsed.cgpa ?? '',
+          target_cgpa: parsed.target_cgpa ?? '',
+          painPoint: parsed.painPoint ?? '',
+          subjects: Array.isArray(parsed.subjects) ? parsed.subjects : [],
+        };
+      } catch {
+        // ignore malformed local data
       }
     }
+
     return {
       fullName: '',
       username: '',
-      educationLevel: 'tertiary', // 'secondary' | 'tertiary'
+      educationLevel: 'tertiary',
       institution: '',
       courseOfStudy: '',
       classLevel: '',
@@ -70,9 +73,18 @@ export const StudentOnboarding = () => {
       cgpa: '',
       target_cgpa: '',
       painPoint: '',
-      subjects: [] as string[]
+      subjects: [],
     };
   });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<'pro_monthly' | 'pro_yearly' | null>(null);
+
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
+  const { user } = useAuth();
 
   useEffect(() => {
     localStorage.setItem('student_onboarding_step', step.toString());
@@ -84,19 +96,65 @@ export const StudentOnboarding = () => {
 
   useEffect(() => {
     if (user?.displayName) {
-      setFormData(prev => ({ ...prev, fullName: user.displayName || '' }));
+      setFormData((prev) => ({ ...prev, fullName: prev.fullName || user.displayName || '' }));
     }
   }, [user]);
 
-  const updateField = (field: string, value: any) => {
-    setFormData(prev => {
-      // If changing education level, reset related fields
+  const tertiaryLevels = ['100 Level', '200 Level', '300 Level', '400 Level', '500 Level'];
+  const secondaryLevels = ['JSS 1', 'JSS 2', 'JSS 3', 'SS 1', 'SS 2', 'SS 3'];
+
+  const painPoints = formData.educationLevel === 'secondary'
+    ? [
+        'Preparing for an upcoming exam (WAEC, JAMB, NECO, etc.)',
+        'Preparing for university admission',
+        'Struggling with homework & assignments',
+        'General revision and continuous learning',
+      ]
+    : [
+        'Want to boost my CGPA',
+        'Preparing for professional/certification exams',
+        'Struggling with coursework or assignments',
+        'General revision and continuous learning',
+      ];
+
+  const subjectOptions = formData.educationLevel === 'secondary'
+    ? [
+        'Mathematics', 'English', 'Physics', 'Chemistry', 'Biology', 'Economics', 'Further Mathematics',
+        'Literature in English', 'Government', 'Accounting', 'Commerce', 'Geography', 'Agricultural Science',
+      ]
+    : [
+        'Computer Science', 'Engineering', 'Medicine', 'Law', 'Business Administration', 'Accounting',
+        'Economics', 'Nursing', 'Pharmacy', 'Political Science', 'Mass Communication', 'English',
+        'Mathematics', 'Physics', 'Chemistry', 'Biology',
+      ];
+
+  const progress = Math.round((step / stepConfig.length) * 100);
+  const currentStepMeta = stepConfig[step - 1];
+
+  const canContinue = useMemo(() => {
+    if (step === 1) {
+      return formData.fullName.trim().length > 1 && formData.username.trim().length > 1;
+    }
+    if (step === 2) {
+      const baseValid = formData.institution.trim() && formData.classLevel.trim();
+      if (formData.educationLevel === 'secondary') return Boolean(baseValid);
+      return Boolean(baseValid && formData.courseOfStudy.trim());
+    }
+    if (step === 3) {
+      return Boolean(formData.painPoint && formData.subjects.length > 0);
+    }
+    return true;
+  }, [formData, step]);
+
+  const updateField = <K extends keyof StudentFormData>(field: K, value: StudentFormData[K]) => {
+    setFormData((prev) => {
       if (field === 'educationLevel' && prev.educationLevel !== value) {
         return {
           ...prev,
-          [field]: value,
+          educationLevel: value as StudentFormData['educationLevel'],
           painPoint: '',
-          subjects: [], // Clear selected subjects as options change
+          subjects: [],
+          classLevel: '',
         };
       }
       return { ...prev, [field]: value };
@@ -104,27 +162,30 @@ export const StudentOnboarding = () => {
   };
 
   const toggleSubject = (subject: string) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const subjects = prev.subjects.includes(subject)
-        ? prev.subjects.filter(s => s !== subject)
+        ? prev.subjects.filter((item) => item !== subject)
         : [...prev.subjects, subject];
       return { ...prev, subjects };
     });
   };
 
-  const nextStep = () => setStep(prev => prev + 1);
-  const prevStep = () => setStep(prev => prev - 1);
+  const nextStep = () => setStep((prev) => Math.min(prev + 1, stepConfig.length));
+  const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
 
-  const handleComplete = async (selectedPlan?: 'free' | 'pro_monthly' | 'pro_yearly' | React.MouseEvent, paymentProvider?: 'flutterwave' | 'paystack') => {
-    // If it's a mouse event, set to undefined or just ignore it for the string check
+  const handleComplete = async (
+    selectedPlan?: 'free' | 'pro_monthly' | 'pro_yearly' | React.MouseEvent,
+    paymentProvider?: 'flutterwave' | 'paystack',
+  ) => {
     const plan = typeof selectedPlan === 'string' ? selectedPlan : undefined;
     if (!user) return;
+
     setIsSubmitting(true);
     try {
       await updateDoc(doc(db, 'users', user.uid), {
         isOnboardingComplete: true,
         displayName: formData.fullName || user.displayName,
-        ...({ ...({ ...({ ...({ ...({ ...({ username: formData.username } as any) } as any) } as any) } as any) } as any) } as any),
+        username: formData.username,
         level: formData.educationLevel,
         institution: formData.institution,
         courseOfStudy: formData.courseOfStudy,
@@ -134,37 +195,36 @@ export const StudentOnboarding = () => {
         targetCGPA: parseFloat(formData.target_cgpa) || 0,
         painPoint: formData.painPoint,
         interests: formData.subjects,
-        // Fallback or explicit init if they hit skip
         plan: 'free',
       });
+
       useAuthStore.getState().setUser({
         ...user,
         isOnboardingComplete: true,
         displayName: formData.fullName || user.displayName,
-        ...({ ...({ username: formData.username } as any) } as any)
+        ...({ username: formData.username } as any),
       });
+
       localStorage.removeItem('student_onboarding_step');
       localStorage.removeItem('student_onboarding_formData');
-      
-      // If plan is selected handle payout transition
+
       if (plan && (plan === 'pro_monthly' || plan === 'pro_yearly')) {
         const initializeSubscription = httpsCallable(functions, 'initializeSubscription');
-        const planCode = plan === 'pro_monthly' ? "FW_PLAN_STUDENT_MONTHLY" : "FW_PLAN_STUDENT_YEARLY";
+        const planCode = plan === 'pro_monthly' ? 'FW_PLAN_STUDENT_MONTHLY' : 'FW_PLAN_STUDENT_YEARLY';
         const result = await initializeSubscription({
           planCode,
-          email: user?.email,
-          userId: user?.uid,
+          email: user.email,
+          userId: user.uid,
           provider: paymentProvider || 'flutterwave',
-          redirectUrl: window.location.origin + '/student/dashboard'
+          redirectUrl: `${window.location.origin}/student/dashboard`,
         });
 
         const data: any = result.data;
         if (data?.authorizationUrl) {
-          window.location.href = data.authorizationUrl; // Redirect to Payment Provider
+          window.location.href = data.authorizationUrl;
           return;
-        } else {
-           toast.error("Error initializing payment URL.");
         }
+        toast.error('Error initializing payment URL.');
       }
 
       if (returnTo) {
@@ -179,441 +239,334 @@ export const StudentOnboarding = () => {
     }
   };
 
-  const steps = [
-    { title: "Profile", icon: UserCircle },
-    { title: "Academic Info", icon: BookOpen },
-    { title: "Goals", icon: Target },
-    { title: "Plans", icon: Sparkles },
-    { title: "Finish", icon: CheckCircle2 }
-  ];
-
-  const tertiaryLevels = ["100 Level", "200 Level", "300 Level", "400 Level", "500 Level"];
-  const secondaryLevels = ["JSS 1", "JSS 2", "JSS 3", "SS 1", "SS 2", "SS 3"];
-  
-  const painPoints = formData.educationLevel === 'secondary' ? [
-    "Preparing for an upcoming exam (WAEC, JAMB, NECO, etc.)", 
-    "Preparing for university admission",
-    "Struggling with homework & assignments", 
-    "General revision and continuous learning"
-  ] : [
-    "Want to boost my CGPA", 
-    "Preparing for professional/certification exams",
-    "Struggling with coursework or assignments", 
-    "General revision and continuous learning"
-  ];
-  
-  const subjectOptions = formData.educationLevel === 'secondary' ? [
-    "Mathematics", "English", "Physics", "Chemistry", 
-    "Biology", "Economics", "Further Mathematics", "Literature in English",
-    "Government", "Accounting", "Commerce", "Geography", "Agricultural Science"
-  ] : [
-    "Computer Science", "Engineering", "Medicine", "Law", 
-    "Business Administration", "Accounting", "Economics", "Nursing", 
-    "Pharmacy", "Political Science", "Mass Communication", 
-    "English", "Mathematics", "Physics", "Chemistry", "Biology"
-  ];
-
-  return (
-    <div className="w-full max-w-2xl mx-auto">
-      {/* Progress Header */}
-      <div className="mb-8 relative">
-        <div className="flex justify-between items-center mb-4 relative z-10 w-full max-w-xl mx-auto">
-          {steps.map((s, idx) => {
-            const Icon = s.icon;
-            const isActive = step >= idx + 1;
-            const isCurrent = step === idx + 1;
-            
-            return (
-              <div key={idx} className="flex flex-col items-center gap-2">
-                <div className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2 bg-white dark:bg-slate-900",
-                  isActive ? "border-primary text-primary" : "border-slate-200 dark:border-slate-700 text-slate-400",
-                  isCurrent && "ring-4 ring-primary/20 bg-primary text-white border-primary"
-                )}>
-                  <Icon className="w-5 h-5" />
-                </div>
-                <span className={cn(
-                  "text-xs font-medium transition-colors duration-300 hidden sm:block",
-                  isActive ? "text-primary" : "text-slate-400"
-                )}>{s.title}</span>
-              </div>
-            );
-          })}
+  const renderStep = () => {
+    if (step === 1) {
+      return (
+        <div className="space-y-5">
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">Full name</label>
+            <Input
+              value={formData.fullName}
+              onChange={(e) => updateField('fullName', e.target.value)}
+              placeholder="e.g. Jane Thompson"
+              className="h-11 rounded-xl border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950"
+            />
+          </div>
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">Username</label>
+            <Input
+              value={formData.username}
+              onChange={(e) => updateField('username', e.target.value)}
+              placeholder="e.g. janetwrites"
+              className="h-11 rounded-xl border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950"
+            />
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">This appears in community discussions and profile pages.</p>
+          </div>
         </div>
-        
-        {/* Progress Line Background */}
-        <div className="absolute top-5 left-0 w-full h-0.5 bg-slate-100 dark:bg-slate-800 -z-0" />
-        
-        {/* Active Progress Line */}
-        <div 
-           className="absolute top-5 left-0 h-0.5 bg-primary -z-0 transition-all duration-500"
-           style={{ 
-             width: `${((step - 1) / (steps.length - 1)) * 100}%`
-           }} 
-        />
-      </div>
+      );
+    }
 
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm relative overflow-hidden min-h-[400px]">
-        {/* Background Decoration */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
-
-        <AnimatePresence mode="wait">
-          {step === 1 && (
-            <motion.div
-              key="step1"
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -20, opacity: 0 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold font-display text-slate-900 dark:text-white">Let's get to know you</h2>
-                <p className="text-slate-500 dark:text-slate-400">Basic information to set up your profile.</p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Full Name</label>
-                  <Input 
-                    placeholder="e.g. John Doe" 
-                    value={formData.fullName}
-                    onChange={(e) => updateField('fullName', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Username (Handle for Community)</label>
-                  <Input 
-                    placeholder="e.g. johndoe99"
-                    value={formData.username}
-                    onChange={(e) => updateField('username', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="pt-4 flex justify-end">
-                <Button onClick={nextStep} disabled={!formData.fullName || !formData.username} className="w-full sm:w-auto gap-2">
-                  Next Step <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </motion.div>
-          )}
-
-          {step === 2 && (
-            <motion.div
-              key="step2"
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -20, opacity: 0 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold font-display text-slate-900 dark:text-white">Academic Details</h2>
-                <p className="text-slate-500 dark:text-slate-400">Tell us where you are in your educational journey.</p>
-              </div>
-
-              <div className="flex gap-4 mb-4">
-                <div 
-                  onClick={() => {
-                    updateField('educationLevel', 'secondary');
-                    updateField('classLevel', '');
-                  }}
-                  className={cn(
-                    "flex-1 p-4 rounded-xl border-2 text-center cursor-pointer transition-all",
-                    formData.educationLevel === 'secondary' ? "border-primary bg-primary/5 text-primary" : "border-slate-200 text-slate-600 hover:border-slate-300"
-                  )}
-                >
-                  <p className="font-bold">Secondary School</p>
-                </div>
-                <div 
-                  onClick={() => {
-                    updateField('educationLevel', 'tertiary');
-                    updateField('classLevel', '');
-                  }}
-                  className={cn(
-                    "flex-1 p-4 rounded-xl border-2 text-center cursor-pointer transition-all",
-                    formData.educationLevel === 'tertiary' ? "border-primary bg-primary/5 text-primary" : "border-slate-200 text-slate-600 hover:border-slate-300"
-                  )}
-                >
-                  <p className="font-bold">University / Tertiary</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Institution Name</label>
-                  <Input 
-                    placeholder="e.g. University of Lagos"
-                    value={formData.institution}
-                    onChange={(e) => updateField('institution', e.target.value)}
-                  />
-                </div>
-
-                {formData.educationLevel === 'tertiary' && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Course of Study</label>
-                    <Input 
-                      placeholder="e.g. Computer Science"
-                      value={formData.courseOfStudy}
-                      onChange={(e) => updateField('courseOfStudy', e.target.value)}
-                    />
-                  </div>
+    if (step === 2) {
+      return (
+        <div className="space-y-5">
+          <div>
+            <p className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Education level</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => updateField('educationLevel', 'secondary')}
+                className={cn(
+                  'rounded-xl border-2 px-3 py-3 text-sm font-semibold transition-colors',
+                  formData.educationLevel === 'secondary'
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-primary/40 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300',
                 )}
+              >
+                Secondary
+              </button>
+              <button
+                type="button"
+                onClick={() => updateField('educationLevel', 'tertiary')}
+                className={cn(
+                  'rounded-xl border-2 px-3 py-3 text-sm font-semibold transition-colors',
+                  formData.educationLevel === 'tertiary'
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-primary/40 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300',
+                )}
+              >
+                Tertiary
+              </button>
+            </div>
+          </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Current Level / Class</label>
-                  <select
-                    className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    value={formData.classLevel}
-                    onChange={(e) => updateField('classLevel', e.target.value)}
-                  >
-                    <option value="" disabled>Select Level...</option>
-                    {(formData.educationLevel === 'tertiary' ? tertiaryLevels : secondaryLevels).map(l => (
-                      <option key={l} value={l}>{l}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">Institution</label>
+            <Input
+              value={formData.institution}
+              onChange={(e) => updateField('institution', e.target.value)}
+              placeholder="e.g. University of Lagos"
+              className="h-11 rounded-xl border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950"
+            />
+          </div>
 
-              <div className="pt-4 flex justify-between">
-                <Button variant="ghost" onClick={prevStep} className="gap-2">
-                  <ChevronLeft className="w-4 h-4" /> Back
-                </Button>
-                <Button onClick={nextStep} disabled={!formData.institution || !formData.classLevel || (formData.educationLevel === 'tertiary' && !formData.courseOfStudy)} className="gap-2">
-                  Next Step <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </motion.div>
+          {formData.educationLevel === 'tertiary' && (
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">Course of study</label>
+              <Input
+                value={formData.courseOfStudy}
+                onChange={(e) => updateField('courseOfStudy', e.target.value)}
+                placeholder="e.g. Computer Science"
+                className="h-11 rounded-xl border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950"
+              />
+            </div>
           )}
 
-          {step === 3 && (
-            <motion.div
-              key="step3"
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -20, opacity: 0 }}
-              className="space-y-6"
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">Current class / level</label>
+            <select
+              value={formData.classLevel}
+              onChange={(e) => updateField('classLevel', e.target.value)}
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none ring-primary/20 transition-shadow focus:ring-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
             >
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold font-display text-slate-900 dark:text-white">Standing & Goals</h2>
-                <p className="text-slate-500 dark:text-slate-400">Help us personalize your study experience.</p>
-              </div>
+              <option value="">Select level</option>
+              {(formData.educationLevel === 'tertiary' ? tertiaryLevels : secondaryLevels).map((value) => (
+                <option key={value} value={value}>{value}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      );
+    }
 
-              {formData.educationLevel === 'tertiary' && (
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Grading System</label>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                      value={formData.gradingSystem}
-                      onChange={(e) => updateField('gradingSystem', e.target.value)}
-                    >
-                      <option value="5.0">5.0 Scale</option>
-                      <option value="4.0">4.0 Scale</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Current CGPA</label>
-                    <Input 
-                      type="number"
-                      step="0.01"
-                      placeholder="e.g. 3.5"
-                      value={formData.cgpa}
-                      onChange={(e) => updateField('cgpa', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Target CGPA</label>
-                    <Input 
-                      type="number"
-                      step="0.01"
-                      placeholder="e.g. 4.5"
-                      value={formData.target_cgpa}
-                      onChange={(e) => updateField('target_cgpa', e.target.value)}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">What is your primary academic goal right now?</label>
+    if (step === 3) {
+      return (
+        <div className="space-y-5">
+          {formData.educationLevel === 'tertiary' && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Scale</label>
                 <select
-                  className="flex h-10 w-full rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                  value={formData.painPoint}
-                  onChange={(e) => updateField('painPoint', e.target.value)}
+                  value={formData.gradingSystem}
+                  onChange={(e) => updateField('gradingSystem', e.target.value as '4.0' | '5.0')}
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none ring-primary/20 transition-shadow focus:ring-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
                 >
-                  <option value="" disabled>Select your main goal...</option>
-                  {painPoints.map(p => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
+                  <option value="5.0">5.0</option>
+                  <option value="4.0">4.0</option>
                 </select>
               </div>
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Current CGPA</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.cgpa}
+                  onChange={(e) => updateField('cgpa', e.target.value)}
+                  placeholder="3.2"
+                  className="h-11 rounded-xl border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Target CGPA</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.target_cgpa}
+                  onChange={(e) => updateField('target_cgpa', e.target.value)}
+                  placeholder="4.5"
+                  className="h-11 rounded-xl border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950"
+                />
+              </div>
+            </div>
+          )}
 
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Select core subjects of interest
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {subjectOptions.map((subject) => (
-                    <div 
-                      key={subject}
-                      onClick={() => toggleSubject(subject)}
-                      className={cn(
-                        "cursor-pointer flex items-center px-3 py-1.5 border rounded-full text-sm transition-all",
-                        formData.subjects.includes(subject)
-                          ? "border-primary bg-primary text-white" 
-                          : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900"
-                      )}
-                    >
-                      {subject}
-                    </div>
-                  ))}
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">Primary goal</label>
+            <select
+              value={formData.painPoint}
+              onChange={(e) => updateField('painPoint', e.target.value)}
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none ring-primary/20 transition-shadow focus:ring-2 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
+            >
+              <option value="">Choose your focus</option>
+              {painPoints.map((value) => (
+                <option key={value} value={value}>{value}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">Subjects of interest</label>
+            <div className="flex flex-wrap gap-2">
+              {subjectOptions.map((subject) => {
+                const active = formData.subjects.includes(subject);
+                return (
+                  <button
+                    key={subject}
+                    type="button"
+                    onClick={() => toggleSubject(subject)}
+                    className={cn(
+                      'rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors',
+                      active
+                        ? 'border-primary bg-primary text-white'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-primary/40 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300',
+                    )}
+                  >
+                    {subject}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-950">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Free</h3>
+            <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">N0</span>
+          </div>
+          <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">Core tools for everyday studying.</p>
+          <Button variant="outline" className="w-full" onClick={() => handleComplete('free')} disabled={isSubmitting}>
+            Continue with Free
+          </Button>
+        </div>
+
+        <div className="rounded-2xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 to-white p-5 shadow-sm dark:from-primary/20 dark:to-slate-950">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Pro Monthly</h3>
+            <span className="rounded-full bg-primary px-2 py-1 text-xs font-bold text-white">Popular</span>
+          </div>
+          <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">Unlimited AI + advanced exam prep features.</p>
+          <Button
+            className="w-full"
+            onClick={() => {
+              setSelectedPlanForPayment('pro_monthly');
+              setIsPaymentModalOpen(true);
+            }}
+            disabled={isSubmitting}
+          >
+            Upgrade Monthly
+          </Button>
+        </div>
+
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 shadow-sm dark:border-amber-700 dark:bg-amber-950/20">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Pro Yearly</h3>
+            <span className="rounded-full bg-amber-500 px-2 py-1 text-xs font-bold text-white">Best Value</span>
+          </div>
+          <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">Save more yearly with all Pro benefits included.</p>
+          <Button
+            className="w-full bg-amber-500 text-white hover:bg-amber-600"
+            onClick={() => {
+              setSelectedPlanForPayment('pro_yearly');
+              setIsPaymentModalOpen(true);
+            }}
+            disabled={isSubmitting}
+          >
+            Upgrade Yearly
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-5xl">
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="rounded-[28px] border border-slate-200 bg-[#f8f7f1] p-4 shadow-xl shadow-slate-900/5 dark:border-slate-700 dark:bg-slate-900">
+          <div className="rounded-[24px] border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-950">
+            <div className="mb-5 flex items-center gap-3">
+              {step > 1 && step < 4 ? (
+                <button
+                  type="button"
+                  onClick={prevStep}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900"
+                  aria-label="Go back"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+              ) : (
+                <div className="h-9 w-9" />
+              )}
+
+              <div className="w-full">
+                <div className="mb-1 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <span>{currentStepMeta.title}</span>
+                  <span>{progress}%</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                  <div className="h-2 rounded-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
                 </div>
               </div>
+            </div>
 
-              <div className="pt-4 flex justify-between">
-                <Button variant="ghost" onClick={prevStep} className="gap-2">
-                  <ChevronLeft className="w-4 h-4" /> Back
-                </Button>
-                <Button onClick={nextStep} className="gap-2" disabled={!formData.painPoint || formData.subjects.length === 0}>
-                  Next Step <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </motion.div>
-          )}
-
-          {step === 4 && (
-            <motion.div
-              key="step4"
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -20, opacity: 0 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold font-display text-slate-900 dark:text-white">Choose Your Plan</h2>
-                <p className="text-slate-500 dark:text-slate-400">Unlock premium AI tutoring and advanced features.</p>
-              </div>
-
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                {/* Free Tier */}
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="flex flex-col p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 relative overflow-hidden"
-                >
-                  <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2">Free</h3>
-                  <div className="flex items-baseline gap-1 mb-4">
-                    <span className="text-3xl font-bold">?0</span>
-                  </div>
-                  <ul className="space-y-3 mb-8 flex-1">
-                    <li className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Basic AI Assistance
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Standard Study Plans
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" /> 10 queries / day
-                    </li>
-                  </ul>
-                  <Button variant="outline" className="w-full mt-auto" onClick={() => handleComplete('free')} disabled={isSubmitting}>
-                    Skip for now
-                  </Button>
-                </motion.div>
-
-                 {/* Pro Monthly Tier */}
-                 <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="flex flex-col p-6 rounded-2xl border-2 border-primary bg-primary/5 relative overflow-hidden shadow-lg shadow-primary/10"
-                >
-                  <div className="absolute top-0 right-0 bg-primary text-white text-xs font-bold px-3 py-1 rounded-bl-xl">
-                    POPULAR
-                  </div>
-                  <h3 className="font-bold text-lg text-primary mb-2">Pro Monthly</h3>
-                  <div className="flex items-baseline gap-1 mb-4">
-                    <span className="text-3xl font-bold">?4,000</span>
-                    <span className="text-sm text-slate-500">/ month</span>
-                  </div>
-                  <ul className="space-y-3 mb-8 flex-1">
-                    <li className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                      <CheckCircle2 className="w-4 h-4 text-primary" /> Unlimited AI Queries
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                      <CheckCircle2 className="w-4 h-4 text-primary" /> Exam Prediction Engine
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                      <CheckCircle2 className="w-4 h-4 text-primary" /> Advanced Analytics
-                    </li>
-                  </ul>
-                  <Button className="w-full gap-2 shadow-md shadow-primary/20 mt-auto" onClick={() => { setSelectedPlanForPayment('pro_monthly'); setIsPaymentModalOpen(true); }} disabled={isSubmitting}>
-                    <Sparkles className="w-4 h-4" /> Upgrade Monthly
-                  </Button>
-                </motion.div>
-
-                {/* Pro Yearly Tier */}
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="flex flex-col p-6 rounded-2xl border-2 border-amber-500 bg-amber-50 dark:bg-amber-900/10 relative overflow-hidden shadow-lg shadow-amber-500/10 sm:col-span-2 lg:col-span-1"
-                >
-                  <div className="absolute top-0 right-0 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl">
-                    BEST VALUE
-                  </div>
-                  <h3 className="font-bold text-lg text-amber-600 dark:text-amber-500 mb-2">Pro Yearly</h3>
-                  <div className="flex items-baseline gap-1 mb-4">
-                    <span className="text-3xl font-bold">?40,000</span>
-                    <span className="text-sm text-slate-500">/ year</span>
-                  </div>
-                  <ul className="space-y-3 mb-8 flex-1">
-                    <li className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                      <CheckCircle2 className="w-4 h-4 text-amber-500" /> Everything in Pro Monthly
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                      <CheckCircle2 className="w-4 h-4 text-amber-500" /> 5 assignments / term
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                      <CheckCircle2 className="w-4 h-4 text-amber-500" /> Priority Support
-                    </li>
-                  </ul>
-                  <Button className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20 mt-auto" onClick={() => { setSelectedPlanForPayment('pro_yearly'); setIsPaymentModalOpen(true); }} disabled={isSubmitting}>
-                    <Sparkles className="w-4 h-4" /> Upgrade Yearly
-                  </Button>
-                </motion.div>
-              </div>
-
-              <div className="pt-2 flex justify-between">
-                <Button variant="ghost" onClick={prevStep} className="gap-2">
-                  <ChevronLeft className="w-4 h-4" /> Back
-                </Button>
-              </div>
-            </motion.div>
-          )}
-
-          {step === 5 && (
-            <motion.div
-              key="step5"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="text-center py-8"
-            >
-              <div className="w-24 h-24 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in duration-500">
-                <CheckCircle2 className="w-12 h-12" />
-              </div>
-              
-              <h2 className="text-3xl font-bold font-display text-slate-900 dark:text-white mb-2">You're All Set!</h2>
-              <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-8">
-                Your profile has been created successfully. Welcome to MyTutorMe.
-              </p>
-
-              <Button 
-                size="lg" 
-                className="w-full max-w-xs shadow-lg shadow-primary/20" 
-                onClick={() => handleComplete('free')}
-                disabled={isSubmitting}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.22 }}
+                className="pb-4"
               >
-                {isSubmitting ? 'Saving...' : 'Go to Dashboard'}
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <div className="mb-5">
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-primary">Question {step} of {stepConfig.length}</p>
+                  <h2 className="text-2xl font-bold font-display text-slate-900 dark:text-white">{currentStepMeta.subtitle}</h2>
+                </div>
+
+                {renderStep()}
+              </motion.div>
+            </AnimatePresence>
+
+            {step < 4 && (
+              <div className="sticky bottom-0 mt-4 rounded-2xl border border-slate-200 bg-white/95 p-3 backdrop-blur dark:border-slate-700 dark:bg-slate-950/95">
+                <Button
+                  className="h-11 w-full justify-between rounded-xl bg-primary px-4 text-white hover:bg-primary-dark"
+                  onClick={nextStep}
+                  disabled={!canContinue}
+                >
+                  Continue
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="hidden rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm lg:block dark:border-slate-700 dark:bg-slate-900">
+          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <currentStepMeta.icon className="h-6 w-6" />
+          </div>
+          <h3 className="mb-2 text-xl font-bold font-display text-slate-900 dark:text-white">Build your best study profile</h3>
+          <p className="mb-6 text-sm leading-6 text-slate-600 dark:text-slate-300">
+            This flow is optimized for mobile completion and syncs instantly to your student dashboard.
+          </p>
+
+          <div className="space-y-2">
+            {stepConfig.map((item, index) => {
+              const active = index + 1 === step;
+              const done = index + 1 < step;
+              return (
+                <div
+                  key={item.title}
+                  className={cn(
+                    'flex items-center gap-3 rounded-xl border px-3 py-2 text-sm transition-colors',
+                    active && 'border-primary bg-primary/10 text-primary',
+                    done && 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300',
+                    !active && !done && 'border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400',
+                  )}
+                >
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    {done ? <Check className="h-3.5 w-3.5" /> : index + 1}
+                  </span>
+                  {item.title}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <PaymentModal

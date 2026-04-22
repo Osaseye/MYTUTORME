@@ -11,6 +11,8 @@ export const StudentLayout = () => {
   const { user } = useAuthStore();
   const location = useLocation();
   const isAiTutor = location.pathname.includes('/student/ai-tutor');
+  const isExamTaking = location.pathname.startsWith('/student/exam-prep/active/');
+  const showMobileFloatingNav = !isAiTutor && !isExamTaking;
 
   const getPlanDisplay = (plan?: string) => {
     if (!plan || plan === 'free') return 'Free';
@@ -26,9 +28,9 @@ export const StudentLayout = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <StudentSidebar />
-      {!isAiTutor && <MobileFloatingNav />}
+      {showMobileFloatingNav && <MobileFloatingNav />}
       
-      <div className={`ml-0 md:ml-64 min-h-screen flex flex-col ${isAiTutor ? '' : 'pb-24 md:pb-0'}`}>
+      <div className={`ml-0 md:ml-64 min-h-screen flex flex-col ${showMobileFloatingNav ? 'pb-24 md:pb-0' : ''}`}>
         {/* Top Header */}
         {!isAiTutor && (
           <header className="h-16 px-4 md:px-8 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-30">
