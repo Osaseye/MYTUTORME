@@ -49,7 +49,7 @@ export const CourseInvitePage = () => {
     useEffect(() => {
         if (!course) return;
         const title = course.title || course.mockExam?.title || course.subject || 'Course';
-        const inviter = referrer?.displayName ? referrer.displayName.split(' ')[0] : 'A student';
+        const inviter = referrer?.username || (referrer?.displayName ? referrer.displayName.split(' ')[0] : 'A student');
         const displayString = `${inviter} invites you to learn ${title} on MyTutorMe`;
         document.title = displayString;
         
@@ -97,7 +97,7 @@ export const CourseInvitePage = () => {
     }
 
     const displayTitle = course.title || course.mockExam?.title || course.subject || 'Course';
-    const inviterName = referrer?.displayName ? referrer.displayName.split(' ')[0] : 'A student';
+    const inviterName = referrer?.username || (referrer?.displayName ? referrer.displayName.split(' ')[0] : 'A student');
     const isGenerated = course.generatedCourse;
 
     return (

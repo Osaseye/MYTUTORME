@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/i/:courseId",
+      "destination": "/api/invite-preview?courseId=:courseId"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
