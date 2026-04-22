@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { onAuthStateChanged } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import { auth } from '@/lib/firebase';
@@ -34,9 +35,19 @@ export const RoleSelectionPage = () => {
   const returnTo = searchParams.get('returnTo');
   const [selectedRole, setSelectedRole] = useState<Exclude<UserRole, 'admin'> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentUser, setCurrentUser] = useState(auth.currentUser);
+  const [isResolvingSession, setIsResolvingSession] = useState(true);
 
-  const currentUser = auth.currentUser;
   const canContinue = useMemo(() => Boolean(currentUser && selectedRole && !isSubmitting), [currentUser, selectedRole, isSubmitting]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setCurrentUser(firebaseUser);
+      setIsResolvingSession(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleContinue = async () => {
     if (!selectedRole || !currentUser) {
@@ -70,6 +81,19 @@ export const RoleSelectionPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (isResolvingSession) {
+    return (
+      <div className="space-y-6 text-center">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold font-display text-slate-900 dark:text-white">Restoring your Google session</h1>
+          <p className="text-slate-500 dark:text-slate-400">
+            Please wait a moment while we finish signing you in.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return (

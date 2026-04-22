@@ -4,6 +4,8 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import loginBg from "@/assets/login.png"; 
 import { GlobalLoader } from "@/components/ui/global-loader";
+import { auth } from "@/lib/firebase";
+import { isPendingOAuthRoleSelection } from "@/features/auth/api/auth";
 
 const testimonials = [
   {
@@ -28,6 +30,7 @@ export const AuthLayout = () => {
   const returnTo = searchParams.get("returnTo");
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const { user, isAuthenticated, isLoading } = useAuth();
+  const shouldResumeGoogleRoleSelection = Boolean(auth.currentUser && isPendingOAuthRoleSelection());
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -38,6 +41,12 @@ export const AuthLayout = () => {
 
   if (isLoading) {
     return <GlobalLoader />;
+  }
+
+  // For OAuth redirect login (mostly PWA/mobile fallback), a new user can have a
+  // Firebase session before their Firestore profile exists. Resume at role selection.
+  if (!isAuthenticated && shouldResumeGoogleRoleSelection) {
+    return <Navigate to={`/select-role${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`} replace />;
   }
 
   // If the user logs in or registers successfully, redirect them away from Auth screens
