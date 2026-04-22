@@ -50,15 +50,22 @@ export const RegisterForm = () => {
   const handleGoogleLogin = async () => {
     setIsOAuthLoading(true);
     try {
+      console.log('[RegisterForm] Starting Google sign-up with role:', selectedRole);
       await registerWithGoogle(selectedRole);
       // onAuthStateChanged handles the rest
+      console.log('[RegisterForm] Google sign-up call completed, waiting for auth state change');
+      toast.success('Signing up with Google...', { description: 'Please wait while we set up your account.' });
     } catch (error: any) {
+      console.error('[RegisterForm] Google sign-up error:', error);
       const messages: Record<string, string> = {
-        'auth/popup-closed-by-user': 'Google sign-up was cancelled.',
+        'auth/popup-closed-by-user': 'Google sign-up was cancelled. Please try again.',
         'auth/cancelled-popup-request': 'Google sign-up is already in progress.',
+        'auth/account-suspended': 'Your account has been suspended.',
+        'auth/user-not-found': error.message,
       };
-      toast.error(messages[error?.code] ?? 'Google sign-up failed.');
-    } finally {
+      const errorMessage = messages[error?.code] ?? error?.message ?? 'Google sign-up failed. Please try again.';
+      console.log('[RegisterForm] Showing error toast:', errorMessage);
+      toast.error(errorMessage);
       setIsOAuthLoading(false);
     }
   };

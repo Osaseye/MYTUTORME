@@ -124,13 +124,17 @@ export const loginWithGoogle = async () => {
   let result;
   
   if (isPWA) {
+    console.log('[Google Auth] PWA mode detected for login, using signInWithRedirect');
     await signInWithRedirect(auth, provider);
     return;
   }
   
   try {
+    console.log('[Google Auth] Attempting loginWithGoogle via popup');
     result = await signInWithPopup(auth, provider);
+    console.log('[Google Auth] Login popup successful, user:', result.user.uid);
   } catch (error: any) {
+    console.warn('[Google Auth] Login popup failed:', error.code, error.message);
     if (
       error.code === 'auth/popup-blocked' ||
       error.code === 'auth/popup-closed-by-user' ||
@@ -138,30 +142,40 @@ export const loginWithGoogle = async () => {
       error.code === 'auth/unauthorized-domain' ||
       error.message?.includes('Cross-Origin-Opener-Policy')
     ) {
+      console.log('[Google Auth] Falling back to signInWithRedirect for login');
       await signInWithRedirect(auth, provider);
       return;
     }
+    console.error('[Google Auth] Unrecoverable login error:', error);
     throw error;
   }
   const user = result.user;
 
-  // Check if Firestore document exists (returning user vs new user)
-  const userDocRef = doc(db, 'users', user.uid);
-  const userDoc = await getDoc(userDocRef);
+  try {
+    // Check if Firestore document exists (returning user vs new user)
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userDocRef);
+    console.log('[Google Auth] User doc exists for login:', userDoc.exists());
 
-  if (userDoc.exists() && userDoc.data().isSuspended) {
-    await signOut(auth);
-    throw { code: 'auth/account-suspended', message: 'Your account has been suspended.' };
+    if (userDoc.exists() && userDoc.data().isSuspended) {
+      console.warn('[Google Auth] User account suspended during login');
+      await signOut(auth);
+      throw { code: 'auth/account-suspended', message: 'Your account has been suspended.' };
+    }
+
+    if (!userDoc.exists()) {
+      console.warn('[Google Auth] No user document found during login - user must sign up first');
+      // Force new users to use the Register page so they can select their role.
+      await user.delete().catch(() => {});
+      await signOut(auth);
+      throw { code: 'auth/user-not-found', message: 'No account found. Please sign up to choose your account type (Student or Teacher).' };
+    }
+
+    return result;
+  } catch (error: any) {
+    console.error('[Google Auth] Error during login Firestore check:', error);
+    throw error;
   }
-
-  if (!userDoc.exists()) {
-    // Force new users to use the Register page so they can select their role.
-    await user.delete().catch(() => {});
-    await signOut(auth);
-    throw { code: 'auth/user-not-found', message: 'No account found. Please sign up to choose your account type (Student or Teacher).' };
-  }
-
-  return result;
 };
 
 export const registerWithGoogle = async (role: AuthRole) => {
@@ -170,16 +184,21 @@ export const registerWithGoogle = async (role: AuthRole) => {
   
   if (role) {
      localStorage.setItem('oauth_intended_role', role);
+     console.log('[Google Auth] Set oauth_intended_role:', role);
   }
 
   if (isPWA) {
+    console.log('[Google Auth] PWA mode detected, using signInWithRedirect');
     await signInWithRedirect(auth, provider);
     return;
   }
 
   try {
+    console.log('[Google Auth] Attempting signInWithPopup');
     result = await signInWithPopup(auth, provider);
+    console.log('[Google Auth] Popup successful, user:', result.user.uid);
   } catch (error: any) {
+    console.warn('[Google Auth] Popup failed with error:', error.code, error.message);
     if (
       error.code === 'auth/popup-blocked' ||
       error.code === 'auth/popup-closed-by-user' ||
@@ -187,24 +206,36 @@ export const registerWithGoogle = async (role: AuthRole) => {
       error.code === 'auth/unauthorized-domain' ||
       error.message?.includes('Cross-Origin-Opener-Policy')
     ) {
+      console.log('[Google Auth] Falling back to signInWithRedirect');
       await signInWithRedirect(auth, provider);
       return;
     }
+    console.error('[Google Auth] Unrecoverable error:', error);
     throw error;
   }
   const user = result.user;
 
-  const userDocRef = doc(db, 'users', user.uid);
-  const userDoc = await getDoc(userDocRef);
+  try {
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userDocRef);
+    console.log('[Google Auth] User doc exists:', userDoc.exists());
 
-  if (userDoc.exists() && userDoc.data().isSuspended) {
-    await signOut(auth);
-    throw { code: 'auth/account-suspended', message: 'Your account has been suspended.' };
+    if (userDoc.exists() && userDoc.data().isSuspended) {
+      console.warn('[Google Auth] User account suspended');
+      await signOut(auth);
+      throw { code: 'auth/account-suspended', message: 'Your account has been suspended.' };
+    }
+
+    if (!userDoc.exists()) {
+      console.log('[Google Auth] Creating new user document');
+      await setDoc(userDocRef, buildUserDoc(user, role));
+      console.log('[Google Auth] User document created successfully');
+    }
+
+    localStorage.removeItem('oauth_intended_role');
+    return result;
+  } catch (error: any) {
+    console.error('[Google Auth] Error during Firestore operations:', error);
+    throw error;
   }
-
-  if (!userDoc.exists()) {
-    await setDoc(userDocRef, buildUserDoc(user, role));
-  }
-
-  return result;
 };

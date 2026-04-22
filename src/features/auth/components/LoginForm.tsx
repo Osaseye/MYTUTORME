@@ -51,18 +51,23 @@ export const LoginForm = () => {
     setIsOAuthLoading(true);
     setSuspendedError(false);
     try {
+      console.log('[LoginForm] Starting Google login');
       await loginWithGoogle();
       // onAuthStateChanged handles the rest
+      console.log('[LoginForm] Google login call completed, waiting for auth state change');
+      toast.success('Signing in with Google...', { description: 'Please wait.' });
     } catch (error: any) {
+      console.error('[LoginForm] Google login error:', error);
       if (error?.code === 'auth/account-suspended') {
         setSuspendedError(true);
         toast.error('Account Suspended');
       } else if (error?.code === 'auth/user-not-found') {
-        toast.error(error.message);
+        toast.error(error.message ? error.message : 'No account found. Please sign up first.');
       } else {
-        toast.error('Google login failed.');
+        const errMsg = error?.message ?? 'Google login failed. Please try again.';
+        console.log('[LoginForm] Showing error toast:', errMsg);
+        toast.error(errMsg);
       }
-    } finally {
       setIsOAuthLoading(false);
     }
   };
@@ -158,7 +163,7 @@ export const LoginForm = () => {
             <div className="relative">
                 <Input
                 id="password"
-                placeholder="••••••••"
+                placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 {...register('password')}
