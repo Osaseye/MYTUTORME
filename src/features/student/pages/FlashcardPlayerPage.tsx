@@ -3,9 +3,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { ArrowLeft, BrainCircuit, ChevronLeft, ChevronRight, Lightbulb, CheckCircle2, RotateCcw } from 'lucide-react';
+import { ArrowLeft, BrainCircuit, ChevronLeft, ChevronRight, Lightbulb, CheckCircle2, RotateCcw, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlobalLoader } from '@/components/ui/global-loader';
+import { toast } from 'sonner';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 interface Flashcard {
   id: string;
@@ -17,6 +19,7 @@ interface Flashcard {
 export const FlashcardPlayerPage = () => {
   const { deckId } = useParams();
   const navigate = useNavigate();
+   const { user } = useAuth();
   const [deck, setDeck] = useState<any>(null);
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,6 +79,29 @@ export const FlashcardPlayerPage = () => {
     setCurrentIndex(0);
   };
 
+   const handleShareDeck = async () => {
+      if (!deckId) return;
+      const shareUrl = `${window.location.origin}/student/exam-prep/flashcards/${deckId}${user?.uid ? `?ref=${user.uid}` : ''}`;
+
+      try {
+         if (navigator.share) {
+            await navigator.share({
+               title: deck?.title || 'Flashcard Deck',
+               text: 'Practice this flashcard deck on MyTutorMe',
+               url: shareUrl,
+            });
+         } else {
+            await navigator.clipboard.writeText(shareUrl);
+            toast.success('Flashcard share link copied!');
+         }
+      } catch (error) {
+         if ((error as Error)?.name !== 'AbortError') {
+            console.error('Failed to share deck:', error);
+            toast.error('Could not share deck link right now.');
+         }
+      }
+   };
+
   const isCompleted = currentIndex === cards.length;
   const currentCard = cards[currentIndex];
 
@@ -94,7 +120,9 @@ export const FlashcardPlayerPage = () => {
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">{deck.title}</h1>
               <p className="text-sm text-slate-500 capitalize">{deck.difficulty} Difficulty</p>
            </div>
-           <div className="w-24"></div> {/* Balance header */}
+           <Button variant="outline" onClick={handleShareDeck} className="gap-2">
+              <Share2 className="w-4 h-4" /> Share
+           </Button>
         </div>
 
         {/* Progress */}

@@ -2,14 +2,16 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { ArrowLeft, CheckCircle2, Circle, Trophy } from 'lucide-react';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { ArrowLeft, CheckCircle2, Circle, Trophy, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export const StudyPlannerViewPage = () => {
     const { planId } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [planDoc, setPlanDoc] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
@@ -37,6 +39,10 @@ export const StudyPlannerViewPage = () => {
 
     const toggleTask = async (weekIndex: number, taskIndex: number) => {
         if (!planDoc) return;
+        if (!isOwner) {
+            toast.info('This is a shared plan. Only the owner can update tasks.');
+            return;
+        }
         
         // Deep clone to update
         const updatedWeeks = JSON.parse(JSON.stringify(planDoc.planData.weeks));
@@ -77,6 +83,37 @@ export const StudyPlannerViewPage = () => {
         }
     };
 
+    const handleSharePlan = async () => {
+        if (!planId || !planDoc) return;
+        const shareUrl = `${window.location.origin}/student/exam-prep/planner/${planId}`;
+
+        try {
+            if (isOwner && !planDoc.isShared) {
+                await updateDoc(doc(db, 'study_plans', planId), {
+                    isShared: true,
+                    sharedAt: serverTimestamp(),
+                });
+                setPlanDoc((prev: any) => prev ? { ...prev, isShared: true } : prev);
+            }
+
+            if (navigator.share) {
+                await navigator.share({
+                    title: `${planDoc.subject || 'Study'} Plan`,
+                    text: 'Check out this study plan on MyTutorMe',
+                    url: shareUrl,
+                });
+            } else {
+                await navigator.clipboard.writeText(shareUrl);
+                toast.success('Study plan link copied!');
+            }
+        } catch (error) {
+            if ((error as Error)?.name !== 'AbortError') {
+                console.error('Error sharing study plan', error);
+                toast.error('Could not share the study plan right now.');
+            }
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex-1 flex justify-center items-center min-h-[50vh]">
@@ -86,6 +123,8 @@ export const StudyPlannerViewPage = () => {
     }
 
     if (!planDoc) return null;
+
+    const isOwner = user?.uid && planDoc.userId === user.uid;
 
     
 
@@ -106,14 +145,25 @@ export const StudyPlannerViewPage = () => {
                             <p className="text-sm text-slate-500">{planDoc.targetExam} • {planDoc.durationWeeks} Weeks</p>
                         </div>
                     </div>
-                    <div className="bg-white dark:bg-slate-900 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
-                        <Trophy className="w-5 h-5 text-yellow-500" />
-                        <div>
-                            <div className="text-xs text-slate-500 font-medium">Overall Progress</div>
-                            <div className="font-bold text-slate-900 dark:text-white">{planDoc.progress || 0}%</div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" onClick={handleSharePlan} className="gap-2">
+                            <Share2 className="w-4 h-4" /> Share Plan
+                        </Button>
+                        <div className="bg-white dark:bg-slate-900 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+                            <Trophy className="w-5 h-5 text-yellow-500" />
+                            <div>
+                                <div className="text-xs text-slate-500 font-medium">Overall Progress</div>
+                                <div className="font-bold text-slate-900 dark:text-white">{planDoc.progress || 0}%</div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                {!isOwner && (
+                    <div className="rounded-xl border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/20 dark:text-blue-300 px-4 py-3 text-sm">
+                        Shared view mode: only the owner can mark tasks complete.
+                    </div>
+                )}
 
                 {/* Overarching Details */}
                 <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 text-slate-800 dark:text-slate-200">

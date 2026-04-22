@@ -14,7 +14,8 @@ export const ProtectedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => 
     if (location.pathname.startsWith('/admin')) {
       return <Navigate to="/admin/login" replace />;
     }
-    return <Navigate to="/login" replace />;
+    const returnTo = encodeURIComponent(`${location.pathname}${location.search}`);
+    return <Navigate to={`/login?returnTo=${returnTo}`} replace />;
   }
 
   if (!user.isOnboardingComplete) {

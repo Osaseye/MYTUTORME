@@ -43,7 +43,16 @@ service cloud.firestore {
     }
 
     match /study_plans/{planId} {
-      allow read, write: if request.auth != null && (request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId || isAdmin());
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.userId ||
+        resource.data.isShared == true ||
+        isAdmin()
+      );
+      allow write: if request.auth != null && (
+        request.auth.uid == resource.data.userId ||
+        request.auth.uid == request.resource.data.userId ||
+        isAdmin()
+      );
     }
 
     match /quizzes/{quizId} {

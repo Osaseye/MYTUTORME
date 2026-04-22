@@ -65,13 +65,18 @@ export const ExamConfigPage = () => {
     const [selectedPlan, setSelectedPlan] = useState<string>('');
     
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+    const [uploadedFileCount, setUploadedFileCount] = useState(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
   
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
       if (!files) return;
-  
-      setSelectedFiles(prev => [...prev, ...Array.from(files)]);
+
+            const nextFiles = Array.from(files);
+            setSelectedFiles(prev => [...prev, ...nextFiles]);
+            setUploadedFileCount(0);
+            toast.success(`${nextFiles.length} file${nextFiles.length > 1 ? 's' : ''} selected.`);
     
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -80,6 +85,7 @@ export const ExamConfigPage = () => {
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+        setUploadedFileCount(0);
   };
 
   useEffect(() => {
@@ -179,7 +185,9 @@ export const ExamConfigPage = () => {
           
           if (selectedFiles.length > 0 && user) {
             try {
+                            setIsUploadingFiles(true);
               const storagePaths = await uploadFilesToStorage(selectedFiles, user.uid, 'exam-uploads');
+                            setUploadedFileCount(storagePaths.length);
               fileDataForApi = selectedFiles.map((file, index) => ({
                 storagePath: storagePaths[index],
                 mimeType: file.type || 'application/octet-stream'
@@ -187,6 +195,8 @@ export const ExamConfigPage = () => {
             } catch (error: any) {
               toast.error('File upload failed: ' + error.message, { id: loadingToastId });
               return;
+                        } finally {
+                            setIsUploadingFiles(false);
             }
           }
   
@@ -330,6 +340,7 @@ export const ExamConfigPage = () => {
                                 >
                                     <UploadCloud className="w-6 h-6 text-slate-400" />
                                     <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Click to upload images/documents</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">You will see file previews immediately. Files upload when you click Start Exam.</p>
                                     <input 
                                         type="file" 
                                         className="hidden" 
@@ -339,6 +350,16 @@ export const ExamConfigPage = () => {
                                         onChange={handleFileChange}
                                     />
                                 </div>
+
+                                {selectedFiles.length > 0 && (
+                                    <div className="mt-3 rounded-lg border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/70 dark:bg-emerald-950/20 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
+                                        {isUploadingFiles
+                                            ? `Uploading ${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''} to cloud...`
+                                            : uploadedFileCount > 0
+                                                ? `${uploadedFileCount} file${uploadedFileCount > 1 ? 's' : ''} uploaded successfully.`
+                                                : `${selectedFiles.length} file${selectedFiles.length > 1 ? 's are' : ' is'} ready to upload.`}
+                                    </div>
+                                )}
 
                                 {selectedFiles.length > 0 && (
                                     <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -500,7 +521,7 @@ export const ExamConfigPage = () => {
                         )}
 
                         <Button 
-                            disabled={isGenerating || (sourceType === 'ai' && !selectedSubject)} 
+                                     disabled={isGenerating || isUploadingFiles || (sourceType === 'ai' && !selectedSubject)} 
                             onClick={handleStartExam}
                             className="w-full py-6 text-base font-bold shadow-lg shadow-primary/25 group relative" 
                         >
@@ -509,6 +530,11 @@ export const ExamConfigPage = () => {
                                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                                   Generating...
                                </>
+                                     ) : isUploadingFiles ? (
+                                         <>
+                                             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                             Uploading files...
+                                         </>
                             ) : (
                                <>
                                   Start Exam <ChevronRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
