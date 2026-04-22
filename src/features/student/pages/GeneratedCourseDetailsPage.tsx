@@ -197,11 +197,7 @@ export const GeneratedCourseDetailsPage = () => {
   const sectionCount = examData?.sections?.length || 0;
   const questionCount = flattenedQuestions.length;
   const hasStudyMaterial = !!studyMaterial?.content;
-  const inviterName =
-    (user as any)?.username ||
-    user?.displayName?.split(' ')[0] ||
-    user?.email?.split('@')[0] ||
-    'A student';
+  const inviterName = user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || 'A student';
 
   const handleShare = async () => {
     const previewLink = `${window.location.origin}/i/${courseId}?ref=${encodeURIComponent(user?.uid || '')}&inviter=${encodeURIComponent(inviterName)}&title=${encodeURIComponent(courseDisplayTitle)}`;
