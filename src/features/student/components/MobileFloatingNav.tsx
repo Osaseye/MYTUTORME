@@ -2,145 +2,198 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  LayoutDashboard, 
-  BookOpen, 
-  Bot, 
-  Users, 
-  Menu, 
   X, 
   FileText, 
-  GraduationCap, 
   TrendingUp, 
   Award, 
-  Settings 
+  Settings,
+  MoreHorizontal,
+  ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { paths } from '@/app/routes/paths';
+import { HubIcon, StacksIcon, NovaIcon, TargetIcon, NexusIcon } from '@/components/ui/brand-icons';
 
 export function MobileFloatingNav() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
   const location = useLocation();
 
+  // Hide nav on the actual AI Tutor chat interface if you want it full screen
+  // Or remove this condition if you want the nav always visible
+  const isAiTutorFull = location.pathname === paths.student.aiTutor && false; // Disable hiding for now to align with design
+  if (isAiTutorFull) return null;
+
   const navItems = [
-    { label: 'Dashboard', path: '/student/dashboard', icon: LayoutDashboard },
-    { label: 'Courses', path: '/student/courses', icon: BookOpen },
-    { label: 'AI Tutor', path: '/student/ai-tutor', icon: Bot },
-    { label: 'Community', path: '/student/community', icon: Users },
+    { label: 'Dashboard', path: paths.student.dashboard, icon: HubIcon },
+    { label: 'Courses', path: paths.student.courses, icon: StacksIcon },
+    // AI Tutor is handled specially as the center FAB
+    { label: 'Exam Prep', path: paths.student.examPrep, icon: TargetIcon },
   ];
 
-  const menuItems = [
-    { label: 'Assignment Helper', path: '/student/assignment-helper', icon: FileText },
-    { label: 'Exam Prep', path: '/student/exam-prep', icon: GraduationCap },
-    { label: 'GPA Tracker', path: '/student/gpa', icon: TrendingUp },
-    { label: 'Certificates', path: '/student/certificates', icon: Award },
-    { label: 'Settings', path: '/student/settings', icon: Settings },
+  const moreMenuItems = [
+    { label: 'Assignment Helper', path: paths.student.assignmentHelper, icon: FileText, desc: 'Get help with essays & outlines' },
+    { label: 'GPA Tracker', path: paths.student.gpa, icon: TrendingUp, desc: 'Simulate and track your grades' },
+    { label: 'Community', path: paths.student.community, icon: NexusIcon, desc: 'Connect with other students' },
+    { label: 'Certificates', path: paths.student.certificates, icon: Award, desc: 'View your achievements' },
+    { label: 'Settings', path: paths.student.settings, icon: Settings, desc: 'Manage your account' },
   ];
-
-  if (location.pathname === '/student/ai-tutor') return null;
 
   return (
     <>
+      {/* Bottom Sheet Backdrop */}
       <AnimatePresence>
-        {isOpen && (
+        {isMoreOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setIsOpen(false)}
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+            onClick={() => setIsMoreOpen(false)}
+            className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm md:hidden"
           />
         )}
       </AnimatePresence>
 
-      <div className="fixed bottom-6 left-0 right-0 z-50 flex justify-center px-4 md:hidden pointer-events-none">
-         <div className="relative pointer-events-auto">
-            <AnimatePresence>
-            {isOpen && (
-                <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: 10 }}
-                transition={{ type: "spring", duration: 0.3 }}
-                className="absolute bottom-full right-0 mb-4 flex flex-col items-end gap-3 z-50"
-                >
-                    {menuItems.map((item, index) => {
-                    const Icon = item.icon;
-                    const active = location.pathname.startsWith(item.path);
-
-                    return (
-                        <Link
-                            key={item.path}
-                            to={item.path}
-                            onClick={() => setIsOpen(false)}
-                            className="group relative flex items-center"
-                        >
-                            <span className="absolute right-14 whitespace-nowrap rounded-lg bg-black/80 px-3 py-1.5 text-xs font-medium text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100 border border-white/10">
-                                {item.label}
-                            </span>
-                            
-                            <motion.div
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                                className={cn(
-                                    "flex h-12 w-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-md transition-all",
-                                    active 
-                                        ? "bg-primary border-primary text-white" 
-                                        : "bg-white/80 border-white/20 text-slate-600 hover:bg-white hover:text-primary dark:bg-black/80 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
-                                )}
-                            >
-                                <Icon className="h-5 w-5" />
-                            </motion.div>
-                        </Link>
-                    );
-                    })}
-                </motion.div>
-            )}
-            </AnimatePresence>
-
-            <motion.nav
-            initial={{ y: 100 }}
+      {/* Bottom Sheet Menu */}
+      <AnimatePresence>
+        {isMoreOpen && (
+          <motion.div
+            initial={{ y: '100%' }}
             animate={{ y: 0 }}
-            className="flex h-16 items-center gap-1 rounded-full border border-white/20 bg-white/80 px-2 shadow-2xl backdrop-blur-md dark:bg-black/40 dark:border-white/10"
-            >
-            {navItems.map((item) => {
-                const Icon = item.icon;
-                const active = location.pathname === item.path;
-
-                return (
-                <Link
-                    key={item.path} 
+            exit={{ y: '100%' }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl border-t border-slate-200 dark:border-slate-800 md:hidden"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 80px)' }}
+          >
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full" />
+            </div>
+            
+            <div className="px-4 py-2">
+              <div className="flex items-center justify-between mb-4 px-2">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">More</h2>
+                <button onClick={() => setIsMoreOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                {moreMenuItems.map((item) => (
+                  <Link
+                    key={item.path}
                     to={item.path}
-                    onClick={() => setIsOpen(false)}
-                    className="relative flex h-12 w-12 flex-col items-center justify-center rounded-full transition-colors"
-                >
-                    {active && (
-                    <motion.div
-                        layoutId="nav-pill"
-                        className="absolute inset-2 rounded-full bg-primary/20"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                    )}
-                    <Icon
-                    className={cn(
-                        "relative z-10 h-5 w-5 transition-colors",
-                        active ? "text-primary" : "text-slate-600 dark:text-slate-400"
-                    )}
-                    />
-                </Link>
+                    onClick={() => setIsMoreOpen(false)}
+                    className="flex items-center p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                      <item.icon className="w-5 h-5" />
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{item.label}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-primary transition-colors" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Pill Nav Bar */}
+      <div className="fixed bottom-4 left-4 right-4 z-40 flex justify-center md:hidden pointer-events-none pb-[env(safe-area-inset-bottom)]">
+        <div className="relative pointer-events-auto w-full max-w-sm">
+          <nav className="flex items-center justify-between h-16 px-2 rounded-[2rem] bg-white dark:bg-slate-900 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 dark:border-slate-800">
+            {/* Left Items (0 and 1) */}
+            <div className="flex items-center justify-evenly flex-1">
+              {[navItems[0], navItems[1]].map((item) => {
+                const isActive = location.pathname.startsWith(item.path);
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setIsMoreOpen(false)}
+                    className="relative flex flex-col items-center justify-center w-14 h-14"
+                  >
+                    <div className="relative flex flex-col items-center justify-center z-10 gap-1">
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeTabPill"
+                          className="absolute top-[-2px] bottom-[14px] left-[-10px] right-[-10px] rounded-full bg-primary/15 -z-10"
+                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                      {/* Note: In a real app we'd use solid/outline variants based on state */}
+                      <item.icon className={cn("w-[22px] h-[22px] transition-colors", isActive ? "text-primary fill-primary/10" : "text-slate-500 dark:text-slate-400")} strokeWidth={isActive ? 2.5 : 2} />
+                      <span className={cn("text-[10px] font-medium tracking-tight", isActive ? "text-primary" : "text-slate-500 dark:text-slate-400")}>
+                        {item.label}
+                      </span>
+                    </div>
+                  </Link>
                 );
-            })}
+              })}
+            </div>
 
-            <div className="h-8 w-px bg-slate-200 dark:bg-white/10 mx-1" />
+            {/* Center FAB (AI Tutor / Nova) */}
+            <div className="relative flex items-center justify-center flex-shrink-0 w-20">
+              <Link
+                to={paths.student.aiTutor}
+                onClick={() => setIsMoreOpen(false)}
+                className="absolute -top-7 flex items-center justify-center w-[60px] h-[60px] rounded-full bg-primary shadow-[0_8px_25px_rgba(5,150,105,0.4)] text-white hover:scale-105 active:scale-95 transition-transform"
+              >
+                <div className="absolute inset-0 rounded-full bg-white/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
+                <NovaIcon className="w-8 h-8 relative z-10" />
+              </Link>
+              <span className="absolute bottom-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">Nova</span>
+            </div>
 
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex h-12 w-12 items-center justify-center rounded-full text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/10 hover:text-black dark:hover:text-white transition-colors"
-                aria-label="Menu"
-            >
-                {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-            </motion.nav>
-         </div>
+            {/* Right Items (Exam Prep + More) */}
+            <div className="flex items-center justify-evenly flex-1">
+               <Link
+                    to={navItems[2].path}
+                    onClick={() => setIsMoreOpen(false)}
+                    className="relative flex flex-col items-center justify-center w-14 h-14"
+                  >
+                    <div className="relative flex flex-col items-center justify-center z-10 gap-1">
+                      {location.pathname.startsWith(navItems[2].path) && (
+                        <motion.div
+                          layoutId="activeTabPill"
+                          className="absolute top-[-2px] bottom-[14px] left-[-10px] right-[-10px] rounded-full bg-primary/15 -z-10"
+                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                      {(() => {
+                        const Icon = navItems[2].icon;
+                        return <Icon className={cn("w-[22px] h-[22px] transition-colors", location.pathname.startsWith(navItems[2].path) ? "text-primary fill-primary/10" : "text-slate-500 dark:text-slate-400")} strokeWidth={location.pathname.startsWith(navItems[2].path) ? 2.5 : 2} />;
+                      })()}
+                      <span className={cn("text-[10px] font-medium tracking-tight", location.pathname.startsWith(navItems[2].path) ? "text-primary" : "text-slate-500 dark:text-slate-400")}>
+                        {navItems[2].label}
+                      </span>
+                    </div>
+              </Link>
+
+              <button
+                onClick={() => setIsMoreOpen(true)}
+                className="relative flex flex-col items-center justify-center w-14 h-14"
+              >
+                <div className="relative flex flex-col items-center justify-center z-10 gap-1">
+                  {isMoreOpen && (
+                    <motion.div
+                      layoutId="activeTabPill"
+                      className="absolute top-[-2px] bottom-[14px] left-[-10px] right-[-10px] rounded-full bg-primary/15 -z-10"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <MoreHorizontal className={cn("w-[22px] h-[22px] transition-colors", isMoreOpen ? "text-primary" : "text-slate-500 dark:text-slate-400")} strokeWidth={isMoreOpen ? 2.5 : 2} />
+                  <span className={cn("text-[10px] font-medium tracking-tight", isMoreOpen ? "text-primary" : "text-slate-500 dark:text-slate-400")}>
+                    More
+                  </span>
+                </div>
+              </button>
+            </div>
+
+          </nav>
+        </div>
       </div>
     </>
   );

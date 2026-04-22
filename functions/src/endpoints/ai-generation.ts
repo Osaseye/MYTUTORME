@@ -112,16 +112,28 @@ export const generateMockExam = functions.https.onCall(async (request) => {
 
             const parts: any[] = [{ text: prompt }];
             if (data.fileData && Array.isArray(data.fileData)) {
-                data.fileData.forEach((fObj: any) => {
-                    if (fObj.data && fObj.mimeType) {
+                for (const fObj of data.fileData) {
+                    if (fObj.storagePath) {
+                        try {
+                            const [fileBuf] = await admin.storage().bucket().file(fObj.storagePath).download();
+                            parts.push({
+                                inlineData: {
+                                    data: fileBuf.toString('base64'),
+                                    mimeType: fObj.mimeType
+                                }
+                            });
+                        } catch (err) {
+                            console.error('Error downloading file from storage:', err);
+                        }
+                    } else if (fObj.data && fObj.mimeType) {
                         parts.push({
                             inlineData: {
-                                data: fObj.data.split(',')[1] || fObj.data, // Handle full data URL or just base64
+                                data: fObj.data.split(',')[1] || fObj.data,
                                 mimeType: fObj.mimeType
                             }
                         });
                     }
-                });
+                }
             }
 
             const result = await model.generateContent({ contents: [{ role: 'user', parts }] });
@@ -370,16 +382,28 @@ export const generateFlashcardDeck = functions.https.onCall(async (request) => {
             const parts: any[] = [{ text: prompt }];
 
             if (data.fileData && Array.isArray(data.fileData)) {
-                data.fileData.forEach((fObj: any) => {
-                    if (fObj.data && fObj.mimeType) {
+                for (const fObj of data.fileData) {
+                    if (fObj.storagePath) {
+                        try {
+                            const [fileBuf] = await admin.storage().bucket().file(fObj.storagePath).download();
+                            parts.push({
+                                inlineData: {
+                                    data: fileBuf.toString('base64'),
+                                    mimeType: fObj.mimeType
+                                }
+                            });
+                        } catch (err) {
+                            console.error('Error downloading file from storage:', err);
+                        }
+                    } else if (fObj.data && fObj.mimeType) {
                         parts.push({
                             inlineData: {
-                                data: fObj.data.split(',')[1] || fObj.data, // Handle full data URL or just base64
+                                data: fObj.data.split(',')[1] || fObj.data,
                                 mimeType: fObj.mimeType
                             }
                         });
                     }
-                });
+                }
             }
 
             const result = await model.generateContent({ contents: [{ role: 'user', parts }] });
@@ -551,7 +575,7 @@ export const processAssignmentHelp = functions.https.onCall(async (request) => {
         throw new functions.https.HttpsError("unauthenticated", "Must be logged in to use Assignment Helper.");
     }
     
-    const { question, fileData } = data;
+    const { question, fileData, mode } = data;
     if (!question && !fileData) {
         throw new functions.https.HttpsError("invalid-argument", "Must provide a question or file data.");
     }
@@ -569,7 +593,7 @@ export const processAssignmentHelp = functions.https.onCall(async (request) => {
     await recordUsageTransaction(context.auth.uid, isPremium, maxQueries, 200, 'assignmentHelp');
 
     try {
-        const SYSTEM_INSTRUCTION = `You are an expert AI Assignment Helper. Your goal is to guide students to the answer, rather than just giving it to them outright.
+        let SYSTEM_INSTRUCTION = `You are an expert AI Assignment Helper. Your goal is to guide students to the answer, rather than just giving it to them outright.
         - Break down the problem into smaller, understandable steps.
         - Explain the underlying concepts briefly.
         - Use clear formatting with valid markdown. Use tables where appropriate.
@@ -577,19 +601,58 @@ export const processAssignmentHelp = functions.https.onCall(async (request) => {
         - Be concise and avoid over-explaining simple concepts. Focus on the core of the problem.
         - Ask questions at the end of sections to gauge understanding if appropriate.`;
 
+        if (mode === 'plagiarism-safe') {
+            SYSTEM_INSTRUCTION = `You are a Plagiarism-Safe AI Tutor. Your strict rule is to help students *think*, not cheat.
+            - You MUST NOT write complete essays, code blocks solving the whole assignment, or full paragraphs of submission-ready text.
+            - Return ONLY ideas, outlines, structures, concepts, and guiding hints.
+            - Use bullet points and headers extensively.
+            - Provide structured outlines with bullet points that the student can write from.
+            - Actively refuse to "write my essay" or "do my homework directly", instead offering a structured breakdown of how they should approach it.
+            - Output should be in valid markdown.`;
+        } else if (mode === 'citations') {
+            SYSTEM_INSTRUCTION = `You are an expert Citation Generator.
+            - Extract the source URL, book title, or reference info from the user's prompt.
+            - Instantly return the citation formatted perfectly in both APA and MLA formatting.
+            - Format the response beautifully using Markdown with clear headers for "**APA Format**" and "**MLA Format**".
+            - Give no extra conversational fluff, just the citations.`;
+        } else if (mode === 'submission-check') {
+            SYSTEM_INSTRUCTION = `You are an expert Assignment Submission Reviewer.
+            - The student has pasted their assignment work and the question/brief.
+            - Review their work and flag:
+              1. Missing sections based on the question/brief (if provided).
+              2. Weak arguments or unsupported claims.
+              3. Formatting issues (no references, no introduction, lack of structure, etc.).
+            - Output a bulleted "Checklist of what to fix before submitting".
+            - Be concise, direct, and constructive. Use valid markdown.`;
+        }
+
         const parts: any[] = [];
       
         if (question) {
             parts.push({ text: question });
         }
         
-        if (fileData && fileData.data && fileData.mimeType) {
-            parts.push({
-                inlineData: {
-                    data: fileData.data.split(',')[1] || fileData.data,
-                    mimeType: fileData.mimeType
+        if (fileData) {
+            if (fileData.storagePath) {
+                try {
+                    const [fileBuf] = await admin.storage().bucket().file(fileData.storagePath).download();
+                    parts.push({
+                        inlineData: {
+                            data: fileBuf.toString('base64'),
+                            mimeType: fileData.mimeType
+                        }
+                    });
+                } catch (err) {
+                    console.error('Error downloading isolated file from storage:', err);
                 }
-            });
+            } else if (fileData.data && fileData.mimeType) {
+                parts.push({
+                    inlineData: {
+                        data: fileData.data.split(',')[1] || fileData.data,
+                        mimeType: fileData.mimeType
+                    }
+                });
+            }
         }
 
         const model = getVertexAi().preview.getGenerativeModel({

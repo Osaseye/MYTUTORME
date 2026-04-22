@@ -9,51 +9,54 @@ import { useFlashcardGenerator } from '../hooks/useFlashcardGenerator';
 import { Input } from '@/components/ui/input';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 
-export const FlashcardConfigPage = () => {
-  const navigate = useNavigate();
-  const [subject, setSubject] = useState('');
-  const [topic, setTopic] = useState('');
-  const [cardCount, setCardCount] = useState([10]);
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard' | 'adaptive'>('medium');
-  const [selectedFiles, setSelectedFiles] = useState<{data: string, mimeType: string, name: string}[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { generateDeck, isGenerating } = useFlashcardGenerator();
-  const { user } = useAuthStore();
+import { uploadFilesToStorage } from '@/utils/storageUploadService';
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            if (event.target?.result && typeof event.target.result === 'string') {
-                setSelectedFiles(prev => [...prev, {
-                    data: event.target!.result as string,
-                    mimeType: file.type,
-                    name: file.name
-                }]);
-            }
-        };
-        reader.readAsDataURL(file);
-    });
-    
-    if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-    }
-  };
-
-  const removeFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleGenerate = async () => {
-    if (!subject || !topic) {
-      toast.error('Please enter both subject and topic.');
-      return;
-    }
-
-    const fileDataForApi = selectedFiles.map(f => ({ data: f.data, mimeType: f.mimeType }));
+  export const FlashcardConfigPage = () => {
+    const navigate = useNavigate();
+    const [subject, setSubject] = useState('');
+    const [topic, setTopic] = useState('');
+    const [cardCount, setCardCount] = useState([10]);
+    const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard' | 'adaptive'>('medium');
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const { generateDeck, isGenerating } = useFlashcardGenerator();
+    const { user } = useAuthStore();
+  
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files) return;
+  
+      setSelectedFiles(prev => [...prev, ...Array.from(files)]);
+      
+      if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+      }
+    };
+  
+    const removeFile = (index: number) => {
+      setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    };
+  
+    const handleGenerate = async () => {
+      if (!subject || !topic) {
+        toast.error('Please enter both subject and topic.');
+        return;
+      }
+      
+      let fileDataForApi: any[] | undefined = undefined;
+      
+      if (selectedFiles.length > 0 && user) {
+        try {
+          const storagePaths = await uploadFilesToStorage(selectedFiles, user.uid, 'flashcard-uploads');
+          fileDataForApi = selectedFiles.map((file, index) => ({
+            storagePath: storagePaths[index],
+            mimeType: file.type || 'application/octet-stream'
+          }));
+        } catch (error: any) {
+          toast.error('File upload failed: ' + error.message);
+          return;
+        }
+      }
 
     const deckId = await generateDeck({
       subject: subject.trim(),
@@ -170,8 +173,8 @@ export const FlashcardConfigPage = () => {
                   <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                       {selectedFiles.map((file, idx) => (
                           <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-2 text-center">
-                              {file.mimeType.startsWith('image/') ? (
-                                  <img src={file.data} alt="Upload" className="w-full h-full object-cover" />
+                              {file.type.startsWith('image/') ? (
+                                  <img src={URL.createObjectURL(file)} alt="Upload" className="w-full h-full object-cover" />
                               ) : (
                                   <div className="flex flex-col items-center">
                                       <FileText className="w-8 h-8 text-slate-400 mb-2" />

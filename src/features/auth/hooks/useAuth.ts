@@ -71,6 +71,16 @@ export const useAuthStore = create<AuthState>((set) => ({
             retries++;
           }
 
+          // If still not exists, maybe it's a popup flow that got interrupted? Check for intendedRole just in case
+          if (!userDoc.exists()) {
+            const intendedRole = localStorage.getItem('oauth_intended_role');
+            if (intendedRole === 'student' || intendedRole === 'teacher') {
+              await setDoc(doc(db, 'users', firebaseUser.uid), buildUserDoc(firebaseUser as any, intendedRole));
+              userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+              localStorage.removeItem('oauth_intended_role');
+            }
+          }
+
           if (userDoc.exists()) {
             const userData = userDoc.data() as User;
             set({ user: userData, isAuthenticated: true, isLoading: false });

@@ -15,6 +15,8 @@ const db = admin.firestore();
 import * as dotenv from "dotenv";
 dotenv.config();
 
+export { generateCourseContent } from "./endpoints/ai-generation-admin";
+
 // Use an environment variable for secret keys in production.
 // Set it via: firebase functions:secrets:set FLUTTERWAVE_SECRET_KEY
 // and: firebase functions:secrets:set FLUTTERWAVE_WEBHOOK_SECRET

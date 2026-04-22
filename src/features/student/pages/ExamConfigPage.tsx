@@ -23,40 +23,55 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { useExamGenerator } from '../hooks/useExamGenerator';
 
+import { uploadFilesToStorage } from '@/utils/storageUploadService';
+
+  const FilePreview = ({ file, onRemove }: { file: File, onRemove: () => void }) => {
+  const [url, setUrl] = useState<string>('');
+  useEffect(() => {
+    if (file.type.startsWith('image/')) {
+      const u = URL.createObjectURL(file);
+      setUrl(u);
+      return () => URL.revokeObjectURL(u);
+    }
+  }, [file]);
+  return (
+    <div className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-2 text-center">
+        {file.type.startsWith('image/') && url ? (
+            <img src={url} alt="Upload" className="w-full h-full object-cover" />
+        ) : (
+            <div className="flex flex-col items-center">
+                <FileText className="w-8 h-8 text-slate-400 mb-2" />
+                <span className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">{file.name || 'Document'}</span>
+            </div>
+        )}
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer" onClick={(e) => { e.stopPropagation(); onRemove(); }}>
+            <button className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600"><X className="w-4 h-4" /></button>
+        </div>
+    </div>
+  );
+};
 export const ExamConfigPage = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { generateExam, isGenerating } = useExamGenerator();
+    const navigate = useNavigate();
+    const { user } = useAuth();
+    const { generateExam, isGenerating } = useExamGenerator();
+    
+    const [userDecks, setUserDecks] = useState<any[]>([]);
+    const [userPlans, setUserPlans] = useState<any[]>([]);
+    
+    const [sourceType, setSourceType] = useState<'ai' | 'deck' | 'plan'>('ai');
+    const [selectedSubject, setSelectedSubject] = useState<string>('');
+    const [selectedTopic, setSelectedTopic] = useState<string>('');
+    const [selectedDeck, setSelectedDeck] = useState<string>('');
+    const [selectedPlan, setSelectedPlan] = useState<string>('');
+    
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [userDecks, setUserDecks] = useState<any[]>([]);
-  const [userPlans, setUserPlans] = useState<any[]>([]);
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files) return;
   
-  const [sourceType, setSourceType] = useState<'ai' | 'deck' | 'plan'>('ai');
-  const [selectedSubject, setSelectedSubject] = useState<string>('');
-  const [selectedTopic, setSelectedTopic] = useState<string>('');
-  const [selectedDeck, setSelectedDeck] = useState<string>('');
-  const [selectedPlan, setSelectedPlan] = useState<string>('');
-  
-  const [selectedFiles, setSelectedFiles] = useState<{data: string, mimeType: string, name: string}[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            if (event.target?.result && typeof event.target.result === 'string') {
-                setSelectedFiles(prev => [...prev, {
-                    data: event.target!.result as string,
-                    mimeType: file.type,
-                    name: file.name
-                }]);
-            }
-        };
-        reader.readAsDataURL(file);
-    });
+      setSelectedFiles(prev => [...prev, ...Array.from(files)]);
     
     if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -160,20 +175,33 @@ export const ExamConfigPage = () => {
     // The hook creates the pool and quiz document
     const loadingToastId = toast.loading('Generating your custom exam... Please wait.');
     try {
-        const fileDataForApi = selectedFiles.map(f => ({ data: f.data, mimeType: f.mimeType }));
-
-        const quizId = await generateExam({
-          subject: finalSub,
-          topic: finalTop,
-          difficulty,
-          count: questionCount[0],
-          mode,
-          fileData: fileDataForApi.length > 0 ? fileDataForApi : undefined
-        });
-
-        if (quizId) {
-          toast.success('Exam generated successfully!', { id: loadingToastId });
-          navigate(`/student/exam-prep/active/${quizId}`);
+          let fileDataForApi: any[] | undefined = undefined;
+          
+          if (selectedFiles.length > 0 && user) {
+            try {
+              const storagePaths = await uploadFilesToStorage(selectedFiles, user.uid, 'exam-uploads');
+              fileDataForApi = selectedFiles.map((file, index) => ({
+                storagePath: storagePaths[index],
+                mimeType: file.type || 'application/octet-stream'
+              }));
+            } catch (error: any) {
+              toast.error('File upload failed: ' + error.message, { id: loadingToastId });
+              return;
+            }
+          }
+  
+          const quizId = await generateExam({
+            subject: finalSub,
+            topic: finalTop,
+            difficulty,
+            count: questionCount[0],
+            mode,
+            fileData: fileDataForApi
+          });
+  
+          if (quizId) {
+            toast.success('Exam generated successfully!', { id: loadingToastId });
+            navigate(`/student/exam-prep/active/${quizId}`);
         } else {
             toast.error('Could not generate exam. Please try a different topic.', { id: loadingToastId });
         }
@@ -314,23 +342,7 @@ export const ExamConfigPage = () => {
 
                                 {selectedFiles.length > 0 && (
                                     <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                        {selectedFiles.map((file, idx) => (
-                                            <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-2 text-center">
-                                                {file.mimeType.startsWith('image/') ? (
-                                                    <img src={file.data} alt="Upload" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="flex flex-col items-center">
-                                                        <FileText className="w-8 h-8 text-slate-400 mb-2" />
-                                                        <span className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">{file.name || 'Document'}</span>
-                                                    </div>
-                                                )}
-                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <button onClick={(e) => { e.stopPropagation(); removeFile(idx); }} className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600">
-                                                        <X className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
+                                        {selectedFiles.map((file, idx) => (<FilePreview key={idx} file={file} onRemove={() => removeFile(idx)} />))}
                                     </div>
                                 )}
                             </div>

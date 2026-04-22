@@ -14,6 +14,8 @@ export default defineConfig({
         name: 'MyTutorMe',
         short_name: 'MyTutorMe',
         description: 'Your premium AI-powered education platform',
+        start_url: '/dashboard',
+        scope: '/',
         theme_color: '#059669',
         background_color: '#ffffff',
         display: 'standalone',

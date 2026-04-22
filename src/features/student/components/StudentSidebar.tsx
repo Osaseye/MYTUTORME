@@ -3,32 +3,31 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { 
-  LayoutDashboard, 
-  BookOpen, 
-  BrainCircuit, 
-   
   Award, 
   Settings,
   LogOut,
   Sparkles,
   FileEdit,
-  Users,
   HelpCircle,
-  
+  TrendingUp,
+  Target,
+  Users
 } from 'lucide-react';
+import { HubIcon, StacksIcon, NovaIcon } from '@/components/ui/brand-icons';
 
 export const StudentSidebar = () => {
     const location = useLocation();
     const { signOut } = useAuth();
     
     const menuItems = [
-        { title: 'Dashboard', icon: LayoutDashboard, path: '/student/dashboard' },
-        { title: 'AI Tutor', icon: BrainCircuit, path: '/student/ai-tutor', highlight: true },
+        { title: 'Dashboard', icon: HubIcon, path: '/student/dashboard' },
+        { title: 'Nova AI', icon: NovaIcon, path: '/student/ai-tutor', highlight: true },
         { title: 'Assignment Helper', icon: FileEdit, path: '/student/assignment-helper' },
-        { title: 'My Courses', icon: BookOpen, path: '/student/courses' },
+        { title: 'My Courses', icon: StacksIcon, path: '/student/courses' },
+        { title: 'Exam Prep', icon: Target, path: '/student/exam-prep' },
         { title: 'Community', icon: Users, path: '/student/community' },
-        { title: 'Certificates', icon: Award, path: '/student/certificates' },
-        { title: 'Exam Prep', icon: Award, path: '/student/exam-prep' }
+        { title: 'GPA Tracker', icon: TrendingUp, path: '/student/gpa' },
+        { title: 'Certificates', icon: Award, path: '/student/certificates' }
     ];
 
     return (
@@ -46,7 +45,7 @@ export const StudentSidebar = () => {
                 <div className="space-y-1">
                     {menuItems.map((item) => {
                         const Icon = item.icon;
-                        const isActive = location.pathname === item.path;
+                        const isActive = location.pathname.startsWith(item.path);
                         
                         return (
                             <Link
@@ -55,14 +54,14 @@ export const StudentSidebar = () => {
                                 className={cn(
                                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all group relative",
                                     isActive 
-                                        ? "bg-primary/10 text-primary" 
-                                        : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                                        ? "bg-primary/10 text-primary border border-primary/20" 
+                                        : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white border border-transparent"
                                 )}
                             >
                                 {item.highlight && !isActive && (
                                      <span className="absolute right-2 w-2 h-2 rounded-full bg-primary animate-pulse" />
                                 )}
-                                <Icon className={cn("h-4 w-4", isActive ? "text-primary" : "text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300")} />
+                                <Icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300 transition-colors")} />
                                 {item.title}
                                 {item.highlight && isActive && <Sparkles className="ml-auto w-4 h-4 text-primary animate-pulse" />}
                             </Link>

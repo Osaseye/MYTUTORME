@@ -1,31 +1,54 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { ProtectedRoute } from './protected-route';
 import { paths } from './paths';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import LandingPage from '@/features/landing/LandingPage';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
 import { OnboardingLayout, StudentOnboarding, TeacherOnboarding } from '@/features/onboarding';
-import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, AssignmentHelperPage, GpaTrackerPage, CertificatePage, MyCertificatesPage, SettingsPage, ExamPrepPage, ExamConfigPage, ExamResultsPage, ExamTakingPage, FlashcardConfigPage, FlashcardPlayerPage, CommunityPage, StudyPlannerConfigPage, StudyPlannerViewPage } from '@/features/student';
+import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, GeneratedCourseDetailsPage, AssignmentHelperPage, GpaTrackerPage, CertificatePage, MyCertificatesPage, SettingsPage, ExamPrepPage, ExamConfigPage, ExamResultsPage, ExamTakingPage, FlashcardConfigPage, FlashcardPlayerPage, CommunityPage, StudyPlannerConfigPage, StudyPlannerViewPage } from '@/features/student';
 import { TeacherLayout, TeacherDashboard, TeacherCoursesPage, TeacherCourseDetailsPage, CourseCreationPage, ResourcesPage, EarningsPage, CommunityPage as TeacherCommunityPage, TeacherSettingsPage, StudentsPage, TeacherPendingPage } from '@/features/teacher';
-import { AdminLayout, AdminDashboard, AdminLoginPage, UserManagementPage, CourseModerationPage, AdminCourseDetailsPage, FinancialsPage, SettingsPage as AdminSettingsPage, AdminSupportPage } from '@/features/admin';
+import { AdminLayout, AdminDashboard, AdminLoginPage, UserManagementPage, CourseModerationPage, AdminCourseDetailsPage, FinancialsPage, SettingsPage as AdminSettingsPage, AdminSupportPage, AdminGeneratorPage } from '@/features/admin';
 import { SupportPage } from '@/pages/SupportPage';
 import { VerifyCertificatePage } from '@/pages/VerifyCertificatePage';
 import { PublicExamPage } from '@/pages/PublicExamPage';
+import { CourseInvitePage } from '@/pages/CourseInvitePage';
 import { NotificationsPage } from '@/pages/NotificationsPage';
+import { NotFoundPage } from '@/pages/NotFoundPage';
 
 export const AppRoutes = () => {
+  const isPWA = window.matchMedia("(display-mode: standalone)").matches;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (isPWA && location.pathname === "/") {
+      user ? navigate("/student/dashboard") : navigate("/login");
+    }
+  }, [isPWA, user, location.pathname, navigate]);
+
   return (
     <>
       <ScrollToTop />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/dashboard" element={
+          user ? (
+            <Navigate to={`/${user.role}/dashboard`} replace />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } />
         <Route path={paths.support} element={<SupportPage />} />
         <Route path={paths.verifyCertificate} element={<VerifyCertificatePage />} />
         <Route path="/public/exam/:quizId" element={<PublicExamPage />} />
+        <Route path="/invite/:courseId" element={<CourseInvitePage />} />
         <Route element={<AuthLayout />}>
           <Route path={paths.auth.login} element={<LoginPage />} />
           <Route path={paths.auth.register} element={<RegisterPage />} />
@@ -46,6 +69,7 @@ export const AppRoutes = () => {
         <Route element={<StudentLayout />}>
           <Route path={paths.student.dashboard} element={<StudentDashboard />} />
           <Route path={paths.student.courses} element={<MyCoursesPage />} />
+          <Route path={paths.student.courses + '/generated/:courseId'} element={<GeneratedCourseDetailsPage />} />
           <Route path={paths.student.courses + '/:courseId'} element={<CourseDetailsPage />} />
           <Route path={paths.student.aiTutor} element={<AiTutorPage />} />
           <Route path={paths.student.assignmentHelper} element={<AssignmentHelperPage />} />
@@ -87,6 +111,7 @@ export const AppRoutes = () => {
               <Route path={paths.admin.dashboard} element={<AdminDashboard />} />
               <Route path={paths.admin.users} element={<UserManagementPage />} />              <Route path={paths.admin.moderation} element={<CourseModerationPage />} />
               <Route path={paths.admin.support} element={<AdminSupportPage />} />
+              <Route path={paths.admin.generator} element={<AdminGeneratorPage />} />
               <Route path={paths.admin.coursesNew} element={<CourseCreationPage />} />
               <Route path={paths.admin.courseDetails} element={<AdminCourseDetailsPage />} />
               <Route path={paths.admin.financials} element={<FinancialsPage />} />
@@ -95,7 +120,7 @@ export const AppRoutes = () => {
       </Route>
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
     </>
   );

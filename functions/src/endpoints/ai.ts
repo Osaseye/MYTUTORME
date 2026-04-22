@@ -65,12 +65,38 @@ export const askAiTutor = functions.https.onCall(async (request) => {
             currentTopic = sd?.topic || currentTopic;
             const msgs = sd?.messages || [];
             
-            geminiHistory = msgs.map((msg: any) => ({
-                role: msg.role === 'assistant' ? 'model' : 'user',
-                parts: [
-                    ...(msg.images?.map((img: any) => ({ inlineData: { data: img.data, mimeType: img.mimeType } })) || []),
-                    { text: msg.content }
-                ]
+            geminiHistory = await Promise.all(msgs.map(async (msg: any) => {
+                const parts: any[] = [];
+                if (msg.images && msg.images.length > 0) {
+                    for (const img of msg.images) {
+                        if (img.storagePath) {
+                            try {
+                                const [buffer] = await admin.storage().bucket().file(img.storagePath).download();
+                                parts.push({
+                                    inlineData: {
+                                        data: buffer.toString('base64'),
+                                        mimeType: img.mimeType
+                                    }
+                                });
+                            } catch (err) {
+                                console.error(`Failed to download history image ${img.storagePath}`, err);
+                            }
+                        } else if (img.data) {
+                            parts.push({
+                                inlineData: {
+                                    data: img.data.split(',')[1] || img.data,
+                                    mimeType: img.mimeType
+                                }
+                            });
+                        }
+                    }
+                }
+                parts.push({ text: msg.content });
+                
+                return {
+                    role: msg.role === 'assistant' ? 'model' : 'user',
+                    parts
+                };
             }));
         }
     } else {
@@ -107,7 +133,7 @@ export const askAiTutor = functions.https.onCall(async (request) => {
 
     const vertexAiClient = getVertexAi();
     const model = vertexAiClient.preview.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.5-pro',
         systemInstruction: { role: 'system', parts: [{ text: fullSystemPrompt }] },
         generationConfig: {
             maxOutputTokens: 8192,
@@ -119,12 +145,29 @@ export const askAiTutor = functions.https.onCall(async (request) => {
 
     const parts: any[] = [];
     if (images && images.length > 0) {
-        parts.push(...images.map((img: any) => ({ 
-            inlineData: { 
-                data: img.data.split(',')[1] || img.data, 
-                mimeType: img.mimeType 
-            } 
-        })));
+        for (const img of images) {
+            if (img.storagePath) {
+                try {
+                    const [buffer] = await admin.storage().bucket().file(img.storagePath).download();
+                    parts.push({
+                        inlineData: {
+                            data: buffer.toString('base64'),
+                            mimeType: img.mimeType
+                        }
+                    });
+                } catch (err) {
+                    console.error(`Failed to download uploaded image ${img.storagePath}`, err);
+                    throw new functions.https.HttpsError("internal", "Failed to process uploaded file.");
+                }
+            } else if (img.data) {
+                parts.push({
+                    inlineData: {
+                        data: img.data.split(',')[1] || img.data,
+                        mimeType: img.mimeType
+                    }
+                });
+            }
+        }
     }
     parts.push({ text: messageContent });
 

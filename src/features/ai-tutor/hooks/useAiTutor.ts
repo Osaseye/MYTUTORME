@@ -1,18 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
-import { db } from '@/lib/firebase';
+import { db, functions } from '@/lib/firebase';
+import { httpsCallable } from 'firebase/functions';
 import {
-  doc, updateDoc, getDoc,
+  doc, getDoc,
   collection, query, where, orderBy, limit, onSnapshot
 } from 'firebase/firestore';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 import { toast } from 'sonner';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
 
 export interface Message {
   role: 'user' | 'assistant';
   content: string;
-  images?: { data: string, mimeType: string }[];
+  images?: { data?: string, storagePath?: string, mimeType: string }[];
   timestamp: number;
 }
 
@@ -34,7 +33,7 @@ export const useAiTutor = (subject: string, topic?: string, specificSessionId?: 
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [queriesUsed, setQueriesUsed] = useState(0);
-  const maxQueries = 5;
+  const maxQueries = 3;
   const sessionIdRef = useRef<string | null>(null);
 
   // Sync queriesUsed with user doc
@@ -73,26 +72,15 @@ export const useAiTutor = (subject: string, topic?: string, specificSessionId?: 
   const checkRateLimit = async (): Promise<boolean> => {
     if (!user) return false;
     
-    // Free tier logic
+    // Free tier logic (UI guard only, securely enforced in backend)
     if (user.plan === 'free' || !user.plan) {
       const today = new Date().toDateString();
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
-      
-      if (userSnap.exists()) {
-        const data = userSnap.data();
-        if (data.aiQueryDate !== today) {
-          // Reset for new day
-          await updateDoc(userRef, { aiQueryDate: today, aiQueryCount: 0 });
-          setQueriesUsed(0);
-          return true;
-        } else if ((data.aiQueryCount || 0) >= maxQueries) {
-          toast.error(`Free tier limit (${maxQueries} queries/day) reached. Please upgrade to Pro.`);
-          return false;
-        }
+      if (user.aiQueryDate === today && (user.aiQueryCount || 0) >= maxQueries) {
+        toast.error(`Free tier limit (${maxQueries} queries/day) reached. Please upgrade to Pro.`);
+        return false;
       }
     }
-    return true; // Pro users or under limit
+    return true; 
   };
 
   const initializeChat = async (existingSessionId?: string) => {
@@ -121,10 +109,9 @@ export const useAiTutor = (subject: string, topic?: string, specificSessionId?: 
     return { subject: currentSubject, topic: currentTopic };
   };
 
-  const sendMessage = async (content: string, images?: { data: string, mimeType: string }[]) => {
+  const sendMessage = async (content: string, images?: { storagePath?: string, data?: string, mimeType: string, name?: string }[]) => {
     if (!user || isStreaming) return;
 
-    // Check limits before sending
     const canSend = await checkRateLimit();
     if (!canSend) return;
 
@@ -140,34 +127,38 @@ export const useAiTutor = (subject: string, topic?: string, specificSessionId?: 
     setMessages(prev => [...prev, userMessage as Message]);
 
     setIsStreaming(true);
-    setStreamingContent('Thinking...');
+    setStreamingContent('');
 
     try {
-      const askAi = httpsCallable<any, any>(functions, 'askAiTutor');
-      const response = await askAi({
-          subject,
-          topic,
-          messageContent: content,
-          images,
-          existingSessionId: sessionIdRef.current,
+      const askAiTutorFn = httpsCallable(functions, 'askAiTutor');
+      
+      const result = await askAiTutorFn({
+         subject,
+         topic,
+         messageContent: content,
+         images,
+         existingSessionId: sessionIdRef.current 
       });
 
-      const data = response.data;
-      sessionIdRef.current = data.sessionId;
+      const data = result.data as any;
 
-      if (data.assistantMessage) {
-          setStreamingContent(''); // Clear loading text
-          setMessages(prev => [...prev, data.assistantMessage as Message]);
+      if (data && data.success) {
+        sessionIdRef.current = data.sessionId;
+        
+        setMessages(prev => [
+          ...prev,
+          { role: "assistant", content: data.assistantMessage.content, timestamp: Date.now() }
+        ]);
+
+        // Update rate limits locally
+        if (user.plan === 'free' || !user.plan) {
+          setQueriesUsed(prev => prev + 1);
+        }
       }
 
-      // Update rate limits locally
-      if (user.plan === 'free' || !user.plan) {
-        setQueriesUsed(prev => prev + 1);
-      }
-
-    } catch (error) {
+    } catch (error: any) {
       console.error("AI Error:", error);
-      toast.error("Failed to generate response. Please try again.");
+      toast.error(error?.message || "Failed to generate response. Please try again.");
       setMessages(prev => prev.filter(msg => msg !== userMessage)); // rollback
     } finally {
       setIsStreaming(false);
@@ -200,6 +191,5 @@ export const useAiTutor = (subject: string, topic?: string, specificSessionId?: 
     initializeChat,
     currentSessionId: sessionIdRef.current,
     queriesUsed,
-    maxQueries,
   };
 };

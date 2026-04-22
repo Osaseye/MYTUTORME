@@ -117,9 +117,17 @@ export const registerUser = async ({ email, password, name, role }: RegisterCred
   return userCredential;
 };
 
+const isPWA = window.matchMedia("(display-mode: standalone)").matches;
+
 export const loginWithGoogle = async () => {
   const provider = new GoogleAuthProvider();
   let result;
+  
+  if (isPWA) {
+    await signInWithRedirect(auth, provider);
+    return;
+  }
+  
   try {
     result = await signInWithPopup(auth, provider);
   } catch (error: any) {
@@ -162,6 +170,11 @@ export const registerWithGoogle = async (role: AuthRole) => {
   
   if (role) {
      localStorage.setItem('oauth_intended_role', role);
+  }
+
+  if (isPWA) {
+    await signInWithRedirect(auth, provider);
+    return;
   }
 
   try {

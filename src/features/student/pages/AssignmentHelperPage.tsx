@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { 
   FileEdit, 
@@ -11,7 +12,10 @@ import {
   X,
   History,
   Clock,
-  Trash2
+  Trash2,
+  Quote,
+  CheckSquare,
+  ShieldCheck
 } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/lib/firebase';
@@ -21,14 +25,11 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { usePlanGate } from '@/hooks/usePlanGate';
+import { useAuthStore } from '@/features/auth/hooks/useAuth';
+import { uploadFileToStorage } from '@/utils/storageUploadService';
+import { FreePlanUsageCard } from '@/components/shared/FreePlanUsageCard';
 
 // UI component code
-
-interface SelectedFile {
-  name: string;
-  data: string;
-  mimeType: string;
-}
 
 interface HistoryItem {
   id: string;
@@ -38,15 +39,27 @@ interface HistoryItem {
 }
 
 export const AssignmentHelperPage = () => {
+  const navigate = useNavigate();
   const { hasAccess } = usePlanGate('guided_assignments');
+  const { user } = useAuthStore();
   const [question, setQuestion] = useState('');
+  const [mode, setMode] = useState<'plagiarism-safe' | 'citations' | 'submission-check'>('plagiarism-safe');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'; // Reset first
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [question]);
 
   // Load history from localStorage on mount
   useEffect(() => {
@@ -98,18 +111,8 @@ export const AssignmentHelperPage = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64Data = event.target?.result as string;
-      setSelectedFile({
-        name: file.name,
-        data: base64Data,
-        mimeType: file.type || 'application/octet-stream'
-      });
-      toast.success('Document attached successfully');
-    };
-    reader.onerror = () => toast.error('Failed to read file');
-    reader.readAsDataURL(file);
+    setSelectedFile(file);
+    toast.success('Document attached successfully');
     
     // Reset input so the same file can be selected again if needed
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -129,12 +132,31 @@ export const AssignmentHelperPage = () => {
     setIsAnalyzing(true);
 
     try {
-      const payload: any = { question };
+      let payloadFile: any = undefined;
+      
       if (selectedFile) {
-        payload.fileData = {
-          data: selectedFile.data,
-          mimeType: selectedFile.mimeType
-        };
+        if (!user) {
+          toast.error('You must be logged in to upload files');
+          setIsAnalyzing(false);
+          return;
+        }
+        
+        try {
+          const storagePath = await uploadFileToStorage(selectedFile, user.uid, 'assignment-uploads');
+          payloadFile = {
+            storagePath,
+            mimeType: selectedFile.type || 'application/octet-stream'
+          };
+        } catch (uploadErr: any) {
+          toast.error('Failed to upload file: ' + uploadErr.message);
+          setIsAnalyzing(false);
+          return;
+        }
+      }
+
+      const payload: any = { question, mode };
+      if (payloadFile) {
+        payload.fileData = payloadFile;
       }
 
       const processAssignmentHelp = httpsCallable(functions, 'processAssignmentHelp');
@@ -169,18 +191,13 @@ export const AssignmentHelperPage = () => {
   return (
     <div className="flex-grow flex flex-col w-full h-full gap-8">
       {!hasAccess && (
-        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-500 p-4 rounded-xl flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Brain className="w-6 h-6" />
-            <div>
-              <p className="font-bold">Free Plan Limit: 3 assignments.</p>
-              <p className="text-sm opacity-90">You have analyzed {Math.min(history.length, 3)} out of 3 assignments.</p>
-            </div>
-          </div>
-          <a href="/student/settings" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
-            Upgrade Plan
-          </a>
-        </div>
+        <FreePlanUsageCard 
+          currentUsage={Math.min(history.length, 3)} 
+          maxLimit={3} 
+          description="Free Plan Limit: 3 assignments. You have analyzed your allotted assignments."
+          usageLabel="assignments"
+          variant="default" 
+        />
       )}
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -257,10 +274,50 @@ export const AssignmentHelperPage = () => {
         <div className="w-full lg:w-1/2 flex flex-col gap-4 h-full">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex-grow flex flex-col relative overflow-hidden group min-h-[400px] lg:min-h-0">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-green-400"></div>
+            
+            {/* Mode selection tabs */}
+            <div className="mb-4 flex flex-wrap gap-2 text-sm bg-gray-50 dark:bg-slate-800 p-1.5 rounded-lg border border-gray-100 dark:border-gray-700">
+              <button 
+                onClick={() => setMode('plagiarism-safe')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md font-medium transition-all ${
+                  mode === 'plagiarism-safe' 
+                    ? 'bg-white dark:bg-slate-700 text-primary shadow-sm border border-gray-200 dark:border-gray-600' 
+                    : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4" />
+                Outline Helper
+              </button>
+              <button 
+                onClick={() => setMode('citations')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md font-medium transition-all ${
+                  mode === 'citations' 
+                    ? 'bg-white dark:bg-slate-700 text-primary shadow-sm border border-gray-200 dark:border-gray-600' 
+                    : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                <Quote className="w-4 h-4" />
+                Citation Gen
+              </button>
+              <button 
+                onClick={() => setMode('submission-check')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md font-medium transition-all ${
+                  mode === 'submission-check' 
+                    ? 'bg-white dark:bg-slate-700 text-primary shadow-sm border border-gray-200 dark:border-gray-600' 
+                    : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                <CheckSquare className="w-4 h-4" />
+                Submission Check
+              </button>
+            </div>
+
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <FileEdit className="w-5 h-5 text-primary" />
-                Your Question
+                {mode === 'plagiarism-safe' && "Describe your topic"}
+                {mode === 'citations' && "Paste sources / links"}
+                {mode === 'submission-check' && "Paste your assignment"}
               </h2>
               <button 
                 onClick={handleClearAll}
@@ -289,9 +346,15 @@ export const AssignmentHelperPage = () => {
             )}
 
             <textarea 
-              className="flex-grow w-full bg-gray-50 dark:bg-slate-800/50 border-0 rounded-xl p-4 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-primary/50 resize-none text-base leading-relaxed outline-none" 
-              placeholder="Type your question here, paste text, or describe the problem you're trying to solve..."
+              ref={textareaRef}
+              className="flex-grow w-full bg-gray-50 dark:bg-slate-800/50 border-0 rounded-xl p-4 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-primary/50 resize-none text-base leading-relaxed outline-none overflow-hidden min-h-[150px] transition-colors" 
+              placeholder={
+                mode === 'plagiarism-safe' ? "Type your prompt or assignment topic... (We help you think, not cheat!)" :
+                mode === 'citations' ? "Paste an article URL, book title, or website context to generate citations..." :
+                "Paste your written essay or assignment text here for review..."
+              }
               value={question}
+              style={{ minHeight: '150px' }}
               onChange={(e) => setQuestion(e.target.value)}
               disabled={isAnalyzing}
             />
@@ -324,11 +387,15 @@ export const AssignmentHelperPage = () => {
                 {isAnalyzing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Analyzing...</span>
+                    <span>{mode === 'citations' ? "Generating..." : "Analyzing..."}</span>
                   </>
                 ) : (
                   <>
-                    <span>Analyze</span>
+                    <span>
+                      {mode === 'plagiarism-safe' ? "Get Outline" :
+                       mode === 'citations' ? "Generate Citation" :
+                       "Check Submission"}
+                    </span>
                     <Send className="w-4 h-4" />
                   </>
                 )}
@@ -368,13 +435,38 @@ export const AssignmentHelperPage = () => {
                   <p className="text-sm text-gray-500 dark:text-gray-400">Our AI is breaking down the problem into understandable steps.</p>
                 </div>
               ) : result ? (
-                <div className="prose dark:prose-invert prose-slate prose-sm sm:prose-base max-w-none w-full flex flex-col gap-2">
+                <div className="prose dark:prose-invert prose-slate prose-sm sm:prose-base max-w-none w-full flex flex-col gap-2 pb-6">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkMath]}
                     rehypePlugins={[rehypeKatex]}
                   >
                     {result}
                   </ReactMarkdown>
+
+                  {/* Agentic Handoff to Nova */}
+                  <div className="mt-12 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left transition-all hover:border-emerald-500/30 dark:hover:border-emerald-500/30 hover:shadow-sm">
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-sm border border-white dark:border-slate-700">
+                        <img src="/nova.png" alt="Nova" className="w-full h-full object-cover" />
+                      </div>
+                      <div>
+                         <h4 className="font-bold text-slate-800 dark:text-slate-200">
+                           {mode === 'plagiarism-safe' && "Need more explanation?"}
+                           {mode === 'citations' && "Need help writing the paper?"}
+                           {mode === 'submission-check' && "Need help fixing these issues?"}
+                         </h4>
+                         <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+                           Nova can break this down further or quiz you on the topic.
+                         </p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => navigate('/student/ai-tutor')}
+                      className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-medium rounded-xl hover:scale-[1.02] transition-transform whitespace-nowrap shrink-0 w-full sm:w-auto"
+                    >
+                      Ask Nova →
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center text-center max-w-sm opacity-60 m-auto">

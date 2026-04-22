@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 interface Course {
   id: string;
   title: string;
+    courseTitle?: string;
   description?: string;
   teacherName: string;
   category?: string;
@@ -35,7 +36,18 @@ interface Course {
   rating?: number;
   enrollmentCount?: number;
   totalDurationMinutes?: number;
+    mockExam?: {
+        sections?: any[];
+        studyMaterial?: { title?: string; content?: string };
+        timeAllowed?: number;
+    };
+    studyMaterial?: {
+        title?: string;
+        content?: string;
+    };
 }
+
+const isVisibleCourse = (course?: Partial<Course> | null) => course?.status !== 'rejected';
 
 interface Enrollment {
   id: string;
@@ -60,6 +72,18 @@ export const MyCoursesPage = () => {
     const [subjectFilter, setSubjectFilter] = useState('All');
     const [categoryFilter, setCategoryFilter] = useState('All');
 
+    const formatCoursePrice = (price: Course['price']) => {
+        if (price === 'Free' || price === 0) return 'Free';
+        if (typeof price === 'number' && Number.isFinite(price)) return `₦${price.toLocaleString()}`;
+        return 'Free';
+    };
+
+    const isAdminGeneratedCourse = (course: Course) => {
+        const hasExamSections = Array.isArray(course?.mockExam?.sections) && course.mockExam.sections.length > 0;
+        const hasStudyMaterial = !!course?.studyMaterial || !!course?.mockExam?.studyMaterial;
+        return hasExamSections || hasStudyMaterial;
+    };
+
     // Fetch All Published Courses for Explore
     useEffect(() => {
         const fetchCourses = async () => {
@@ -74,7 +98,7 @@ export const MyCoursesPage = () => {
                     id: doc.id,
                     ...doc.data()
                 })) as Course[];
-                setCourses(fetchedCourses);
+                setCourses(fetchedCourses.filter(isVisibleCourse) as Course[]);
             } catch (err) {
                 console.error("Error fetching courses:", err);
             } finally {
@@ -100,30 +124,37 @@ export const MyCoursesPage = () => {
             const enrichedEnrollments = await Promise.all(
                 rawEnrollments.map(async (enr) => {
                     const courseDoc = courses.find(c => c.id === enr.courseId);
-                    if (courseDoc) {
+                    if (courseDoc && isVisibleCourse(courseDoc)) {
                         return { ...enr, course: courseDoc };
                     }
-                    // Fallback to fetch if not instantly available from explorer cache
-                    // This happens if they are enrolled in a hidden/legacy course
-                    return enr;
+                    return null;
                 })
             );
 
-            setEnrollments(enrichedEnrollments);
+            setEnrollments(enrichedEnrollments.filter(Boolean) as Enrollment[]);
             setLoadingEnrollments(false);
         });
 
         return () => unsubscribe();
     }, [user, courses]);
 
+    const safeLower = (value: unknown) => (typeof value === 'string' ? value.toLowerCase() : '');
+
     // Derived filtered courses
     const filteredCourses = courses.filter(course => {
-        const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                              (course.description && course.description.toLowerCase().includes(searchQuery.toLowerCase()));
+        const queryText = safeLower(searchQuery);
         
-        const matchesLevel = levelFilter === 'All' || ((course as any).level && (course as any).level.toLowerCase() === levelFilter.toLowerCase());
-        const matchesSubject = subjectFilter === 'All' || (course.subject && course.subject.toLowerCase() === subjectFilter.toLowerCase());
-        const matchesCategory = categoryFilter === 'All' || (course.category && course.category.toLowerCase() === categoryFilter.toLowerCase());
+        // Make sure search includes generated course titles mapping matching what's rendered
+        const displayTitle = course.title || (course as any).courseTitle || (course as any).mockExam?.title || course.subject || `Course ${course.id?.slice(0, 8)}`;
+        
+        const titleText = safeLower(displayTitle);
+        const descriptionText = safeLower(course?.description);
+
+        const matchesSearch = titleText.includes(queryText) || descriptionText.includes(queryText);
+        
+        const matchesLevel = levelFilter === 'All' || safeLower((course as any)?.level) === safeLower(levelFilter);
+        const matchesSubject = subjectFilter === 'All' || safeLower(course?.subject) === safeLower(subjectFilter);
+        const matchesCategory = categoryFilter === 'All' || safeLower(course?.category) === safeLower(categoryFilter);
 
         return matchesSearch && matchesLevel && matchesSubject && matchesCategory;
     });
@@ -155,7 +186,7 @@ export const MyCoursesPage = () => {
     }, [startTour]);
 
     return (
-        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="mb-8 md:mb-12">
                 <h1 className="font-display text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
                     Your Learning <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Hub</span>
@@ -306,46 +337,97 @@ export const MyCoursesPage = () => {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                    {filteredCourses.map(course => (
-                                        <Link to={`/student/courses/${course.id}`} key={course.id}>
-                                            <div className="group bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-md transition-all cursor-pointer h-full flex flex-col">
-                                                <div className="aspect-[16/9] bg-slate-200 relative overflow-hidden">
-                                                    {course.thumbnailUrl ? (
-                                                        <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-slate-200 dark:bg-slate-800 group-hover:scale-105 transition-transform duration-500">
-                                                            <BookOpen className="w-10 h-10 text-slate-400" />
+                                    {filteredCourses.map(course => {
+                                        const isGenerated = isAdminGeneratedCourse(course);
+                                        const destinationPath = isGenerated ? `/student/courses/generated/${course.id}` : `/student/courses/${course.id}`;
+                                        const displayTitle = course.title || (course as any).courseTitle || (course as any).mockExam?.title || course.subject || `Course ${course.id?.slice(0, 8)}`;
+
+                                        return (
+                                        <Link to={destinationPath} key={course.id}>
+                                            {isGenerated ? (
+                                                <div className="group relative rounded-2xl border border-primary/30 overflow-hidden cursor-pointer h-full flex flex-col bg-white dark:bg-slate-900 shadow-sm hover:shadow-lg transition-all">
+                                                    <div className="absolute inset-0 pointer-events-none opacity-60" style={{ backgroundImage: 'radial-gradient(circle at 12% 15%, rgba(16,185,129,0.14), transparent 35%), radial-gradient(circle at 90% 10%, rgba(132,204,22,0.10), transparent 30%)' }} />
+
+                                                    <div className="relative aspect-[16/9] overflow-hidden border-b border-slate-200/70 dark:border-slate-800/70">
+                                                        {course.thumbnailUrl ? (
+                                                            <img src={course.thumbnailUrl} alt={displayTitle} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/15 via-slate-100 to-secondary/20 dark:from-primary/20 dark:via-slate-800 dark:to-secondary/10">
+                                                                <BookOpen className="w-10 h-10 text-primary" />
+                                                            </div>
+                                                        )}
+
+                                                        <div className="absolute top-3 left-3 flex gap-2">
+                                                            <Badge className="bg-primary text-white border-0 shadow-sm">Admin Generated</Badge>
+                                                            <Badge className="bg-white/95 text-slate-800 border-0 shadow-sm">Included</Badge>
                                                         </div>
-                                                    )}
-                                                    <div className="absolute top-3 right-3">
-                                                        <Badge className="bg-white/90 text-slate-900 font-bold backdrop-blur-sm shadow-sm hover:bg-white border-0">
-                                                            {course.price === 'Free' || course.price === 0 ? 'Free' : `₦${course.price.toLocaleString()}`}
-                                                        </Badge>
+                                                    </div>
+
+                                                    <div className="relative p-5 flex flex-col flex-grow">
+                                                        <div className="flex items-center gap-2 mb-3">
+                                                            <Badge variant="outline" className="text-xs border-primary/20 text-primary bg-primary/5">{course.subject || course.category || 'Subject'}</Badge>
+                                                            <Badge variant="outline" className="text-xs text-slate-500">No Enrollment</Badge>
+                                                        </div>
+
+                                                        <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white line-clamp-2 mb-2">
+                                                            {displayTitle}
+                                                        </h3>
+                                                        <p className="text-xs text-slate-500 mb-4 font-medium tracking-wide uppercase">Course ID: {course.id}</p>
+
+                                                        <div className="mt-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/60 p-3">
+                                                            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                                                                <span>Learning Pack</span>
+                                                                <span>{course.teacherName || 'MyTutorMe Admin'}</span>
+                                                            </div>
+                                                            <div className="flex items-center justify-between text-sm">
+                                                                <span className="font-semibold text-slate-800 dark:text-slate-200">Study Material + Mock Exam</span>
+                                                                <span className="inline-flex items-center text-primary font-semibold">
+                                                                    <Clock className="w-4 h-4 mr-1" /> {course.totalDurationMinutes ? `${Math.round(course.totalDurationMinutes/60)}h` : 'Flexible'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div className="p-5 flex flex-col flex-grow">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <Badge variant="outline" className="text-xs text-slate-500 shadow-sm">{course.subject || course.category || "Subject"}</Badge>
-                                                    </div>
-                                                    <h3 className="font-bold text-lg text-slate-900 dark:text-white line-clamp-2 md:h-14 mb-2">
-                                                        {course.title}
-                                                    </h3>
-                                                    <p className="text-sm text-slate-500 mb-4">{course.teacherName}</p>
-                                                    
-                                                    <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-sm text-slate-500">
-                                                        <div className="flex items-center gap-1.5 focus:outline-none">
-                                                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                                                            <span className="font-semibold text-slate-700 dark:text-slate-300">{course.rating || "4.5"}</span>
+                                            ) : (
+                                                <div className="group bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-md transition-all cursor-pointer h-full flex flex-col">
+                                                    <div className="aspect-[16/9] bg-slate-200 relative overflow-hidden">
+                                                        {course.thumbnailUrl ? (
+                                                            <img src={course.thumbnailUrl} alt={displayTitle} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center bg-slate-200 dark:bg-slate-800 group-hover:scale-105 transition-transform duration-500">
+                                                                <BookOpen className="w-10 h-10 text-slate-400" />
+                                                            </div>
+                                                        )}
+                                                        <div className="absolute top-3 right-3">
+                                                            <Badge className="bg-white/90 text-slate-900 font-bold backdrop-blur-sm shadow-sm hover:bg-white border-0">
+                                                                {formatCoursePrice(course.price)}
+                                                            </Badge>
                                                         </div>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <Clock className="w-4 h-4" />
-                                                            <span>{course.totalDurationMinutes ? `${Math.round(course.totalDurationMinutes/60)}h` : "Flexible"}</span>
+                                                    </div>
+                                                    <div className="p-5 flex flex-col flex-grow">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <Badge variant="outline" className="text-xs text-slate-500 shadow-sm">{course.subject || course.category || 'Subject'}</Badge>
+                                                        </div>
+                                                        <h3 className="font-bold text-lg text-slate-900 dark:text-white line-clamp-2 md:h-14 mb-2">
+                                                            {displayTitle}
+                                                        </h3>
+                                                        <p className="text-sm text-slate-500 mb-2">{course.teacherName || 'MyTutorMe'}</p>
+                                                        <p className="text-xs text-slate-400 mb-4">Course ID: {course.id}</p>
+                                                        
+                                                        <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-sm text-slate-500">
+                                                            <div className="flex items-center gap-1.5 focus:outline-none">
+                                                                <span className="font-semibold text-slate-700 dark:text-slate-300">Catalog Course</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <Clock className="w-4 h-4" />
+                                                                <span>{course.totalDurationMinutes ? `${Math.round(course.totalDurationMinutes/60)}h` : 'Flexible'}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </Link>
-                                    ))}
+                                    )})}
                                 </div>
                             )}
                         </div>

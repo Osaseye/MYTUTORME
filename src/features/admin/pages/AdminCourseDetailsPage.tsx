@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db } from '@/lib/firebase';
+import { storage } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { 
-  ChevronLeft, Check, X, BookOpen, PlayCircle, FileText,
-  Tag, Banknote, User, GraduationCap, BarChart3, AlertCircle, Calendar 
+  ChevronLeft, Check, X, BookOpen, FileText,
+  User, AlertCircle, Calendar
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 export const AdminCourseDetailsPage = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -21,6 +23,14 @@ export const AdminCourseDetailsPage = () => {
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editThumbnailUrl, setEditThumbnailUrl] = useState('');
+  const [editStudyMaterial, setEditStudyMaterial] = useState('');
+  const [editMockExamJson, setEditMockExamJson] = useState('');
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState('');
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -31,7 +41,13 @@ export const AdminCourseDetailsPage = () => {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          setCourse({ id: docSnap.id, ...docSnap.data() });
+          const courseData = { id: docSnap.id, ...docSnap.data() } as any;
+          setCourse(courseData);
+          setEditTitle(courseData.title || '');
+          setEditDescription(courseData.description || '');
+          setEditThumbnailUrl(courseData.thumbnailUrl || courseData.thumbnail || courseData.image || '');
+          setEditStudyMaterial(courseData.studyMaterial?.content || courseData.mockExam?.studyMaterial?.content || '');
+          setEditMockExamJson(courseData.mockExam ? JSON.stringify(courseData.mockExam, null, 2) : '');
         } else {
           toast.error('Course not found');
           navigate('/admin/moderation');
@@ -89,6 +105,153 @@ export const AdminCourseDetailsPage = () => {
     }
   };
 
+  const handleSaveGeneratedCourse = async () => {
+    if (!courseId || !course) return;
+
+    setActionLoading(true);
+    try {
+      let parsedMockExam = course.mockExam || null;
+      if (editMockExamJson.trim()) {
+        parsedMockExam = JSON.parse(editMockExamJson);
+      }
+
+      const nextStudyMaterial = editStudyMaterial.trim()
+        ? {
+            ...(course.studyMaterial || course.mockExam?.studyMaterial || {}),
+            content: editStudyMaterial.trim()
+          }
+        : (course.studyMaterial || course.mockExam?.studyMaterial || null);
+
+      const updateData = {
+        title: editTitle.trim() || course.title,
+        description: editDescription,
+        thumbnailUrl: editThumbnailUrl.trim() || null,
+        thumbnail: editThumbnailUrl.trim() || null,
+        image: editThumbnailUrl.trim() || null,
+        studyMaterial: nextStudyMaterial,
+        mockExam: parsedMockExam,
+        updatedAt: serverTimestamp()
+      };
+
+      console.log('Saving course update:', {
+        courseId,
+        thumbnailUrl: editThumbnailUrl,
+        updateData: { ...updateData, updatedAt: 'serverTimestamp()' }
+      });
+
+      await updateDoc(doc(db, 'courses', courseId), updateData);
+      console.log('Course updated successfully in Firestore');
+
+      setCourse((prev: any) => prev ? {
+        ...prev,
+        title: editTitle.trim() || prev.title,
+        description: editDescription,
+        thumbnailUrl: editThumbnailUrl.trim() || null,
+        thumbnail: editThumbnailUrl.trim() || null,
+        image: editThumbnailUrl.trim() || null,
+        studyMaterial: nextStudyMaterial,
+        mockExam: parsedMockExam,
+      } : prev);
+      toast.success('Generated course updated successfully');
+    } catch (error) {
+      console.error('Error saving course:', error);
+      toast.error('Failed to update generated course content. Check the mock exam JSON and try again.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteCourse = async () => {
+    if (!courseId) return;
+    if (!window.confirm('Delete this course permanently? This cannot be undone.')) return;
+
+    setActionLoading(true);
+    try {
+      await deleteDoc(doc(db, 'courses', courseId));
+      toast.success('Course deleted from the platform');
+      navigate('/admin/moderation');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to delete course');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleThumbnailFileSelect = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    setThumbnailFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setThumbnailPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const uploadThumbnailToFirebase = async () => {
+    if (!thumbnailFile || !courseId) {
+      console.error('Missing file or courseId:', { thumbnailFile, courseId });
+      toast.error('No file selected or course ID missing');
+      return;
+    }
+
+    setIsUploadingThumbnail(true);
+    console.log('Starting upload for file:', thumbnailFile.name);
+    
+    try {
+      const fileName = `course-thumbnails/${courseId}/${Date.now()}-${thumbnailFile.name}`;
+      console.log('Upload path:', fileName);
+      
+      const fileRef = ref(storage, fileName);
+      console.log('Uploading to Firebase Storage...');
+      
+      await uploadBytes(fileRef, thumbnailFile);
+      console.log('File uploaded successfully, getting download URL...');
+      
+      const downloadUrl = await getDownloadURL(fileRef);
+      console.log('Download URL obtained:', downloadUrl);
+      
+      setEditThumbnailUrl(downloadUrl);
+      setThumbnailFile(null);
+      setThumbnailPreview('');
+      toast.success('Thumbnail uploaded successfully! Click "Save Content Changes" to persist.');
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast.error(`Failed to upload thumbnail: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsUploadingThumbnail(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.currentTarget.classList.add('bg-emerald-50', 'dark:bg-emerald-950/20');
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('bg-emerald-50', 'dark:bg-emerald-950/20');
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('bg-emerald-50', 'dark:bg-emerald-950/20');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleThumbnailFileSelect(files[0]);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -98,6 +261,8 @@ export const AdminCourseDetailsPage = () => {
   }
 
   if (!course) return null;
+
+  const isGeneratedCourse = Boolean(course.generatedCourse || course.mockExam || course.studyMaterial);
 
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto pb-12">
@@ -152,9 +317,98 @@ export const AdminCourseDetailsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 px-6 md:px-10">
+        {isGeneratedCourse && (
+          <section className="xl:col-span-12 bg-gradient-to-br from-emerald-50 via-white to-slate-50 dark:from-emerald-950/25 dark:via-slate-900 dark:to-slate-950 border border-emerald-200/70 dark:border-emerald-900/40 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+              <div>
+                <Badge className="bg-emerald-600 text-white border-0 shadow-sm mb-3">Admin Generated Course</Badge>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Edit content and thumbnail together</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">Use this editor to update the learning pack, replace the thumbnail, and publish new material without rebuilding the course from scratch.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" className="border-rose-200 text-rose-600 hover:bg-rose-50" onClick={handleDeleteCourse} disabled={actionLoading}>
+                  <X className="h-4 w-4 mr-2" /> Delete Course
+                </Button>
+                <Button onClick={handleSaveGeneratedCourse} disabled={actionLoading} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                  {actionLoading ? 'Saving...' : 'Save Content Changes'}
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Course Title</label>
+                <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="bg-white dark:bg-slate-900" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Thumbnail Image</label>
+                <div 
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className="border-2 border-dashed border-emerald-300 dark:border-emerald-800 rounded-xl p-6 text-center cursor-pointer hover:bg-emerald-50/50 dark:hover:bg-emerald-950/10 transition-colors relative"
+                >
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => e.target.files && handleThumbnailFileSelect(e.target.files[0])}
+                    className={`absolute inset-0 opacity-0 cursor-pointer ${thumbnailPreview ? 'pointer-events-none' : ''}`}
+                  />
+                  {thumbnailPreview ? (
+                    <div className="space-y-3">
+                      <img src={thumbnailPreview} alt="Preview" className="w-full h-40 object-cover rounded-lg" />
+                      <Button 
+                        size="sm" 
+                        onClick={uploadThumbnailToFirebase} 
+                        disabled={isUploadingThumbnail}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700"
+                        type="button"
+                      >
+                        {isUploadingThumbnail ? 'Uploading...' : 'Upload to Firebase'}
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setThumbnailFile(null);
+                          setThumbnailPreview('');
+                        }}
+                        disabled={isUploadingThumbnail}
+                        type="button"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="text-2xl">📸</div>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Drag and drop your thumbnail here</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">or click to browse (max 5MB)</p>
+                      {editThumbnailUrl && (
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">✓ Current: Uploaded</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2 lg:col-span-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Course Description</label>
+                <Textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="min-h-[120px] bg-white dark:bg-slate-900" placeholder="Describe the learning pack..." />
+              </div>
+              <div className="space-y-2 lg:col-span-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Study Material Content</label>
+                <Textarea value={editStudyMaterial} onChange={(e) => setEditStudyMaterial(e.target.value)} className="min-h-[160px] bg-white dark:bg-slate-900 font-mono text-sm" placeholder="Paste updated study notes here..." />
+              </div>
+              <div className="space-y-2 lg:col-span-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Mock Exam JSON</label>
+                <Textarea value={editMockExamJson} onChange={(e) => setEditMockExamJson(e.target.value)} className="min-h-[220px] bg-white dark:bg-slate-900 font-mono text-sm" placeholder='{"title":"...","sections":[]}' />
+              </div>
+            </div>
+          </section>
+        )}
         
         {/* Main Left Content */}
-        <div className="xl:col-span-8 flex flex-col gap-8">
+        <div className="xl:col-span-12 flex flex-col gap-8">
           {/* Thumbnail Hero */}
           <div className="aspect-video w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 relative shadow-sm border border-slate-200 dark:border-slate-800">
             {(course.thumbnailUrl || course.image || course.thumbnail) ? (
@@ -183,158 +437,6 @@ export const AdminCourseDetailsPage = () => {
               )}
             </div>
           </section>
-
-          {/* Curriculum Section */}
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-emerald-500" /> Curriculum & Content
-              </h2>
-            </div>
-            
-            <div className="space-y-5">
-              {(() => {
-                const modules = course.modules || course.curriculum || course.sections || [];
-                if (Array.isArray(modules) && modules.length > 0) {
-                  return modules.map((mod: any, i: number) => {
-                    const modItems = mod.items || mod.lessons || [];
-                    return (
-                      <div key={i} className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
-                        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                          <div>
-                            <h3 className="text-[17px] font-semibold text-slate-900 dark:text-white flex items-center gap-3">
-                              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-sm font-bold">
-                                {i + 1}
-                              </span>
-                              {mod.title || 'Untitled Module'}
-                            </h3>
-                          </div>
-                          <Badge variant="outline" className="bg-white dark:bg-slate-900 self-start sm:self-auto py-1 px-3 shadow-sm">
-                            {modItems.length} {modItems.length === 1 ? 'Item' : 'Items'}
-                          </Badge>
-                        </div>
-                        
-                        <div className="p-4 sm:p-6 space-y-3">
-                          {modItems.length > 0 ? (
-                            modItems.map((item: any, j: number) => (
-                              <div key={j} className="flex items-center gap-4 p-4 lg:p-5 bg-slate-50 hover:bg-slate-100/80 dark:bg-slate-950 dark:hover:bg-slate-900 rounded-xl text-sm border border-slate-100 dark:border-slate-800/80 transition-all cursor-default group">
-                                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm border border-slate-200 dark:border-slate-700 group-hover:scale-105 transition-transform">
-                                  {item.type === 'video' ? <PlayCircle className="h-5 w-5 text-indigo-500" /> : <FileText className="h-5 w-5 text-emerald-500" />}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-slate-800 dark:text-slate-200 truncate text-[15px]">
-                                    {item.title || item.name || 'Untitled Lesson'}
-                                  </p>
-                                  <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider font-medium">
-                                    {item.type || 'Document'}
-                                  </p>
-                                </div>
-                                {item.duration && (
-                                  <span className="flex-shrink-0 px-3 py-1 bg-white dark:bg-slate-800 rounded-full text-xs font-semibold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                                    {item.duration}
-                                  </span>
-                                )}
-                              </div>
-                            ))
-                          ) : (
-                            <div className="py-8 px-4 text-center rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-                              <BookOpen className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                              <p className="text-sm text-slate-500 font-medium">No lessons added to this module yet.</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  });
-                }
-                return (
-                  <div className="py-20 px-6 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900/50 flex flex-col items-center justify-center">
-                    <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                      <BookOpen className="h-8 w-8 text-slate-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Curriculum is Empty</h3>
-                    <p className="text-slate-500 max-w-sm mx-auto">This course doesn't have any learning material uploaded yet. It is highly recommended to reject incomplete courses.</p>
-                  </div>
-                );
-              })()}
-            </div>
-          </section>
-        </div>
-
-        {/* Sidebar / Stats Grid */}
-        <div className="xl:col-span-4 space-y-6">
-          <Card className="shadow-sm border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden sticky top-32">
-            <CardHeader className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 py-5">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-indigo-500" /> Course Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                {/* Detail Item */}
-                <div className="flex items-center justify-between p-5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                  <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                      <Banknote className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    </div>
-                    <span className="text-sm font-medium">Pricing</span>
-                  </div>
-                  <span className="text-[15px] font-bold text-slate-900 dark:text-white">
-                    {typeof course.price === 'number' && course.price > 0 ? `₦${course.price.toLocaleString()}` : course.price || 'Free'}
-                  </span>
-                </div>
-
-                {/* Detail Item */}
-                <div className="flex items-center justify-between p-5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                  <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                      <Tag className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <span className="text-sm font-medium">Subject</span>
-                  </div>
-                  <span className="text-[15px] font-semibold text-slate-900 dark:text-white text-right break-words ml-4">
-                    {course.subject || course.category || 'Uncategorized'}
-                  </span>
-                </div>
-
-                {/* Detail Item */}
-                <div className="flex items-center justify-between p-5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                  <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
-                    <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                      <GraduationCap className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <span className="text-sm font-medium">Level</span>
-                  </div>
-                  <span className="text-[15px] font-semibold text-slate-900 dark:text-white capitalize">
-                    {course.level || 'All Levels'}
-                  </span>
-                </div>
-
-                {/* Extra Stats Derived from Curriculum */}
-                {(() => {
-                  const modules = course.modules || course.curriculum || course.sections || [];
-                  let totalItems = 0;
-                  if (Array.isArray(modules)) {
-                    totalItems = modules.reduce((acc, mod) => acc + (mod.items?.length || mod.lessons?.length || 0), 0);
-                  }
-                  
-                  return (
-                    <div className="flex items-center justify-between p-5 bg-slate-50/50 dark:bg-slate-800/10">
-                      <div className="flex flex-col">
-                        <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{modules.length}</span>
-                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Modules</span>
-                      </div>
-                      <div className="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
-                      <div className="flex flex-col text-right">
-                        <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{totalItems}</span>
-                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Lessons</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
 

@@ -86,16 +86,40 @@ exports.askAiTutor = functions.https.onCall(async (request) => {
             currentSubject = (sd === null || sd === void 0 ? void 0 : sd.subject) || currentSubject;
             currentTopic = (sd === null || sd === void 0 ? void 0 : sd.topic) || currentTopic;
             const msgs = (sd === null || sd === void 0 ? void 0 : sd.messages) || [];
-            geminiHistory = msgs.map((msg) => {
-                var _a;
-                return ({
+            geminiHistory = await Promise.all(msgs.map(async (msg) => {
+                const parts = [];
+                if (msg.images && msg.images.length > 0) {
+                    for (const img of msg.images) {
+                        if (img.storagePath) {
+                            try {
+                                const [buffer] = await admin.storage().bucket().file(img.storagePath).download();
+                                parts.push({
+                                    inlineData: {
+                                        data: buffer.toString('base64'),
+                                        mimeType: img.mimeType
+                                    }
+                                });
+                            }
+                            catch (err) {
+                                console.error(`Failed to download history image ${img.storagePath}`, err);
+                            }
+                        }
+                        else if (img.data) {
+                            parts.push({
+                                inlineData: {
+                                    data: img.data.split(',')[1] || img.data,
+                                    mimeType: img.mimeType
+                                }
+                            });
+                        }
+                    }
+                }
+                parts.push({ text: msg.content });
+                return {
                     role: msg.role === 'assistant' ? 'model' : 'user',
-                    parts: [
-                        ...(((_a = msg.images) === null || _a === void 0 ? void 0 : _a.map((img) => ({ inlineData: { data: img.data, mimeType: img.mimeType } }))) || []),
-                        { text: msg.content }
-                    ]
-                });
-            });
+                    parts
+                };
+            }));
         }
     }
     else {
@@ -127,7 +151,7 @@ exports.askAiTutor = functions.https.onCall(async (request) => {
     const fullSystemPrompt = `${userContext}\n\n${systemPrompt}`;
     const vertexAiClient = getVertexAi();
     const model = vertexAiClient.preview.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.5-pro',
         systemInstruction: { role: 'system', parts: [{ text: fullSystemPrompt }] },
         generationConfig: {
             maxOutputTokens: 8192,
@@ -137,12 +161,31 @@ exports.askAiTutor = functions.https.onCall(async (request) => {
     const chat = model.startChat({ history: geminiHistory });
     const parts = [];
     if (images && images.length > 0) {
-        parts.push(...images.map((img) => ({
-            inlineData: {
-                data: img.data.split(',')[1] || img.data,
-                mimeType: img.mimeType
+        for (const img of images) {
+            if (img.storagePath) {
+                try {
+                    const [buffer] = await admin.storage().bucket().file(img.storagePath).download();
+                    parts.push({
+                        inlineData: {
+                            data: buffer.toString('base64'),
+                            mimeType: img.mimeType
+                        }
+                    });
+                }
+                catch (err) {
+                    console.error(`Failed to download uploaded image ${img.storagePath}`, err);
+                    throw new functions.https.HttpsError("internal", "Failed to process uploaded file.");
+                }
             }
-        })));
+            else if (img.data) {
+                parts.push({
+                    inlineData: {
+                        data: img.data.split(',')[1] || img.data,
+                        mimeType: img.mimeType
+                    }
+                });
+            }
+        }
     }
     parts.push({ text: messageContent });
     const userMessage = { role: 'user', content: messageContent, timestamp: Date.now() };

@@ -287,19 +287,20 @@ export const StudentDashboard = () => {
         {/* Right Column: Sidebar Widgets */}
         <div className="space-y-6">
           {/* AI Doubt Solver Widget */}
-          <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-6 text-white text-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+          <div className="bg-gradient-to-b from-[#111111] to-[#1a1a1a] rounded-[2rem] p-6 text-white text-center relative overflow-hidden group shadow-2xl border border-white/10 transition-all hover:border-emerald-500/30">
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15]" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full mix-blend-screen filter blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
             
             <div className="relative z-10 flex flex-col items-center">
-              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-md border border-white/10 shadow-xl group-hover:scale-110 transition-transform duration-300">
-                <BrainCircuit className="w-7 h-7 text-white" />
+              <div className="relative w-20 h-20 mb-3 group-hover:scale-105 transition-transform duration-500 ease-out">
+                 <img src="/nova.png" alt="Nova AI" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(34,197,94,0.3)] animate-pulse" />
               </div>
-              <h3 className="font-bold text-lg mb-2">Stuck on a problem?</h3>
-              <p className="text-sm text-indigo-100 mb-6 max-w-[200px] leading-relaxed">
+              <h3 className="font-[400] font-serif text-[1.4rem] tracking-tight mb-2 text-slate-100">Stuck on a problem?</h3>
+              <p className="text-[13px] text-slate-400 mb-6 max-w-[220px] leading-relaxed font-light">
                 Snap a photo or type your question. Your AI Tutor is ready.
               </p>
-              <Button onClick={() => navigate('/student/ai-tutor')} size="lg" className="bg-white text-indigo-700 hover:bg-indigo-50 w-full font-bold shadow-xl border-0 h-11 rounded-xl">
-                Ask AI Tutor
+              <Button onClick={() => navigate('/student/ai-tutor')} size="lg" className="w-full rounded-2xl bg-white text-black hover:bg-slate-200 hover:scale-[1.02] transition-all font-medium h-12 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                Ask Nova
               </Button>
             </div>
           </div>

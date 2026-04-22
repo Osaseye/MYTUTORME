@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
+import { FreePlanUsageCard } from '@/components/shared/FreePlanUsageCard';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { toast } from 'sonner';
@@ -259,18 +260,13 @@ export const ExamPrepPage = () => {
   return (
     <div className="w-full px-4 md:px-8 py-8 space-y-8">
       {!hasAccess && (
-        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-500 p-4 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="w-6 h-6" />
-            <div>
-              <p className="font-bold">Free Plan Limit</p>
-              <p className="text-sm opacity-90">Upgrade to Pro for unlimited mock exams and advanced analytics.</p>
-            </div>
-          </div>
-          <Link to="/student/settings" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
-            Upgrade Plan
-          </Link>
-        </div>
+        <FreePlanUsageCard 
+          currentUsage={studyPlans.length + examHistory.length} 
+          maxLimit={5} 
+          description="Free Plan Limit: Upgrade to Pro for unlimited mock exams and advanced analytics."
+          usageLabel="Basic quota used"
+          variant="default" 
+        />
       )}
 
       {/* Header */}

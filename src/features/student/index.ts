@@ -3,6 +3,7 @@ export * from './pages/StudentDashboard';
 export * from './pages/AiTutorPage';
 export * from './pages/MyCoursesPage';
 export * from './pages/CourseDetailsPage';
+export * from './pages/GeneratedCourseDetailsPage';
 export * from './pages/AssignmentHelperPage';
 export * from './pages/GpaTrackerPage';
 export * from './pages/CertificatePage';

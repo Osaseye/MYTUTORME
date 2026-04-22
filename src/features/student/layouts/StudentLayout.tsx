@@ -26,7 +26,7 @@ export const StudentLayout = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <StudentSidebar />
-      <MobileFloatingNav />
+      {!isAiTutor && <MobileFloatingNav />}
       
       <div className={`ml-0 md:ml-64 min-h-screen flex flex-col ${isAiTutor ? '' : 'pb-24 md:pb-0'}`}>
         {/* Top Header */}

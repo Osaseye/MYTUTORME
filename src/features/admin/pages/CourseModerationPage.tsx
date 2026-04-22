@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 
@@ -49,7 +49,19 @@ interface Course {
     reports?: number;
     createdAt: number;
     thumbnail?: string;
+    thumbnailUrl?: string;
     rejectionReason?: string;
+    generatedCourse?: boolean;
+    mockExam?: {
+        title?: string;
+        timeAllowed?: number;
+        sections?: any[];
+        studyMaterial?: { title?: string; content?: string };
+    };
+    studyMaterial?: {
+        title?: string;
+        content?: string;
+    };
 }
 
 import { useNavigate } from 'react-router-dom';
@@ -60,7 +72,7 @@ export const CourseModerationPage = () => {
     const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [tab, setTab] = useState<'pending' | 'live' | 'flagged'>('pending');
+    const [tab, setTab] = useState<'all' | 'pending' | 'live' | 'flagged'>('all');
 
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
     const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
@@ -68,42 +80,52 @@ export const CourseModerationPage = () => {
     const [actionLoading, setActionLoading] = useState(false);
 
     useEffect(() => {
-        const q = query(collection(db, 'courses'), orderBy('createdAt', 'desc'));
+        const q = query(collection(db, 'courses'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedCourses: Course[] = [];
             snapshot.forEach((doc) => {
-                const data = doc.data();
-                
-                let parsedCreatedAt = Date.now();
-                if (data.createdAt) {
-                    if (typeof data.createdAt === 'number') parsedCreatedAt = data.createdAt;
-                    else if (typeof data.createdAt.toMillis === 'function') parsedCreatedAt = data.createdAt.toMillis();
-                    else if (data.createdAt.seconds) parsedCreatedAt = data.createdAt.seconds * 1000;
-                    else {
-                        const dateObj = new Date(data.createdAt);
-                        if (!isNaN(dateObj.getTime())) parsedCreatedAt = dateObj.getTime();
+                try {
+                    const data = doc.data();
+                    
+                    let parsedCreatedAt = Date.now();
+                    if (data.createdAt) {
+                        if (typeof data.createdAt === 'number') parsedCreatedAt = data.createdAt;
+                        else if (typeof data.createdAt.toMillis === 'function') parsedCreatedAt = data.createdAt.toMillis();
+                        else if (data.createdAt.seconds) parsedCreatedAt = data.createdAt.seconds * 1000;
+                        else {
+                            const dateObj = new Date(data.createdAt);
+                            if (!isNaN(dateObj.getTime())) parsedCreatedAt = dateObj.getTime();
+                        }
                     }
+
+                    let cat = data.subject || data.category || 'Uncategorized';
+                    if (typeof cat === 'string' && cat.toLowerCase() === 'uncategoruzed') cat = 'Uncategorized';
+                    if (typeof cat !== 'string') cat = 'Uncategorized';
+
+                    fetchedCourses.push({
+                        id: doc.id,
+                        title: data.title || 'Untitled Course',
+                        description: data.description || '',
+                        teacherId: data.teacherId || 'unknown_teacher_id',
+                        teacherName: data.teacherName || 'Unknown Teacher',
+                        teacherPhotoURL: data.teacherPhotoURL,
+                        price: data.price || 'Free',
+                        category: cat,
+                        status: data.status || 'draft',
+                        reports: data.reports || 0,
+                        createdAt: parsedCreatedAt,
+                        thumbnail: data.thumbnail,
+                        rejectionReason: data.rejectionReason,
+                        ...data
+                    });
+                } catch (innerErr) {
+                    console.error("Failed processing course doc", doc.id, innerErr);
                 }
-
-                let cat = data.subject || data.category || 'Uncategorized';
-                if (cat.toLowerCase() === 'uncategoruzed') cat = 'Uncategorized';
-
-                fetchedCourses.push({
-                    id: doc.id,
-                    title: data.title || 'Untitled Course',
-                    description: data.description || '',
-                    teacherId: data.teacherId,
-                    teacherName: data.teacherName || 'Unknown Teacher',
-                    teacherPhotoURL: data.teacherPhotoURL,
-                    price: data.price || 'Free',
-                    category: cat,
-                    status: data.status || 'draft',
-                    reports: data.reports || 0,
-                    createdAt: parsedCreatedAt,
-                    thumbnail: data.thumbnail,
-                    rejectionReason: data.rejectionReason
-                });
             });
+            console.log("Admin Dashboard Fetched Courses -> ", fetchedCourses.map(c => ({ id: c.id, title: c.title, status: c.status })));
+            
+            fetchedCourses.sort((a, b) => b.createdAt - a.createdAt);
+            
             setCourses(fetchedCourses);
             setLoading(false);
         }, (error) => {
@@ -125,6 +147,7 @@ export const CourseModerationPage = () => {
         } else if (tab === 'flagged') {
             result = result.filter(c => c.status === 'flagged' || (c.reports && c.reports > 0));
         }
+        // if tab === 'all', do not filter by status
 
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
@@ -206,9 +229,13 @@ export const CourseModerationPage = () => {
                 </div>
             </div>
 
-            <Tabs defaultValue="pending" className="w-full" onValueChange={(v) => setTab(v as any)}>
+            <Tabs defaultValue="all" className="w-full" onValueChange={(v) => setTab(v as any)}>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <TabsList className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 h-10 w-full sm:w-auto">
+                        <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-primary shadow-sm flex-1 sm:flex-none">
+                            All Courses
+                            <Badge variant="secondary" className="ml-2 bg-slate-200/50 text-slate-700">{courses.length}</Badge>
+                        </TabsTrigger>
                         <TabsTrigger value="pending" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-amber-600 shadow-sm flex-1 sm:flex-none">
                             Pending Review
                             <Badge variant="secondary" className="ml-2 bg-amber-100/50 text-amber-700">{courses.filter(c => c.status === 'pending_review' || c.status === 'pending').length}</Badge>
@@ -245,6 +272,26 @@ export const CourseModerationPage = () => {
                     </div>
                 ) : (
                     <>
+                        <TabsContent value="all" className="mt-0 outline-none">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {filteredCourses.length === 0 ? (
+                                    <div className="col-span-full py-20 text-center text-slate-500">
+                                        <p>No courses found in database.</p>
+                                    </div>
+                                ) : (
+                                    filteredCourses.map((course) => (
+                                        <CourseCard 
+                                            key={course.id} 
+                                            course={course} 
+                                            onApprove={() => handleApproveCourse(course.id)}
+                                            onReject={() => handleOpenRejectModal(course.id)}
+                                            onFlag={() => handleFlagCourse(course.id)}
+                                        />
+                                    ))
+                                )}
+                            </div>
+                        </TabsContent>
+
                         <TabsContent value="pending" className="mt-0 outline-none">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {filteredCourses.length === 0 ? (
@@ -347,6 +394,101 @@ const CourseCard = ({ course, onApprove, onReject, onFlag }: {
     onFlag?: () => void;
 }) => {
     const viewCourseUrl = `/admin/moderation/courses/${course.id}`;
+    const isGeneratedCourse = Boolean(course.generatedCourse || course.mockExam || course.studyMaterial);
+    const sectionCount = Array.isArray(course.mockExam?.sections) ? course.mockExam.sections.length : 0;
+    const questionCount = Array.isArray(course.mockExam?.sections)
+        ? course.mockExam.sections.reduce((count, section) => count + (Array.isArray(section?.questions) ? section.questions.length : 0), 0)
+        : 0;
+    const hasStudyMaterial = Boolean(course.studyMaterial?.content || course.mockExam?.studyMaterial?.content);
+
+    if (isGeneratedCourse) {
+        return (
+            <Card className="flex flex-col overflow-hidden border-emerald-200 dark:border-emerald-900/60 bg-gradient-to-br from-white via-emerald-50/30 to-white dark:from-slate-900 dark:via-emerald-950/20 dark:to-slate-900 hover:shadow-lg transition-shadow">
+                <div className="aspect-video relative group overflow-hidden bg-slate-100 dark:bg-slate-800">
+                    {course.thumbnailUrl || course.thumbnail ? (
+                        <img src={course.thumbnailUrl || course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-emerald-500 bg-gradient-to-br from-emerald-50 to-slate-100 dark:from-emerald-950/20 dark:to-slate-800">
+                            <BookOpen className="h-12 w-12 opacity-30" />
+                        </div>
+                    )}
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-slate-950/10 to-transparent" />
+                    <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+                        <Badge className="bg-emerald-600 text-white border-0 shadow-sm">Admin Generated</Badge>
+                        <Badge className={`shadow-sm ${course.status === 'published' ? 'bg-green-500 text-white' : course.status === 'rejected' ? 'bg-red-500 text-white' : 'bg-amber-500 text-white'}`}>
+                            {course.status === 'published' ? 'Live' : course.status === 'rejected' ? 'Rejected' : 'Pending'}
+                        </Badge>
+                    </div>
+
+                    <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+                        <div className="flex items-center justify-between gap-3 text-xs text-white/80 mb-1">
+                            <span>{course.category || 'Learning Pack'}</span>
+                            <span>{course.teacherName || 'MyTutorMe Admin'}</span>
+                        </div>
+                        <p className="text-sm font-medium line-clamp-2">{course.description || 'Admin-authored learning material with mock exams and study notes.'}</p>
+                    </div>
+
+                    <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Button variant="secondary" size="sm" className="bg-white/90 hover:bg-white text-slate-900" onClick={() => window.open(viewCourseUrl, '_blank')}>
+                            <Eye className="w-4 h-4 mr-2" /> View Details
+                        </Button>
+                    </div>
+                </div>
+
+                <CardHeader className="p-4 pb-2">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs font-medium text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-300 px-2 py-1 rounded-md">
+                            Content Pack
+                        </span>
+                        {course.reports && course.reports > 0 && (
+                            <Badge variant="destructive" className="flex items-center gap-1 py-0 h-5 text-[10px]">
+                                <Flag className="h-3 w-3" /> {course.reports} flags
+                            </Badge>
+                        )}
+                    </div>
+                    <CardTitle className="text-base font-bold line-clamp-1 hover:text-primary transition-colors cursor-pointer" title={course.title}>
+                        {course.title}
+                    </CardTitle>
+                    <CardDescription className="flex items-center gap-2 mt-2">
+                        <Avatar className="h-5 w-5 border border-slate-200">
+                            <AvatarImage src={course.teacherPhotoURL} />
+                            <AvatarFallback className="text-[10px] bg-emerald-100 text-emerald-700">A</AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs font-medium truncate text-slate-600 dark:text-slate-300">{course.teacherName || 'MyTutorMe Admin'}</span>
+                    </CardDescription>
+                </CardHeader>
+
+                <CardContent className="p-4 pt-1 flex-1">
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-2">
+                            <p className="text-slate-500">Sections</p>
+                            <p className="font-semibold text-slate-900 dark:text-white">{sectionCount}</p>
+                        </div>
+                        <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-2">
+                            <p className="text-slate-500">Questions</p>
+                            <p className="font-semibold text-slate-900 dark:text-white">{questionCount}</p>
+                        </div>
+                        <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-2">
+                            <p className="text-slate-500">Material</p>
+                            <p className="font-semibold text-slate-900 dark:text-white">{hasStudyMaterial ? 'Yes' : 'No'}</p>
+                        </div>
+                    </div>
+                </CardContent>
+
+                <CardFooter className="p-4 pt-0 flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50" onClick={() => window.open(viewCourseUrl, '_blank')}>
+                        <Eye className="h-4 w-4 mr-1.5" /> View Details
+                    </Button>
+                    {course.status === 'published' && (
+                        <Button variant="outline" size="sm" className="flex-none text-red-600 hover:bg-red-50" onClick={onReject}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    )}
+                </CardFooter>
+            </Card>
+        );
+    }
     
     return (
         <Card className="flex flex-col overflow-hidden hover:shadow-md transition-shadow dark:bg-slate-900/50 border-slate-200 dark:border-slate-800">

@@ -46,6 +46,7 @@ export const paths = {
     coursesNew: '/admin/courses/new',
     courseDetails: '/admin/moderation/courses/:courseId',
     financials: '/admin/financials',
+    generator: '/admin/generator',
     settings: '/admin/settings',
   }
 } as const;

@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.processPendingDowngrades = exports.scheduleDowngrade = exports.verifyCoursePayment = exports.initializeCoursePayment = exports.requestPayout = exports.cancelSubscription = exports.paymentWebhook = exports.verifySubscription = exports.initializeSubscription = void 0;
+exports.processPendingDowngrades = exports.scheduleDowngrade = exports.verifyCoursePayment = exports.initializeCoursePayment = exports.requestPayout = exports.cancelSubscription = exports.paymentWebhook = exports.verifySubscription = exports.initializeSubscription = exports.generateCourseContent = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const axios_1 = __importDefault(require("axios"));
@@ -52,6 +52,8 @@ admin.initializeApp();
 const db = admin.firestore();
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
+var ai_generation_admin_1 = require("./endpoints/ai-generation-admin");
+Object.defineProperty(exports, "generateCourseContent", { enumerable: true, get: function () { return ai_generation_admin_1.generateCourseContent; } });
 // Use an environment variable for secret keys in production.
 // Set it via: firebase functions:secrets:set FLUTTERWAVE_SECRET_KEY
 // and: firebase functions:secrets:set FLUTTERWAVE_WEBHOOK_SECRET

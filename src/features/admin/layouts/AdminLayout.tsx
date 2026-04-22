@@ -10,7 +10,8 @@ import {
   Search,
   Menu,
   X,
-  DollarSign
+  DollarSign,
+  Wand2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -68,6 +69,7 @@ export const AdminLayout = () => {
         { label: 'User Management', path: '/admin/users', icon: Users },
         { label: 'Content Review', path: '/admin/moderation', icon: BookOpen },
         { label: 'Create Course', path: '/admin/courses/new', icon: BookOpen },
+        { label: 'Content Generator', path: '/admin/generator', icon: Wand2 },
         { label: 'Finance', path: '/admin/financials', icon: DollarSign },
         { label: 'Support & Announcements', path: '/admin/support', icon: Bell },
         { label: 'Settings', path: '/admin/settings', icon: Settings },
