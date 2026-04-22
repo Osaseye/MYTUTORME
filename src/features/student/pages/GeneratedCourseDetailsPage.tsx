@@ -197,25 +197,24 @@ export const GeneratedCourseDetailsPage = () => {
   const sectionCount = examData?.sections?.length || 0;
   const questionCount = flattenedQuestions.length;
   const hasStudyMaterial = !!studyMaterial?.content;
-  const inviterName = user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || 'A student';
 
   const handleShare = async () => {
-    const previewLink = `${window.location.origin}/i/${courseId}?ref=${encodeURIComponent(user?.uid || '')}&inviter=${encodeURIComponent(inviterName)}&title=${encodeURIComponent(courseDisplayTitle)}`;
+    const inviteLink = `${window.location.origin}/invite/${courseId}?ref=${user?.uid || ''}`;
     try {
       if (navigator.share) {
         await navigator.share({
           title: `Learn ${courseDisplayTitle} on MyTutorMe`,
           text: `Check out this course: ${courseDisplayTitle}`,
-          url: previewLink,
+          url: inviteLink,
         });
       } else {
-        await navigator.clipboard.writeText(previewLink);
+        await navigator.clipboard.writeText(inviteLink);
         toast.success("Invite link copied to clipboard!");
       }
     } catch (err) {
       console.error("Error sharing", err);
       // Fallback
-      await navigator.clipboard.writeText(previewLink).catch(console.error);
+      await navigator.clipboard.writeText(inviteLink).catch(console.error);
       toast.success("Invite link copied to clipboard!");
     }
   };
