@@ -32,6 +32,9 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateCourseContent = void 0;
 const functions = __importStar(require("firebase-functions"));
@@ -39,6 +42,7 @@ const admin = __importStar(require("firebase-admin"));
 const vertexai_1 = require("@google-cloud/vertexai");
 const mammoth = __importStar(require("mammoth"));
 const XLSX = __importStar(require("xlsx"));
+const officeparser_1 = __importDefault(require("officeparser"));
 if (!admin.apps.length) {
     admin.initializeApp();
 }
@@ -54,6 +58,11 @@ const isDocxMime = (mimeType, fileName) => {
 const isXlsxMime = (mimeType, fileName) => {
     return mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
         (fileName === null || fileName === void 0 ? void 0 : fileName.toLowerCase().endsWith('.xlsx')) ||
+        false;
+};
+const isPptxMime = (mimeType, fileName) => {
+    return mimeType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+        (fileName === null || fileName === void 0 ? void 0 : fileName.toLowerCase().endsWith('.pptx')) ||
         false;
 };
 const textToBase64 = (text) => Buffer.from(text, 'utf8').toString('base64');
@@ -95,6 +104,15 @@ exports.generateCourseContent = functions.https.onCall({ timeoutSeconds: 300, me
                     return {
                         inlineData: {
                             data: textToBase64(text),
+                            mimeType: 'text/plain'
+                        }
+                    };
+                }
+                if (isPptxMime(incomingMimeType, incomingName)) {
+                    const parsed = await officeparser_1.default.parseOffice(fileBuf);
+                    return {
+                        inlineData: {
+                            data: textToBase64(parsed.toText() || ''),
                             mimeType: 'text/plain'
                         }
                     };

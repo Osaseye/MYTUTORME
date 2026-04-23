@@ -3,6 +3,7 @@ import * as admin from 'firebase-admin';
 import { VertexAI } from '@google-cloud/vertexai';
 import * as mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
+import officeParser from 'officeparser';
 
 if (!admin.apps.length) {
   admin.initializeApp();
@@ -22,6 +23,12 @@ const isDocxMime = (mimeType: string, fileName?: string) => {
 const isXlsxMime = (mimeType: string, fileName?: string) => {
   return mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
     fileName?.toLowerCase().endsWith('.xlsx') ||
+    false;
+};
+
+const isPptxMime = (mimeType: string, fileName?: string) => {
+  return mimeType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+    fileName?.toLowerCase().endsWith('.pptx') ||
     false;
 };
 
@@ -75,6 +82,16 @@ export const generateCourseContent = functions.https.onCall(
           return {
             inlineData: {
               data: textToBase64(text),
+              mimeType: 'text/plain'
+            }
+          };
+        }
+
+        if (isPptxMime(incomingMimeType, incomingName)) {
+          const parsed = await officeParser.parseOffice(fileBuf);
+          return {
+            inlineData: {
+              data: textToBase64(parsed.toText() || ''),
               mimeType: 'text/plain'
             }
           };

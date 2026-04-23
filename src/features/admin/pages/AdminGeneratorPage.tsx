@@ -48,11 +48,11 @@ const MultiFileUploadZone = ({ files, setFiles, accept, label }: { files: File[]
           <UploadCloud className="h-6 w-6 text-slate-400 group-hover:text-primary transition-colors" />
         </div>
         <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{label || "Drag & drop or click to upload"}</p>
-        <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">Supports PDF, DOCX, XLSX, TXT, PNG, JPG (Max 10MB)</p>
+        <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">Supports PDF, PPTX, DOCX, XLSX, TXT, PNG, JPG (Max 10MB)</p>
         <input 
           type="file" 
           multiple
-          accept={accept || ".pdf,.txt,.png,.jpg,.jpeg,.doc,.docx,.xlsx,application/pdf,text/plain,image/png,image/jpeg,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+          accept={accept || ".pdf,.pptx,.txt,.png,.jpg,.jpeg,.doc,.docx,.xlsx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,image/png,image/jpeg,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
           onChange={e => {
             if (e.target.files?.length) {
@@ -259,7 +259,7 @@ export const AdminGeneratorPage = () => {
                     <MultiFileUploadZone
                       files={pastQuestionsFiles}
                       setFiles={setPastQuestionsFiles}
-                      accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,application/pdf,image/png,image/jpeg,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      accept=".pdf,.pptx,.png,.jpg,.jpeg,.doc,.docx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/png,image/jpeg,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                       label="Upload one or more past exam papers"
                     />
                   </div>
