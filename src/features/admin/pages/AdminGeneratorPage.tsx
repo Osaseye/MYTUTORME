@@ -15,46 +15,6 @@ import { uploadFilesToStorage } from '@/utils/storageUploadService';
 
 const generateCourseContent = httpsCallable(functions, 'generateCourseContent', { timeout: 300000 });
 
-const FileUploadZone = ({ file, setFile, accept, label }: { file: File | null; setFile: (file: File | null) => void; accept?: string; label?: string }) => {
-  if (file) {
-    return (
-      <div className="flex items-center justify-between p-4 border border-primary/30 bg-primary/5 rounded-xl transition-all">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <FileText className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-800 dark:text-slate-200 line-clamp-1">{file.name}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-          </div>
-        </div>
-        <Button variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); setFile(null); }} className="text-slate-400 hover:text-red-500">
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-primary/50 transition-all rounded-xl cursor-pointer group group-hover:shadow-sm">
-      <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-full group-hover:bg-primary/10 transition-colors mb-3">
-        <UploadCloud className="h-6 w-6 text-slate-400 group-hover:text-primary transition-colors" />
-      </div>
-      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{label || "Drag & drop or click to upload"}</p>
-      <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">Supports PDF, DOCX, XLSX, TXT, PNG, JPG (Max 10MB)</p>
-      <input 
-        type="file" 
-        accept={accept || ".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx,application/pdf,text/plain,image/png,image/jpeg,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-        onChange={e => {
-          const selectedFile = e.target.files?.[0] || null;
-          setFile(selectedFile);
-        }} 
-      />
-    </div>
-  );
-};
-
 const MultiFileUploadZone = ({ files, setFiles, accept, label }: { files: File[]; setFiles: (files: File[]) => void; accept?: string; label?: string }) => {
   const removeFile = (index: number) => {
     setFiles(files.filter((_, i) => i !== index));
@@ -92,7 +52,7 @@ const MultiFileUploadZone = ({ files, setFiles, accept, label }: { files: File[]
         <input 
           type="file" 
           multiple
-          accept={accept || ".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx,application/pdf,text/plain,image/png,image/jpeg,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+          accept={accept || ".pdf,.txt,.png,.jpg,.jpeg,.doc,.docx,.xlsx,application/pdf,text/plain,image/png,image/jpeg,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
           onChange={e => {
             if (e.target.files?.length) {
@@ -111,7 +71,7 @@ export const AdminGeneratorPage = () => {
   const [courseId, setCourseId] = useState('');
   const [courseTitle, setCourseTitle] = useState('');
   const [notesFiles, setNotesFiles] = useState<File[]>([]);
-  const [pastQuestionsFile, setPastQuestionsFile] = useState<File | null>(null);
+  const [pastQuestionsFiles, setPastQuestionsFiles] = useState<File[]>([]);
   const [useUpload, setUseUpload] = useState(false);
   const [loading, setLoading] = useState(false);
   const [examJson, setExamJson] = useState<any>(null);
@@ -139,20 +99,20 @@ export const AdminGeneratorPage = () => {
         storagePath: notePaths[index]
       }));
       
-      let pastQuestionsData = null;
-      if (useUpload && pastQuestionsFile) {
-         const [pastQuestionPath] = await uploadFilesToStorage([pastQuestionsFile], user.uid, 'admin-generator-past-questions');
-         pastQuestionsData = {
-           name: pastQuestionsFile.name,
-           mimeType: pastQuestionsFile.type || 'application/octet-stream',
-           storagePath: pastQuestionPath
-         };
+      let pastQuestionsData: Array<{ name: string; mimeType: string; storagePath: string }> | null = null;
+      if (useUpload && pastQuestionsFiles.length > 0) {
+        const pastQuestionPaths = await uploadFilesToStorage(pastQuestionsFiles, user.uid, 'admin-generator-past-questions');
+        pastQuestionsData = pastQuestionsFiles.map((file, index) => ({
+          name: file.name,
+          mimeType: file.type || 'application/octet-stream',
+          storagePath: pastQuestionPaths[index]
+        }));
       }
 
       const result = await generateCourseContent({
         courseId,
         courseTitle,
-        hasPastQuestions: !!pastQuestionsFile && useUpload,
+        hasPastQuestions: useUpload && pastQuestionsFiles.length > 0,
         notesData,
         pastQuestionsData,
         manualConfig: !useUpload ? {
@@ -296,10 +256,11 @@ export const AdminGeneratorPage = () => {
                 {useUpload ? (
                   <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                     <Label className="text-slate-700 dark:text-slate-400 block mb-2">Upload Past Questions</Label>
-                    <FileUploadZone 
-                      file={pastQuestionsFile} 
-                      setFile={setPastQuestionsFile} 
-                      label="Upload past exam paper" 
+                    <MultiFileUploadZone
+                      files={pastQuestionsFiles}
+                      setFiles={setPastQuestionsFiles}
+                      accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,application/pdf,image/png,image/jpeg,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      label="Upload one or more past exam papers"
                     />
                   </div>
                 ) : (

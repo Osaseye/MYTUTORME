@@ -113,13 +113,16 @@ export const generateCourseContent = functions.https.onCall(
 
     let examInstructions = "";
     if (hasPastQuestions && pastQuestionsData) {
-       const pastQuestionInlinePart = await resolveInlinePart(pastQuestionsData);
-       if (pastQuestionInlinePart) {
-         promptParts.push(pastQuestionInlinePart);
+       const pastQuestionFiles = Array.isArray(pastQuestionsData) ? pastQuestionsData : [pastQuestionsData];
+       for (const fileObj of pastQuestionFiles) {
+         const pastQuestionInlinePart = await resolveInlinePart(fileObj);
+         if (pastQuestionInlinePart) {
+           promptParts.push(pastQuestionInlinePart);
+         }
        }
        examInstructions = `
-Analyze the uploaded PAST EXAM PAPER. Replicate its exact structure (sections, number of questions, types of questions like MCQ/Theory, marks allocation, and overall style). 
-Generate ALL NEW questions based strictly on the uploaded COURSE NOTES. Do not reuse questions from the past paper.`;
+Analyze the uploaded PAST EXAM PAPER(S). Replicate their structure and style as closely as possible (sections, number of questions, question types like MCQ/Theory, marks allocation, phrasing style, and expected depth).
+Generate ALL NEW questions based strictly on the uploaded COURSE NOTES. Do not reuse questions from past papers.`;
     } else if (manualConfig) {
        examInstructions = `
 Generate an exam based strictly on the uploaded COURSE NOTES following this manual configuration:
@@ -135,7 +138,12 @@ ${examInstructions}
 
 First, generate a "studyMaterial" object containing:
 - "title": A formal title for the study guide.
-- "content": A detailed string (using \\n\\n for paragraphs) summarizing the core concepts from the notes so the student is prepared for the exam.
+- "content": A detailed markdown string summarizing the core concepts from the notes so the student is prepared for the exam.
+  Markdown requirements:
+  - Use headings/subheadings where helpful.
+  - Include markdown tables when comparing concepts, formulas, or classifications.
+  - Include fenced code blocks for code snippets or algorithm examples.
+  - Include bullet lists for key points.
 
 Second, generate the "sections" array for the exam.
 Each question must contain:
