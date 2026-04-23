@@ -14,6 +14,7 @@ export const RegisterForm = () => {
   const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const isGoogleAuthTemporarilyDisabled = true;
 
   const {
     register,
@@ -80,13 +81,19 @@ export const RegisterForm = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
+        {isGoogleAuthTemporarilyDisabled && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
+            Google sign-up/sign-in is currently experiencing temporary downtime. Please create your account with email and password.
+            If you already used Google before, your account is safe and you can still log in normally with your existing credentials.
+          </div>
+        )}
         <Button
           variant="outline"
           type="button"
           className="w-full"
           onClick={handleGoogleLogin}
           isLoading={isOAuthLoading}
-          disabled={isOAuthLoading || isLoading}
+          disabled={isGoogleAuthTemporarilyDisabled || isOAuthLoading || isLoading}
         >
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             <path
@@ -106,7 +113,7 @@ export const RegisterForm = () => {
               fill="#EA4335"
             />
           </svg>
-          Continue with Google
+          {isGoogleAuthTemporarilyDisabled ? 'Google Sign-In Temporarily Unavailable' : 'Continue with Google'}
         </Button>
       </div>
 

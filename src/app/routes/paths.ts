@@ -4,7 +4,6 @@ export const paths = {
   auth: {
     login: '/login',
     register: '/register',
-    selectRole: '/select-role',
     forgotPassword: '/forgot-password',
   },
   onboarding: {

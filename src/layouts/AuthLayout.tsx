@@ -1,4 +1,4 @@
-import { Link, Outlet, Navigate, useSearchParams } from "react-router-dom";
+import { Link, Outlet, Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,7 @@ const testimonials = [
 
 export const AuthLayout = () => {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const returnTo = searchParams.get("returnTo");
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -44,8 +45,8 @@ export const AuthLayout = () => {
 
   // For OAuth redirect login (mostly PWA/mobile fallback), a new user can have a
   // Firebase session before their Firestore profile exists. Resume at role selection.
-  if (!isAuthenticated && shouldResumeGoogleRoleSelection) {
-    return <Navigate to={`/select-role${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`} replace />;
+  if (!isAuthenticated && shouldResumeGoogleRoleSelection && location.pathname !== '/register') {
+    return <Navigate to={`/register${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`} replace />;
   }
 
   // If the user logs in or registers successfully, redirect them away from Auth screens
