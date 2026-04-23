@@ -17,14 +17,18 @@ export const useFlashcardGenerator = () => {
   const generateDeck = async (options: FlashcardGenerationOptions) => {
     setIsGenerating(true);
     try {
-      const genFn = httpsCallable<FlashcardGenerationOptions, { success: boolean, deckId: string }>(functions, 'generateFlashcardDeck');
+      const genFn = httpsCallable<FlashcardGenerationOptions, { success: boolean, deckId: string }>(functions, 'generateFlashcardDeck', { timeout: 300000 });
       const response = await genFn(options);
       
       console.log('Deck created:', response.data.deckId);
       return response.data.deckId;
     } catch (error: any) {
       console.error('Error generating flashcards:', error);
-      toast.error('Failed to generate flashcards: ' + error.message);
+      if (error?.code === 'deadline-exceeded') {
+        toast.error('Flashcard generation timed out. Try fewer cards or fewer/ smaller files.');
+      } else {
+        toast.error('Failed to generate flashcards: ' + error.message);
+      }
       return null;
     } finally {
       setIsGenerating(false);

@@ -156,14 +156,14 @@ import { uploadFilesToStorage } from '@/utils/storageUploadService';
                     <UploadCloud className="w-6 h-6" />
                  </div>
                  <div>
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Click to upload images</p>
-                    <p className="text-xs text-slate-500 mt-1">JPEG, PNG up to 5MB</p>
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Click to upload notes, Word, Excel, or images</p>
+                    <p className="text-xs text-slate-500 mt-1">JPEG, PNG, PDF, DOC/DOCX, XLS/XLSX, CSV</p>
                  </div>
                  <input 
                     type="file" 
                     className="hidden" 
                     ref={fileInputRef} 
-                    accept="image/*, .pdf, .txt, .doc, .docx" 
+                    accept="image/*,.pdf,.txt,.doc,.docx,.xls,.xlsx,.csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" 
                     multiple
                     onChange={handleFileChange}
                  />

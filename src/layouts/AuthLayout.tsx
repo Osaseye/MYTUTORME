@@ -4,7 +4,6 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import loginBg from "@/assets/login.png"; 
 import { GlobalLoader } from "@/components/ui/global-loader";
-import { auth } from "@/lib/firebase";
 import { isPendingOAuthRoleSelection } from "@/features/auth/api/auth";
 
 const testimonials = [
@@ -30,7 +29,7 @@ export const AuthLayout = () => {
   const returnTo = searchParams.get("returnTo");
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const { user, isAuthenticated, isLoading } = useAuth();
-  const shouldResumeGoogleRoleSelection = Boolean(auth.currentUser && isPendingOAuthRoleSelection());
+  const shouldResumeGoogleRoleSelection = isPendingOAuthRoleSelection();
 
   useEffect(() => {
     const interval = setInterval(() => {

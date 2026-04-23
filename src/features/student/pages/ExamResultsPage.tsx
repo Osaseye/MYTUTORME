@@ -24,6 +24,8 @@ export const ExamResultsPage = () => {
   const { attemptId } = useParams();
   const [attemptData, setAttemptData] = useState<any>(null);
   const [quizData, setQuizData] = useState<any>(null);
+   const [questionDetails, setQuestionDetails] = useState<any[]>([]);
+   const [isQuestionAnalysisLoading, setIsQuestionAnalysisLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
   const handleShare = () => {
@@ -50,13 +52,30 @@ export const ExamResultsPage = () => {
             const quizRef = doc(db, 'quizzes', data.quizId);
             const quizSnap = await getDoc(quizRef);
             if (quizSnap.exists()) {
-                setQuizData(quizSnap.data());
+                        const quiz = quizSnap.data();
+                        setQuizData(quiz);
+
+                        const questionIds: string[] = Array.isArray(quiz.questionIds) ? quiz.questionIds : [];
+                        if (questionIds.length > 0) {
+                           const questionSnaps = await Promise.all(
+                              questionIds.map((qId) => getDoc(doc(db, 'questions', qId)))
+                           );
+
+                           const loadedQuestions = questionSnaps
+                              .filter((snap) => snap.exists())
+                              .map((snap) => ({ id: snap.id, ...snap.data() }));
+
+                           setQuestionDetails(loadedQuestions);
+                        } else {
+                           setQuestionDetails([]);
+                        }
             }
           }
         }
       } catch (error) {
         console.error("Error fetching results", error);
       } finally {
+            setIsQuestionAnalysisLoading(false);
         setIsLoading(false);
       }
     };
@@ -212,8 +231,8 @@ export const ExamResultsPage = () => {
                     Question Analysis
                  </h3>
                  <div className="space-y-6">
-                    {quizData && quizData.questions ? (
-                       quizData.questions.map((q: any, i: number) => {
+                    {!isQuestionAnalysisLoading && questionDetails.length > 0 ? (
+                       questionDetails.map((q: any, i: number) => {
                           const studentAnswer = attemptData.answers[q.id];
                           const isCorrect = studentAnswer === q.correctAnswer;
                           
@@ -225,7 +244,7 @@ export const ExamResultsPage = () => {
                                    </div>
                                    <div className="flex-1">
                                         <div className="text-slate-900 dark:text-white font-medium mb-3 prose dark:prose-invert max-w-none">
-                                            <ReactMarkdown>{q.question}</ReactMarkdown>
+                                          <ReactMarkdown>{q.text || q.question || 'Question'}</ReactMarkdown>
                                         </div>
                                       
                                       <div className={`text-sm p-3 rounded-lg mb-2 ${isCorrect ? 'bg-green-100/50 text-green-800' : 'bg-red-100/50 text-red-800'}`}>
@@ -251,7 +270,7 @@ export const ExamResultsPage = () => {
                                       
                                       {!isCorrect && (
                                         <div className="mt-3">
-                                            <Link to={`/student/ai-tutor?topic=${encodeURIComponent(q.topic || (quizData.subject + ' ' + quizData.topic))}&question=${encodeURIComponent(q.question)}`}>
+                                            <Link to={`/student/ai-tutor?topic=${encodeURIComponent(q.topic || (quizData.subject + ' ' + quizData.topic))}&question=${encodeURIComponent(q.text || q.question || '')}`}>
                                                 <Button size="sm" variant="outline" className="bg-indigo-50 border-blue-200 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">
                                                     <Sparkles className="w-4 h-4 mr-2" /> AI Deep Dive
                                                 </Button>
@@ -263,9 +282,13 @@ export const ExamResultsPage = () => {
                              </div>
                           );
                        })
-                    ) : (
+                    ) : isQuestionAnalysisLoading ? (
                        <div className="text-center text-slate-500 py-4">
                           Loading detailed question data...
+                       </div>
+                    ) : (
+                       <div className="text-center text-slate-500 py-4">
+                          No detailed question analysis available for this attempt.
                        </div>
                     )}
                  </div>

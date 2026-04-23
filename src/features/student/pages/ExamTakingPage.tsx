@@ -131,6 +131,11 @@ export const ExamTakingPage = () => {
     return () => clearInterval(timer);
   }, [isLoading, timeLeft]);
 
+    useEffect(() => {
+        if (isLoading) return;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [currentQuestionIndex, isLoading]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -262,7 +267,6 @@ export const ExamTakingPage = () => {
         </div>
       </nav>
 
-      Main Content Area
       <main className="min-h-[calc(100vh-64px)] w-full flex justify-center p-4 md:p-8 relative">
         {/* Background Grid Pattern */}
         <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05]" 
@@ -435,9 +439,10 @@ export const ExamTakingPage = () => {
                                         setIsSubmitModalOpen(true);
                                     }
                                 }}
+                                disabled={isSubmitting}
                                 className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold py-6 px-8 rounded-xl shadow-lg transition-all hover:-translate-y-0.5 flex gap-2"
                             >
-                                {currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'Finish Exam'} 
+                                {isSubmitting ? 'Submitting...' : (currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'Finish Exam')} 
                                 <ArrowRight className="w-4 h-4" />
                             </Button>
                         ) : !isChecked ? (
@@ -456,9 +461,10 @@ export const ExamTakingPage = () => {
                                             setIsSubmitModalOpen(true);
                                         }
                                     }}
+                                    disabled={isSubmitting}
                                     className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold py-6 px-8 rounded-xl shadow-lg transition-all hover:-translate-y-0.5 flex gap-2"
                                 >
-                                    {currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'Finish Exam'} 
+                                    {isSubmitting ? 'Submitting...' : (currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'Finish Exam')} 
                                     <ArrowRight className="w-4 h-4" />
                                 </Button>
                         )}
@@ -519,7 +525,7 @@ export const ExamTakingPage = () => {
                                         {currentQuestion.explanation?.steps && (
                                             <div className="space-y-1">
                                                 {currentQuestion.explanation.steps.map((step: string, i: number) => (
-                                                    <p key={i} className="text-sm text-slate-600 dark:text-slate-300 font-mono text-xs opacity-90">
+                                                    <p key={i} className="text-xs text-slate-600 dark:text-slate-300 font-mono opacity-90">
                                                         {step}
                                                     </p>
                                                 ))}
@@ -585,8 +591,14 @@ export const ExamTakingPage = () => {
                      <Button 
                         className="flex-1 py-6 bg-red-600 hover:bg-red-700 text-white"
                         onClick={handleSubmit}
+                                disabled={isSubmitting}
                      >
-                        Yes, Submit
+                                {isSubmitting ? (
+                                  <>
+                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                     Submitting...
+                                  </>
+                                ) : 'Yes, Submit'}
                      </Button>
                   </div>
                </div>

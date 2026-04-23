@@ -345,7 +345,7 @@ export const ExamConfigPage = () => {
                                         type="file" 
                                         className="hidden" 
                                         ref={fileInputRef} 
-                                        accept="image/*, .pdf, .txt, .doc, .docx" 
+                                        accept="image/*,.pdf,.txt,.doc,.docx,.xls,.xlsx,.csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" 
                                         multiple
                                         onChange={handleFileChange}
                                     />

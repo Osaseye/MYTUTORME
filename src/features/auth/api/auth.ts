@@ -135,14 +135,19 @@ export const registerUser = async ({ email, password, name, role }: RegisterCred
   return userCredential;
 };
 
-const isPWA = window.matchMedia("(display-mode: standalone)").matches;
+const shouldPreferRedirectForGoogleAuth = () => {
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+  const isSmallScreen = window.matchMedia('(max-width: 768px)').matches;
+  const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  return isPWA || isSmallScreen || isMobileUA;
+};
 
 export const loginWithGoogle = async (): Promise<GoogleLoginResult | undefined> => {
   const provider = new GoogleAuthProvider();
   let result;
   
-  if (isPWA) {
-    console.log('[Google Auth] PWA mode detected for login, using signInWithRedirect');
+  if (shouldPreferRedirectForGoogleAuth()) {
+    console.log('[Google Auth] Redirect-preferred environment detected for login, using signInWithRedirect');
     markPendingOAuthRoleSelection();
     await signInWithRedirect(auth, provider);
     return;
@@ -237,8 +242,8 @@ export const registerWithGoogle = async (role: AuthRole) => {
      console.log('[Google Auth] Set oauth_intended_role:', role);
   }
 
-  if (isPWA) {
-    console.log('[Google Auth] PWA mode detected, using signInWithRedirect');
+  if (shouldPreferRedirectForGoogleAuth()) {
+    console.log('[Google Auth] Redirect-preferred environment detected, using signInWithRedirect');
     await signInWithRedirect(auth, provider);
     return;
   }

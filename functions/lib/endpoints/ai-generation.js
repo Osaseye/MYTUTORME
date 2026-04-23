@@ -72,7 +72,7 @@ async function recordUsageTransaction(userId, isPremium, freeLimit, maxPremium =
         return true;
     });
 }
-exports.generateMockExam = functions.https.onCall(async (request) => {
+exports.generateMockExam = functions.https.onCall({ timeoutSeconds: 540, memory: "1GiB", region: "us-central1" }, async (request) => {
     const data = request.data;
     const context = request;
     if (!context.auth) {
@@ -301,7 +301,7 @@ exports.generateStudyPlan = functions.https.onCall(async (request) => {
         throw new functions.https.HttpsError("internal", error.message);
     }
 });
-exports.generateFlashcardDeck = functions.https.onCall(async (request) => {
+exports.generateFlashcardDeck = functions.https.onCall({ timeoutSeconds: 540, memory: "1GiB", region: "us-central1" }, async (request) => {
     const data = request.data;
     const context = request;
     if (!context.auth) {

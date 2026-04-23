@@ -47,7 +47,7 @@ async function recordUsageTransaction(userId: string, isPremium: boolean, freeLi
     });
 }
 
-export const generateMockExam = functions.https.onCall(async (request) => {
+export const generateMockExam = functions.https.onCall({ timeoutSeconds: 540, memory: "1GiB", region: "us-central1" }, async (request: any) => {
     const data = request.data;
     const context = request;
     if (!context.auth) {
@@ -309,7 +309,7 @@ export const generateStudyPlan = functions.https.onCall(async (request) => {
     }
 });
 
-export const generateFlashcardDeck = functions.https.onCall(async (request) => {
+export const generateFlashcardDeck = functions.https.onCall({ timeoutSeconds: 540, memory: "1GiB", region: "us-central1" }, async (request: any) => {
     const data = request.data;
     const context = request;
     if (!context.auth) {

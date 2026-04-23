@@ -18,14 +18,18 @@ export const useExamGenerator = () => {
   const generateExam = async (options: ExamGenerationOptions) => {
     setIsGenerating(true);
     try {
-      const genFn = httpsCallable<ExamGenerationOptions, { success: boolean, quizId: string, mockExamId: string }>(functions, 'generateMockExam');
+      const genFn = httpsCallable<ExamGenerationOptions, { success: boolean, quizId: string, mockExamId: string }>(functions, 'generateMockExam', { timeout: 300000 });
       const response = await genFn(options);
       
       console.log('Quiz created:', response.data.quizId);
       return response.data.quizId;
     } catch (error: any) {
       console.error('Error generating exam:', error);
-      toast.error('Failed to generate exam: ' + error.message);
+      if (error?.code === 'deadline-exceeded') {
+        toast.error('Exam generation timed out. Try fewer questions or fewer/ smaller files.');
+      } else {
+        toast.error('Failed to generate exam: ' + error.message);
+      }
       return null;
     } finally {
       setIsGenerating(false);
