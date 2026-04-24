@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   watermarkImage: {
     width: 300,
     height: 300,
-    opacity: 0.05, // Very faint watermark
+    opacity: 0.05,
   },
   titlePage: {
     flex: 1,
@@ -94,20 +94,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 1.6,
     color: '#334155',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   studyGuideH2: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#0f172a',
-    marginTop: 10,
+    marginTop: 14,
     marginBottom: 6,
   },
   studyGuideH3: {
     fontSize: 13,
     fontWeight: 'bold',
     color: '#1e293b',
-    marginTop: 8,
+    marginTop: 10,
     marginBottom: 5,
   },
   studyGuideBullet: {
@@ -117,16 +117,90 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     marginLeft: 10,
   },
+  // Code block: outer View holds bg/padding, inner Text holds color/font
   codeBlock: {
     backgroundColor: '#0f172a',
-    color: '#e2e8f0',
-    fontSize: 9,
-    lineHeight: 1.45,
-    fontFamily: 'Courier',
-    padding: 8,
-    borderRadius: 4,
+    padding: 10,
+    borderRadius: 5,
     marginBottom: 10,
     marginTop: 6,
+  },
+  codeBlockHeader: {
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+    marginBottom: 0,
+  },
+  codeBlockHeaderText: {
+    color: '#94a3b8',
+    fontSize: 8,
+    fontFamily: 'Helvetica',
+    letterSpacing: 0.5,
+  },
+  codeBlockLine: {
+    color: '#e2e8f0',
+    fontSize: 9,
+    fontFamily: 'Courier',
+    lineHeight: 1.5,
+  },
+  // Numbered list item
+  numberedItem: {
+    flexDirection: 'row',
+    marginBottom: 5,
+    marginLeft: 4,
+    alignItems: 'flex-start',
+  },
+  numberedBadge: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: BRAND.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+    flexShrink: 0,
+    marginTop: 1,
+  },
+  numberedBadgeText: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: 'bold',
+  },
+  numberedText: {
+    fontSize: 11,
+    lineHeight: 1.5,
+    color: '#334155',
+    flex: 1,
+  },
+  // Callout / note box
+  calloutBox: {
+    flexDirection: 'row',
+    backgroundColor: '#f0fdf4',
+    borderLeftWidth: 4,
+    borderLeftColor: BRAND.primary,
+    borderRadius: 4,
+    padding: 10,
+    marginBottom: 10,
+    marginTop: 6,
+  },
+  calloutLabel: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: BRAND.primaryDark,
+    marginBottom: 3,
+  },
+  calloutText: {
+    fontSize: 10,
+    lineHeight: 1.5,
+    color: '#166534',
+  },
+  // Horizontal divider
+  divider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+    marginVertical: 12,
   },
   tableBlock: {
     borderWidth: 1,
@@ -185,9 +259,9 @@ const styles = StyleSheet.create({
     lineHeight: 1.3,
   },
   theoryLines: {
-    borderBottomWidth: 1, 
+    borderBottomWidth: 1,
     borderBottomStyle: 'dotted',
-    borderBottomColor: '#cbd5e1', 
+    borderBottomColor: '#cbd5e1',
     marginTop: 25,
     height: 1,
   },
@@ -214,16 +288,14 @@ const styles = StyleSheet.create({
   }
 });
 
-interface PDFProps {  
+interface PDFProps {
   courseTitle: string;
   courseCode?: string;
   examData: any;
 }
 
 const Watermark = () => (
-  // We use a React-PDF fixed element so it repeats on every page (except the title page, which we'll handle separately if needed)
   <View style={styles.watermarkContainer} fixed>
-    {/* Using the public icon.png path, assumes it's available at the origin */}
     <Image src="/icon.png" style={styles.watermarkImage} />
   </View>
 );
@@ -238,12 +310,36 @@ const Footer = () => (
   </View>
 );
 
+// Renders a string with **bold** markers as proper bold <Text> spans.
+// Single-asterisk *italic* is stripped cleanly (no special style — PDF font support is limited).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const inlineRender = (text: string, baseStyle: any, key: string) => {
+  // Normalise single-asterisk italic to plain text first, then handle bold.
+  const normalised = text.replace(/(?<!\*)\*(?!\*)([^*]+)\*(?!\*)/g, '$1');
+  const parts = normalised.split(/(\*\*[^*]+\*\*)/g);
+  if (parts.length === 1) {
+    return <Text key={key} style={baseStyle}>{normalised}</Text>;
+  }
+  return (
+    <Text key={key} style={baseStyle}>
+      {parts.map((part, i) =>
+        part.startsWith('**') && part.endsWith('**')
+          ? <Text key={i} style={{ fontWeight: 'bold' }}>{part.slice(2, -2)}</Text>
+          : part
+      )}
+    </Text>
+  );
+};
+
 type StudyBlock =
   | { type: 'h2'; text: string }
   | { type: 'h3'; text: string }
   | { type: 'paragraph'; text: string }
   | { type: 'bullet'; text: string }
-  | { type: 'code'; text: string }
+  | { type: 'numbered'; text: string; number: string }
+  | { type: 'code'; text: string; lang?: string }
+  | { type: 'callout'; text: string }
+  | { type: 'divider' }
   | { type: 'table'; rows: string[][] };
 
 const parseMarkdownishContent = (content: string): StudyBlock[] => {
@@ -260,7 +356,9 @@ const parseMarkdownishContent = (content: string): StudyBlock[] => {
       continue;
     }
 
+    // Fenced code block
     if (trimmed.startsWith('```')) {
+      const lang = trimmed.slice(3).trim() || undefined;
       i += 1;
       const codeLines: string[] = [];
       while (i < lines.length && !lines[i].trim().startsWith('```')) {
@@ -268,28 +366,57 @@ const parseMarkdownishContent = (content: string): StudyBlock[] => {
         i += 1;
       }
       if (i < lines.length) i += 1;
-      blocks.push({ type: 'code', text: codeLines.join('\n') || ' ' });
+      blocks.push({ type: 'code', text: codeLines.join('\n') || ' ', lang });
       continue;
     }
 
+    // Headings
     if (trimmed.startsWith('## ')) {
       blocks.push({ type: 'h2', text: trimmed.replace(/^##\s+/, '') });
       i += 1;
       continue;
     }
-
     if (trimmed.startsWith('### ')) {
       blocks.push({ type: 'h3', text: trimmed.replace(/^###\s+/, '') });
       i += 1;
       continue;
     }
 
+    // Horizontal divider
+    if (/^-{3,}$/.test(trimmed) || /^\*{3,}$/.test(trimmed)) {
+      blocks.push({ type: 'divider' });
+      i += 1;
+      continue;
+    }
+
+    // Bullet list (- or *)
     if (/^[-*]\s+/.test(trimmed)) {
       blocks.push({ type: 'bullet', text: trimmed.replace(/^[-*]\s+/, '') });
       i += 1;
       continue;
     }
 
+    // Numbered list (1. 2. etc.)
+    const numberedMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
+    if (numberedMatch) {
+      blocks.push({ type: 'numbered', text: numberedMatch[2], number: numberedMatch[1] });
+      i += 1;
+      continue;
+    }
+
+    // Callout / blockquote
+    if (trimmed.startsWith('> ')) {
+      const calloutLines: string[] = [trimmed.replace(/^>\s+/, '')];
+      i += 1;
+      while (i < lines.length && lines[i].trim().startsWith('> ')) {
+        calloutLines.push(lines[i].trim().replace(/^>\s+/, ''));
+        i += 1;
+      }
+      blocks.push({ type: 'callout', text: calloutLines.join(' ') });
+      continue;
+    }
+
+    // Markdown table
     if (trimmed.includes('|') && i + 1 < lines.length && /^\s*\|?\s*[-:]{3,}/.test(lines[i + 1])) {
       const tableLines: string[] = [trimmed, lines[i + 1].trim()];
       i += 2;
@@ -297,20 +424,29 @@ const parseMarkdownishContent = (content: string): StudyBlock[] => {
         tableLines.push(lines[i].trim());
         i += 1;
       }
-
       const rows = tableLines
         .filter((_, idx) => idx !== 1)
         .map((r) => r.replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim()));
-
       if (rows.length > 0) {
         blocks.push({ type: 'table', rows });
       }
       continue;
     }
 
+    // Paragraph — collect consecutive plain lines
     const paragraphLines: string[] = [trimmed];
     i += 1;
-    while (i < lines.length && lines[i].trim() && !lines[i].trim().startsWith('##') && !lines[i].trim().startsWith('###') && !/^[-*]\s+/.test(lines[i].trim()) && !lines[i].trim().startsWith('```')) {
+    while (
+      i < lines.length &&
+      lines[i].trim() &&
+      !lines[i].trim().startsWith('##') &&
+      !lines[i].trim().startsWith('###') &&
+      !/^[-*]\s+/.test(lines[i].trim()) &&
+      !/^\d+\.\s+/.test(lines[i].trim()) &&
+      !lines[i].trim().startsWith('```') &&
+      !lines[i].trim().startsWith('> ') &&
+      !/^-{3,}$/.test(lines[i].trim())
+    ) {
       paragraphLines.push(lines[i].trim());
       i += 1;
     }
@@ -325,19 +461,63 @@ const renderStudyBlocks = (content: string) => {
 
   return blocks.map((block, index) => {
     if (block.type === 'h2') {
-      return <Text key={`h2-${index}`} style={styles.studyGuideH2}>{block.text}</Text>;
+      return inlineRender(block.text, styles.studyGuideH2, `h2-${index}`);
     }
 
     if (block.type === 'h3') {
-      return <Text key={`h3-${index}`} style={styles.studyGuideH3}>{block.text}</Text>;
+      return inlineRender(block.text, styles.studyGuideH3, `h3-${index}`);
     }
 
     if (block.type === 'bullet') {
-      return <Text key={`b-${index}`} style={styles.studyGuideBullet}>• {block.text}</Text>;
+      return (
+        <View key={`b-${index}`} style={{ flexDirection: 'row', marginBottom: 4, marginLeft: 8 }}>
+          <Text style={{ color: BRAND.primary, fontSize: 11, marginRight: 6, lineHeight: 1.5 }}>•</Text>
+          {inlineRender(block.text, styles.studyGuideBullet, `bt-${index}`)}
+        </View>
+      );
+    }
+
+    if (block.type === 'numbered') {
+      return (
+        <View key={`n-${index}`} style={styles.numberedItem}>
+          <View style={styles.numberedBadge}>
+            <Text style={styles.numberedBadgeText}>{block.number}</Text>
+          </View>
+          {inlineRender(block.text, styles.numberedText, `nt-${index}`)}
+        </View>
+      );
+    }
+
+    if (block.type === 'callout') {
+      return (
+        <View key={`call-${index}`} style={styles.calloutBox}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.calloutLabel}>NOTE</Text>
+            {inlineRender(block.text, styles.calloutText, `callt-${index}`)}
+          </View>
+        </View>
+      );
+    }
+
+    if (block.type === 'divider') {
+      return <View key={`div-${index}`} style={styles.divider} />;
     }
 
     if (block.type === 'code') {
-      return <Text key={`c-${index}`} style={styles.codeBlock}>{block.text}</Text>;
+      const codeLines = block.text.split('\n');
+      const label = block.lang ? block.lang.toUpperCase() : 'CODE';
+      return (
+        <View key={`c-${index}`}>
+          <View style={styles.codeBlockHeader}>
+            <Text style={styles.codeBlockHeaderText}>{label}</Text>
+          </View>
+          <View style={styles.codeBlock}>
+            {codeLines.map((codeLine, li) => (
+              <Text key={li} style={styles.codeBlockLine}>{codeLine || ' '}</Text>
+            ))}
+          </View>
+        </View>
+      );
     }
 
     if (block.type === 'table') {
@@ -360,7 +540,8 @@ const renderStudyBlocks = (content: string) => {
       );
     }
 
-    return <Text key={`p-${index}`} style={styles.studyGuideContent}>{block.text}</Text>;
+    // paragraph
+    return inlineRender(block.text, styles.studyGuideContent, `p-${index}`);
   });
 };
 
@@ -375,7 +556,7 @@ export const BrandedCoursePDF = ({ courseTitle, courseCode, examData }: PDFProps
         <Image src="/icon.png" style={styles.titleLogo} />
         <Text style={styles.titleHeader}>MyTutorMe</Text>
         <Text style={styles.titleSub}>Official Course Study Material</Text>
-        
+
         <View style={{ backgroundColor: '#f1f5f9', padding: 20, borderRadius: 8, width: '100%', alignItems: 'center' }}>
           <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#334155', marginBottom: 8 }}>{courseTitle}</Text>
           <Text style={{ fontSize: 10, color: '#64748b' }}>Course Code: {courseCode || examData?.courseId || 'N/A'}</Text>
@@ -388,15 +569,15 @@ export const BrandedCoursePDF = ({ courseTitle, courseCode, examData }: PDFProps
       <Page size="A4" style={styles.page}>
         <Watermark />
         <View style={styles.header}>
-           <View>
-             <Text style={styles.headerText}>MyTutorMe</Text>
-             <Text style={styles.subtitle}>{courseTitle} - Preparatory Material</Text>
-           </View>
-            <Link src="https://mytutorme.org" style={styles.headerLink}>Visit Platform</Link>
+          <View>
+            <Text style={styles.headerText}>MyTutorMe</Text>
+            <Text style={styles.subtitle}>{courseTitle} - Preparatory Material</Text>
+          </View>
+          <Link src="https://mytutorme.org" style={styles.headerLink}>Visit Platform</Link>
         </View>
 
         <Text style={styles.studyGuideTitle}>{examData.studyMaterial.title || 'Study Guide'}</Text>
-        
+
         {renderStudyBlocks(examData.studyMaterial.content || '')}
 
         <Footer />

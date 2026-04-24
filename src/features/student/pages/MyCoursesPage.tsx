@@ -186,23 +186,23 @@ export const MyCoursesPage = () => {
     }, [startTour]);
 
     return (
-        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="mb-8 md:mb-12">
-                <h1 className="font-display text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <div className="mb-6 md:mb-10">
+                <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-2 sm:mb-4">
                     Your Learning <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Hub</span>
                 </h1>
-                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl">
+                <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl">
                     Discover new courses or resume where you left off.
                 </p>
             </div>
 
             <Tabs defaultValue="explore" className="w-full">
-                <TabsList data-tour-target="course-tabs" className="grid w-full grid-cols-1 sm:grid-cols-2 lg:w-[400px] mb-8 bg-slate-100 dark:bg-slate-800 p-1 h-auto gap-y-1">
-                    <TabsTrigger value="explore" className="flex items-center gap-2">
-                        <Search className="w-4 h-4" /> Explore Catalog
+                <TabsList data-tour-target="course-tabs" className="grid w-full grid-cols-2 sm:w-[400px] mb-6 sm:mb-8 bg-slate-100 dark:bg-slate-800 p-1 h-auto">
+                    <TabsTrigger value="explore" className="flex items-center gap-1.5 text-sm sm:text-base">
+                        <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Explore
                     </TabsTrigger>
-                    <TabsTrigger value="enrolled" className="flex items-center gap-2">
-                        <BookOpen className="w-4 h-4" /> My Courses ({enrollments.length})
+                    <TabsTrigger value="enrolled" className="flex items-center gap-1.5 text-sm sm:text-base">
+                        <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> My Courses ({enrollments.length})
                     </TabsTrigger>
                 </TabsList>
 
@@ -211,40 +211,46 @@ export const MyCoursesPage = () => {
                     {loadingEnrollments ? (
                         <div className="py-20 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
                     ) : enrollments.length === 0 ? (
-                        <div className="py-20 text-center bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                            <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Not enrolled yet</h3>
-                            <p className="text-slate-500 mb-6">You haven't started any courses.</p>
+                        <div className="py-16 sm:py-20 text-center bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm px-4">
+                            <BookOpen className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300 mx-auto mb-4" />
+                            <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2">Not enrolled yet</h3>
+                            <p className="text-sm sm:text-base text-slate-500 mb-6">You haven't started any courses. Explore the catalog to get started!</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                             {enrollments.map((enr) => (
                                 <Link to={`/student/courses/${enr.courseId}`} key={enr.id}>
                                     <div className="group bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-md transition-all cursor-pointer flex flex-col h-full">
-                                        <div className="h-40 bg-slate-200 dark:bg-slate-800 relative">
+                                        <div className="aspect-[16/9] sm:h-44 bg-slate-200 dark:bg-slate-800 relative overflow-hidden">
                                             {enr.course?.thumbnailUrl ? (
-                                                <img src={enr.course.thumbnailUrl} alt={enr.course?.title} className="w-full h-full object-cover" />
+                                                <img src={enr.course.thumbnailUrl} alt={enr.course?.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
                                                     <span className="text-white/50 font-bold text-xl">MyTutorMe</span>
                                                 </div>
                                             )}
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                <PlayCircle className="w-12 h-12 text-white" />
+                                                <PlayCircle className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
+                                            </div>
+                                            {/* Progress badge overlay */}
+                                            <div className="absolute bottom-2 right-2">
+                                                <span className="text-xs font-bold bg-black/70 text-white px-2 py-0.5 rounded-full backdrop-blur-sm">
+                                                    {enr.progress || 0}%
+                                                </span>
                                             </div>
                                         </div>
-                                        <div className="p-5 flex flex-col flex-grow">
-                                            <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1 line-clamp-2">
+                                        <div className="p-4 sm:p-5 flex flex-col flex-grow">
+                                            <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-white mb-1 line-clamp-2 leading-snug">
                                                 {enr.course?.title || "Loading Course Data..."}
                                             </h3>
-                                            <p className="text-sm text-slate-500 mb-4">{enr.course?.teacherName || "Instructor"}</p>
+                                            <p className="text-xs sm:text-sm text-slate-500 mb-3">{enr.course?.teacherName || "Instructor"}</p>
                                             
-                                            <div className="mt-auto pt-4 space-y-2">
-                                                <div className="flex justify-between text-sm font-medium">
+                                            <div className="mt-auto pt-3 space-y-1.5">
+                                                <div className="flex justify-between text-xs sm:text-sm font-medium">
                                                     <span className="text-slate-700 dark:text-slate-300">Progress</span>
-                                                    <span className="text-primary">{enr.progress}%</span>
+                                                    <span className="text-primary font-bold">{enr.progress}%</span>
                                                 </div>
-                                                <Progress value={enr.progress} className="h-2" />
+                                                <Progress value={enr.progress} className="h-1.5 sm:h-2" />
                                                 <p className="text-xs text-slate-500 text-right">{enr.completedModules?.length || 0} modules completed</p>
                                             </div>
                                         </div>
@@ -258,47 +264,47 @@ export const MyCoursesPage = () => {
                 {/* EXPLORE CATALOG TAB */}
                 <TabsContent value="explore" className="mt-0">
                     {/* Search & Filter Bar */}
-                    <div data-tour-target="course-filters" className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 mb-8 sticky top-20 z-30">
-                        <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-grow relative">
+                    <div data-tour-target="course-filters" className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-3 sm:p-4 mb-6 sm:mb-8 sticky top-16 sm:top-20 z-30">
+                        <div className="flex flex-col gap-3">
+                        <div className="relative">
                             <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                                <Search className="w-5 h-5 text-slate-400" />
+                                <Search className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
                             </span>
                             <input 
-                            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow" 
-                            placeholder="Search for physics, calculus, python..." 
+                            className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow text-sm sm:text-base" 
+                            placeholder="Search courses..." 
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide max-w-[calc(100vw-2.5rem)] md:max-w-none">
+                        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                             <select 
                                 value={levelFilter} 
                                 onChange={(e) => setLevelFilter(e.target.value)} 
-                                className="py-2.5 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-200 focus:ring-primary focus:border-primary cursor-pointer min-w-[140px] outline-none"
+                                className="flex-shrink-0 py-2 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-200 focus:ring-primary focus:border-primary cursor-pointer min-w-[120px] outline-none"
                             >
                                 <option value="All">Level: All</option>
-                                <option value="Secondary">Level: Secondary</option>
-                                <option value="Tertiary">Level: Tertiary</option>
+                                <option value="Secondary">Secondary</option>
+                                <option value="Tertiary">Tertiary</option>
                             </select>
                             <select 
                                 value={subjectFilter} 
                                 onChange={(e) => setSubjectFilter(e.target.value)} 
-                                className="py-2.5 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-200 focus:ring-primary focus:border-primary cursor-pointer min-w-[140px] outline-none"
+                                className="flex-shrink-0 py-2 px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-200 focus:ring-primary focus:border-primary cursor-pointer min-w-[120px] outline-none"
                             >
                                 <option value="All">Subject: All</option>
-                                <option value="STEM">Subject: STEM</option>
-                                <option value="Arts">Subject: Arts</option>
-                                <option value="Business">Subject: Business</option>
+                                <option value="STEM">STEM</option>
+                                <option value="Arts">Arts</option>
+                                <option value="Business">Business</option>
                             </select>
                         </div>
                         </div>
                     </div>
 
-                    <div className="flex flex-col lg:flex-row gap-8">
+                    <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
                         {/* Sidebar Filters */}
-                        <aside className="hidden lg:block w-64 flex-shrink-0 space-y-8">
+                        <aside className="hidden lg:block w-56 flex-shrink-0 space-y-6">
                             <div>
                                 <h3 className="font-display font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                                 <LayoutGrid className="w-4 h-4 text-primary" /> Categories
@@ -327,16 +333,16 @@ export const MyCoursesPage = () => {
                         </aside>
 
                         {/* Content Grid */}
-                        <div data-tour-target="course-grid" className="flex-grow">
+                        <div data-tour-target="course-grid" className="flex-grow min-w-0">
                             {loadingCourses ? (
                                 <div className="py-20 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
                             ) : filteredCourses.length === 0 ? (
-                                <div className="py-20 text-center text-slate-500 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                                    <p className="text-lg mb-4">No courses found matching your criteria.</p>
+                                <div className="py-16 sm:py-20 text-center text-slate-500 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm px-4">
+                                    <p className="text-base sm:text-lg mb-4">No courses found matching your criteria.</p>
                                     <Button variant="outline" onClick={() => { setSearchQuery(''); setLevelFilter('All'); setSubjectFilter('All'); setCategoryFilter('All');}}>Clear Filters</Button>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                                     {filteredCourses.map(course => {
                                         const isGenerated = isAdminGeneratedCourse(course);
                                         const destinationPath = isGenerated ? `/student/courses/generated/${course.id}` : `/student/courses/${course.id}`;
@@ -353,73 +359,66 @@ export const MyCoursesPage = () => {
                                                             <img src={course.thumbnailUrl} alt={displayTitle} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                                         ) : (
                                                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/15 via-slate-100 to-secondary/20 dark:from-primary/20 dark:via-slate-800 dark:to-secondary/10">
-                                                                <BookOpen className="w-10 h-10 text-primary" />
+                                                                <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                                                             </div>
                                                         )}
 
-                                                        <div className="absolute top-3 left-3 flex gap-2">
-                                                            <Badge className="bg-primary text-white border-0 shadow-sm">Admin Generated</Badge>
-                                                            <Badge className="bg-white/95 text-slate-800 border-0 shadow-sm">Included</Badge>
+                                                        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-wrap gap-1.5">
+                                                            <Badge className="bg-primary text-white border-0 shadow-sm text-[10px] sm:text-xs">Admin Generated</Badge>
+                                                            <Badge className="bg-white/95 text-slate-800 border-0 shadow-sm text-[10px] sm:text-xs">Free</Badge>
                                                         </div>
                                                     </div>
 
-                                                    <div className="relative p-5 flex flex-col flex-grow">
-                                                        <div className="flex items-center gap-2 mb-3">
-                                                            <Badge variant="outline" className="text-xs border-primary/20 text-primary bg-primary/5">{course.subject || course.category || 'Subject'}</Badge>
-                                                            <Badge variant="outline" className="text-xs text-slate-500">No Enrollment</Badge>
+                                                    <div className="relative p-3 sm:p-5 flex flex-col flex-grow">
+                                                        <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3 flex-wrap">
+                                                            <Badge variant="outline" className="text-[10px] sm:text-xs border-primary/20 text-primary bg-primary/5">{course.subject || course.category || 'Subject'}</Badge>
                                                         </div>
 
-                                                        <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white line-clamp-2 mb-2">
+                                                        <h3 className="font-display font-bold text-base sm:text-lg text-slate-900 dark:text-white line-clamp-2 mb-1.5 sm:mb-2 leading-snug">
                                                             {displayTitle}
                                                         </h3>
-                                                        <p className="text-xs text-slate-500 mb-4 font-medium tracking-wide uppercase">Course ID: {course.id}</p>
+                                                        <p className="text-[10px] sm:text-xs text-slate-400 mb-3 font-medium">{course.teacherName || 'MyTutorMe Admin'}</p>
 
-                                                        <div className="mt-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/60 p-3">
-                                                            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                                                        <div className="mt-auto rounded-lg sm:rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/60 p-2.5 sm:p-3">
+                                                            <div className="flex items-center justify-between text-[10px] sm:text-xs text-slate-500 mb-1">
                                                                 <span>Learning Pack</span>
-                                                                <span>{course.teacherName || 'MyTutorMe Admin'}</span>
-                                                            </div>
-                                                            <div className="flex items-center justify-between text-sm">
-                                                                <span className="font-semibold text-slate-800 dark:text-slate-200">Study Material + Mock Exam</span>
-                                                                <span className="inline-flex items-center text-primary font-semibold">
-                                                                    <Clock className="w-4 h-4 mr-1" /> {course.totalDurationMinutes ? `${Math.round(course.totalDurationMinutes/60)}h` : 'Flexible'}
+                                                                <span className="inline-flex items-center gap-0.5 text-primary font-semibold">
+                                                                    <Clock className="w-3 h-3" /> {course.totalDurationMinutes ? `${Math.round(course.totalDurationMinutes/60)}h` : 'Flexible'}
                                                                 </span>
                                                             </div>
+                                                            <p className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">Study Material + Mock Exam</p>
                                                         </div>
                                                     </div>
                                                 </div>
                                             ) : (
                                                 <div className="group bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-md transition-all cursor-pointer h-full flex flex-col">
-                                                    <div className="aspect-[16/9] bg-slate-200 relative overflow-hidden">
+                                                    <div className="aspect-[16/9] bg-slate-200 dark:bg-slate-800 relative overflow-hidden">
                                                         {course.thumbnailUrl ? (
                                                             <img src={course.thumbnailUrl} alt={displayTitle} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                                         ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-slate-200 dark:bg-slate-800 group-hover:scale-105 transition-transform duration-500">
-                                                                <BookOpen className="w-10 h-10 text-slate-400" />
+                                                            <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 group-hover:scale-105 transition-transform duration-500">
+                                                                <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-slate-400" />
                                                             </div>
                                                         )}
-                                                        <div className="absolute top-3 right-3">
-                                                            <Badge className="bg-white/90 text-slate-900 font-bold backdrop-blur-sm shadow-sm hover:bg-white border-0">
+                                                        <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
+                                                            <Badge className="bg-white/90 text-slate-900 font-bold backdrop-blur-sm shadow-sm hover:bg-white border-0 text-[10px] sm:text-xs">
                                                                 {formatCoursePrice(course.price)}
                                                             </Badge>
                                                         </div>
                                                     </div>
-                                                    <div className="p-5 flex flex-col flex-grow">
-                                                        <div className="flex items-center gap-2 mb-2">
-                                                            <Badge variant="outline" className="text-xs text-slate-500 shadow-sm">{course.subject || course.category || 'Subject'}</Badge>
+                                                    <div className="p-3 sm:p-5 flex flex-col flex-grow">
+                                                        <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2 flex-wrap">
+                                                            <Badge variant="outline" className="text-[10px] sm:text-xs text-slate-500 shadow-sm">{course.subject || course.category || 'Subject'}</Badge>
                                                         </div>
-                                                        <h3 className="font-bold text-lg text-slate-900 dark:text-white line-clamp-2 md:h-14 mb-2">
+                                                        <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-white line-clamp-2 mb-1 sm:mb-2 leading-snug">
                                                             {displayTitle}
                                                         </h3>
-                                                        <p className="text-sm text-slate-500 mb-2">{course.teacherName || 'MyTutorMe'}</p>
-                                                        <p className="text-xs text-slate-400 mb-4">Course ID: {course.id}</p>
+                                                        <p className="text-xs sm:text-sm text-slate-500 mb-1">{course.teacherName || 'MyTutorMe'}</p>
                                                         
-                                                        <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-sm text-slate-500">
-                                                            <div className="flex items-center gap-1.5 focus:outline-none">
-                                                                <span className="font-semibold text-slate-700 dark:text-slate-300">Catalog Course</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-1.5">
-                                                                <Clock className="w-4 h-4" />
+                                                        <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs sm:text-sm text-slate-500">
+                                                            <span className="font-semibold text-slate-700 dark:text-slate-300">Course</span>
+                                                            <div className="flex items-center gap-1">
+                                                                <Clock className="w-3.5 h-3.5" />
                                                                 <span>{course.totalDurationMinutes ? `${Math.round(course.totalDurationMinutes/60)}h` : 'Flexible'}</span>
                                                             </div>
                                                         </div>

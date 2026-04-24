@@ -133,17 +133,29 @@ export const ExamResultsPage = () => {
           
           <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
              <div className="text-center md:text-left">
-                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold mb-4 ${scoreClass}`}>
-                  {scoreIcon} {attemptData.passed ? 'Exam Passed' : 'Exam Failed'}
+                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold mb-4 ${
+                  attemptData.hasTheoryQuestions ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' : scoreClass
+                }`}>
+                  {attemptData.hasTheoryQuestions
+                    ? <>&#x23F3; Partially Graded</>
+                    : <>{scoreIcon} {attemptData.passed ? 'Exam Passed' : 'Exam Failed'}</>
+                  }
                 </div>
                 <h1 className="text-3xl md:text-5xl font-display font-bold text-slate-900 dark:text-white mb-2">
                    Exam Finished
                 </h1>
                 <p className="text-slate-600 dark:text-slate-400 text-lg max-w-xl">
-                   {attemptData.passed 
-                      ? "Great job! Keep practicing to maintain your score."
-                      : "Don't worry, utilize the AI breakdown to understand your weak points."}
+                   {attemptData.hasTheoryQuestions
+                     ? "Your objective score is shown. Theory questions are pending AI grading."
+                     : attemptData.passed 
+                       ? "Great job! Keep practicing to maintain your score."
+                       : "Don't worry, utilize the AI breakdown to understand your weak points."}
                 </p>
+                {attemptData.hasTheoryQuestions && (
+                  <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 font-medium">
+                    📝 Theory answers submitted for grading &bull; MCQ score shown below
+                  </div>
+                )}
              </div>
 
              <div className="flex items-center gap-6">
@@ -234,26 +246,76 @@ export const ExamResultsPage = () => {
                     {!isQuestionAnalysisLoading && questionDetails.length > 0 ? (
                        questionDetails.map((q: any, i: number) => {
                           const studentAnswer = attemptData.answers[q.id];
-                          const isCorrect = studentAnswer === q.correctAnswer;
+                          const isTheory = q?.type === 'theory' || q?.type === 'short-answer' || q?.questionType === 'theory' || (!q?.options || q?.options?.length === 0);
+                          const isImageAnswer = typeof studentAnswer === 'string' && studentAnswer.startsWith('[IMAGE_UPLOAD:');
+                          const imageUrl = isImageAnswer ? studentAnswer.replace('[IMAGE_UPLOAD:', '').replace(/\]$/, '') : null;
+                          const isCorrect = !isTheory && studentAnswer === q.correctAnswer;
+                          const theoryGradingStatus = attemptData.theoryGradingStatus;
                           
                           return (
-                             <div key={i} className={`p-4 rounded-xl border ${isCorrect ? 'border-green-100 bg-green-50/30' : 'border-red-100 bg-red-50/30'} dark:border-slate-700`}>
+                             <div key={i} className={`p-4 rounded-xl border ${
+                               isTheory 
+                                 ? 'border-purple-200 bg-purple-50/30 dark:border-purple-900/50 dark:bg-purple-900/10'
+                                 : isCorrect ? 'border-green-100 bg-green-50/30' : 'border-red-100 bg-red-50/30'
+                             } dark:border-slate-700`}>
                                 <div className="flex gap-3">
-                                   <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm ${isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                   <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm ${
+                                     isTheory ? 'bg-purple-100 text-purple-700' : isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                   }`}>
                                       {i + 1}
                                    </div>
-                                   <div className="flex-1">
-                                        <div className="text-slate-900 dark:text-white font-medium mb-3 prose dark:prose-invert max-w-none">
+                                   <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          {isTheory && (
+                                            <span className="text-xs font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">Theory</span>
+                                          )}
+                                          {isTheory && theoryGradingStatus === 'pending' && (
+                                            <span className="text-xs font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">⏳ Pending Grading</span>
+                                          )}
+                                        </div>
+                                        <div className="text-slate-900 dark:text-white font-medium mb-3 prose dark:prose-invert max-w-none text-sm">
                                           <ReactMarkdown>{q.text || q.question || 'Question'}</ReactMarkdown>
                                         </div>
                                       
-                                      <div className={`text-sm p-3 rounded-lg mb-2 ${isCorrect ? 'bg-green-100/50 text-green-800' : 'bg-red-100/50 text-red-800'}`}>
-                                         <span className="font-bold mr-2">Your Answer:</span>
-                                         {studentAnswer || "Not answered"}
-                                         {isCorrect && <CheckCircle className="w-4 h-4 inline ml-2"/>}
-                                      </div>
+                                      {/* Student's answer display */}
+                                      {isTheory ? (
+                                        <div className="space-y-2 mb-2">
+                                          <p className="text-xs font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wide">Your Answer:</p>
+                                          {isImageAnswer && imageUrl ? (
+                                            <div className="rounded-lg border border-purple-200 overflow-hidden">
+                                              <img src={imageUrl} alt="Handwritten answer" className="max-w-full max-h-48 object-contain bg-white" />
+                                              <p className="text-xs text-slate-500 p-2 text-center">Handwritten answer uploaded</p>
+                                            </div>
+                                          ) : studentAnswer ? (
+                                            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
+                                              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{studentAnswer}</p>
+                                            </div>
+                                          ) : (
+                                            <p className="text-sm text-slate-500 italic">Not answered</p>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <div className={`text-sm p-3 rounded-lg mb-2 ${isCorrect ? 'bg-green-100/50 text-green-800' : 'bg-red-100/50 text-red-800'}`}>
+                                           <span className="font-bold mr-2">Your Answer:</span>
+                                           {studentAnswer || "Not answered"}
+                                           {isCorrect && <CheckCircle className="w-4 h-4 inline ml-2"/>}
+                                        </div>
+                                      )}
 
-                                      {!isCorrect && (
+                                      {/* Correct answer / model answer */}
+                                      {isTheory && (q.correctAnswer || q.explanation) ? (
+                                        <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3 mb-2">
+                                          <p className="text-xs font-bold text-purple-700 dark:text-purple-300 mb-1 uppercase tracking-wide">Model Answer / Key Points</p>
+                                          {q.correctAnswer && (
+                                            <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-2">{q.correctAnswer}</p>
+                                          )}
+                                          {q.explanation && typeof q.explanation === 'string' && (
+                                            <div className="text-sm text-slate-600 dark:text-slate-400 prose prose-sm dark:prose-invert max-w-none mt-1">
+                                              <ReactMarkdown>{q.explanation}</ReactMarkdown>
+                                            </div>
+                                          )}
+                                        </div>
+                                      ) : !isTheory && !isCorrect && (
                                          <div className="text-sm p-3 rounded-lg bg-green-100/50 text-green-800 border border-green-200 mb-2">
                                             <span className="font-bold mr-2">Correct Answer:</span>
                                             {q.correctAnswer}
@@ -261,16 +323,16 @@ export const ExamResultsPage = () => {
                                          </div>
                                       )}
 
-                                      {(!isCorrect && q.explanation) && (
+                                      {!isTheory && !isCorrect && q.explanation && (
                                            <div className="text-sm text-slate-600 dark:text-slate-400 italic prose prose-sm dark:prose-invert max-w-none">
                                               <span className="font-semibold not-italic text-slate-800 dark:text-slate-200 block mb-1">Explanation: </span>
                                               <ReactMarkdown>{q.explanation}</ReactMarkdown>
                                            </div>
                                       )}
                                       
-                                      {!isCorrect && (
+                                      {(!isTheory && !isCorrect) && (
                                         <div className="mt-3">
-                                            <Link to={`/student/ai-tutor?topic=${encodeURIComponent(q.topic || (quizData.subject + ' ' + quizData.topic))}&question=${encodeURIComponent(q.text || q.question || '')}`}>
+                                            <Link to={`/student/ai-tutor?topic=${encodeURIComponent(q.topic || [quizData?.subject, quizData?.topic].filter(Boolean).join(' ') || 'General')}&question=${encodeURIComponent(q.text || q.question || '')}`}>
                                                 <Button size="sm" variant="outline" className="bg-indigo-50 border-blue-200 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">
                                                     <Sparkles className="w-4 h-4 mr-2" /> AI Deep Dive
                                                 </Button>

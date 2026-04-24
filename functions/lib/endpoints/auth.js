@@ -42,6 +42,8 @@ const admin = __importStar(require("firebase-admin"));
 const react_1 = __importDefault(require("react"));
 const email_1 = require("../lib/email");
 const PasswordResetEmail_1 = require("../emails/templates/PasswordResetEmail");
+// Update this to your production domain when you go live
+const APP_URL = process.env.APP_URL || 'https://app.mytutorme.org';
 exports.requestPasswordReset = functions.https.onCall(async (request) => {
     const data = request.data || request;
     const { email } = data;
@@ -56,7 +58,11 @@ exports.requestPasswordReset = functions.https.onCall(async (request) => {
         if (!qs.empty) {
             name = qs.docs[0].data().displayName || name;
         }
-        const resetLink = await admin.auth().generatePasswordResetLink(email);
+        // Firebase generates a link pointing to its own hosted page.
+        // We extract just the oobCode and build a link to our custom reset page instead.
+        const firebaseLink = await admin.auth().generatePasswordResetLink(email);
+        const oobCode = new URL(firebaseLink).searchParams.get('oobCode');
+        const resetLink = `${APP_URL}/reset-password?oobCode=${oobCode}`;
         await (0, email_1.sendEmail)({
             to: email,
             subject: 'Reset your MyTutorMe password',

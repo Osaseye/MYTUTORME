@@ -4,46 +4,7 @@ exports.CertificateAwardEmail = void 0;
 const jsx_runtime_1 = require("react/jsx-runtime");
 const components_1 = require("@react-email/components");
 const CertificateAwardEmail = ({ studentName, courseTitle, certificateUrl, }) => {
-    return ((0, jsx_runtime_1.jsxs)(components_1.Html, { children: [(0, jsx_runtime_1.jsx)(components_1.Head, {}), (0, jsx_runtime_1.jsx)(components_1.Preview, { children: "Congratulations on completing your course!" }), (0, jsx_runtime_1.jsx)(components_1.Body, { style: main, children: (0, jsx_runtime_1.jsxs)(components_1.Container, { style: container, children: [(0, jsx_runtime_1.jsx)(components_1.Heading, { style: h1, children: "Course Completed\uD83C\uDF89" }), (0, jsx_runtime_1.jsxs)(components_1.Text, { style: text, children: ["Hi ", studentName, ","] }), (0, jsx_runtime_1.jsxs)(components_1.Text, { style: text, children: ["Amazing job! You have fully completed the course ", (0, jsx_runtime_1.jsx)("strong", { children: courseTitle }), ". All of that hard work has paid off, and your certificate of completion is now ready for you!"] }), (0, jsx_runtime_1.jsx)(components_1.Section, { style: btnContainer, children: (0, jsx_runtime_1.jsx)(components_1.Button, { style: button, href: certificateUrl, children: "View Your Certificate" }) }), (0, jsx_runtime_1.jsx)(components_1.Text, { style: text, children: "Keep up the excellent learning momentum!" }), (0, jsx_runtime_1.jsxs)(components_1.Text, { style: text, children: ["Best,", (0, jsx_runtime_1.jsx)("br", {}), "The MyTutorMe Team"] })] }) })] }));
+    return ((0, jsx_runtime_1.jsxs)(components_1.Html, { children: [(0, jsx_runtime_1.jsxs)(components_1.Head, { children: [(0, jsx_runtime_1.jsx)(components_1.Font, { fontFamily: "Inter", fallbackFontFamily: "sans-serif", webFont: { url: "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZJhjp-Ek-_EeAmM.woff2", format: "woff2" }, fontWeight: 400 }), (0, jsx_runtime_1.jsx)(components_1.Font, { fontFamily: "Manrope", fallbackFontFamily: "sans-serif", webFont: { url: "https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRqAuZuw1Bx9mbZk79FN_B_w.woff2", format: "woff2" }, fontWeight: 800 })] }), (0, jsx_runtime_1.jsxs)(components_1.Preview, { children: ["\uD83C\uDFC6 Your certificate for ", courseTitle, " is ready \u2014 Congratulations, ", studentName, "!"] }), (0, jsx_runtime_1.jsx)(components_1.Body, { style: { backgroundColor: '#f1f5f9', margin: '0', padding: '0', fontFamily: 'Inter, sans-serif' }, children: (0, jsx_runtime_1.jsxs)(components_1.Container, { style: { maxWidth: '600px', margin: '32px auto', padding: '0' }, children: [(0, jsx_runtime_1.jsx)(components_1.Section, { style: { backgroundColor: '#0f172a', borderRadius: '16px 16px 0 0', padding: '20px 32px' }, children: (0, jsx_runtime_1.jsxs)(components_1.Row, { children: [(0, jsx_runtime_1.jsx)(components_1.Column, { style: { width: '40px' }, children: (0, jsx_runtime_1.jsx)(components_1.Img, { src: "https://www.mytutorme.org/icon.png", width: "32", height: "32", alt: "MyTutorMe logo", style: { borderRadius: '8px' } }) }), (0, jsx_runtime_1.jsx)(components_1.Column, { children: (0, jsx_runtime_1.jsx)(components_1.Text, { style: { color: '#10B981', fontSize: '20px', fontWeight: '800', margin: '0', paddingLeft: '10px', fontFamily: 'Manrope, sans-serif' }, children: "MyTutorMe" }) })] }) }), (0, jsx_runtime_1.jsxs)(components_1.Section, { style: { background: 'linear-gradient(135deg, #fef9c3 0%, #fef3c7 50%, #fde68a 100%)', padding: '40px 32px', textAlign: 'center', borderBottom: '2px solid #fbbf24' }, children: [(0, jsx_runtime_1.jsx)(components_1.Text, { style: { fontSize: '56px', margin: '0 0 12px' }, children: "\uD83C\uDFC6" }), (0, jsx_runtime_1.jsx)(components_1.Text, { style: { fontSize: '28px', fontWeight: '800', color: '#78350f', margin: '0 0 8px', fontFamily: 'Manrope, sans-serif' }, children: "Course Completed!" }), (0, jsx_runtime_1.jsxs)(components_1.Text, { style: { fontSize: '16px', color: '#92400e', margin: '0 0 6px', fontWeight: '600', fontFamily: 'Manrope, sans-serif' }, children: ["Congratulations, ", studentName, "!"] }), (0, jsx_runtime_1.jsxs)(components_1.Text, { style: { fontSize: '14px', color: '#92400e', margin: '0 0 24px', lineHeight: '1.6' }, children: ["You've successfully completed ", (0, jsx_runtime_1.jsxs)("strong", { children: ["\"", courseTitle, "\""] }), ". Your certificate of achievement is ready!"] }), (0, jsx_runtime_1.jsx)(components_1.Button, { href: certificateUrl, style: { backgroundColor: '#0f172a', color: '#ffffff', fontSize: '15px', fontWeight: '700', padding: '14px 32px', borderRadius: '10px', textDecoration: 'none', display: 'inline-block', fontFamily: 'Manrope, sans-serif' }, children: "View Your Certificate \u2192" })] }), (0, jsx_runtime_1.jsxs)(components_1.Section, { style: { backgroundColor: '#ffffff', padding: '28px 32px' }, children: [(0, jsx_runtime_1.jsx)(components_1.Text, { style: { fontSize: '15px', color: '#475569', lineHeight: '1.7', margin: '0 0 20px' }, children: "Your dedication and hard work have paid off! This certificate recognizes your commitment to learning and your achievement in completing this course." }), (0, jsx_runtime_1.jsxs)(components_1.Section, { style: { backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px 20px', marginBottom: '16px' }, children: [(0, jsx_runtime_1.jsx)(components_1.Text, { style: { fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px' }, children: "Achievement Unlocked" }), (0, jsx_runtime_1.jsx)(components_1.Text, { style: { fontSize: '18px', fontWeight: '700', color: '#0f172a', margin: '0 0 4px', fontFamily: 'Manrope, sans-serif' }, children: "\uD83D\uDCDC Certificate of Completion" }), (0, jsx_runtime_1.jsx)(components_1.Text, { style: { fontSize: '13px', color: '#64748b', margin: '0' }, children: courseTitle })] }), (0, jsx_runtime_1.jsx)(components_1.Text, { style: { fontSize: '14px', color: '#475569', margin: '0' }, children: "Keep the momentum going \u2014 explore more courses in your dashboard and continue your learning journey." })] }), (0, jsx_runtime_1.jsxs)(components_1.Section, { style: { backgroundColor: '#0f172a', borderRadius: '0 0 16px 16px', padding: '24px 32px', textAlign: 'center' }, children: [(0, jsx_runtime_1.jsx)(components_1.Text, { style: { color: '#10B981', fontSize: '16px', fontWeight: '700', margin: '0 0 8px', fontFamily: 'Manrope, sans-serif' }, children: "MyTutorMe Intelligence" }), (0, jsx_runtime_1.jsx)(components_1.Text, { style: { color: '#64748b', fontSize: '11px', margin: '0 0 12px' }, children: "\u00A9 2026 MyTutorMe Intelligence. All rights reserved." }), (0, jsx_runtime_1.jsx)(components_1.Row, { children: (0, jsx_runtime_1.jsxs)(components_1.Column, { align: "center", children: [(0, jsx_runtime_1.jsx)(components_1.Link, { href: "https://mytutorme.org/privacy", style: { color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }, children: "Privacy Policy" }), (0, jsx_runtime_1.jsx)(components_1.Link, { href: "https://mytutorme.org/terms", style: { color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }, children: "Terms of Service" })] }) })] })] }) })] }));
 };
 exports.CertificateAwardEmail = CertificateAwardEmail;
-const main = {
-    backgroundColor: '#f1f5f9',
-    fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
-};
-const container = {
-    backgroundColor: '#ffffff',
-    margin: '0 auto',
-    padding: '20px 0 48px',
-    marginBottom: '64px',
-    borderRadius: '8px',
-};
-const h1 = {
-    color: '#0f172a',
-    fontSize: '24px',
-    fontWeight: '600',
-    lineHeight: '40px',
-    margin: '0 0 20px',
-    padding: '0 48px',
-};
-const text = {
-    color: '#334155',
-    fontSize: '16px',
-    lineHeight: '24px',
-    padding: '0 48px',
-};
-const btnContainer = {
-    padding: '20px 48px',
-};
-const button = {
-    backgroundColor: '#059669',
-    borderRadius: '6px',
-    color: '#fff',
-    fontSize: '16px',
-    textDecoration: 'none',
-    textAlign: 'center',
-    display: 'block',
-    width: '100%',
-    padding: '12px',
-};
 //# sourceMappingURL=CertificateAwardEmail.js.map

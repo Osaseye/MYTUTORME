@@ -9,6 +9,7 @@ import { AuthLayout } from '@/layouts/AuthLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
 import { OnboardingLayout, StudentOnboarding, TeacherOnboarding } from '@/features/onboarding';
 import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, GeneratedCourseDetailsPage, AssignmentHelperPage, GpaTrackerPage, CertificatePage, MyCertificatesPage, SettingsPage, ExamPrepPage, ExamConfigPage, ExamResultsPage, ExamTakingPage, FlashcardConfigPage, FlashcardPlayerPage, CommunityPage, StudyPlannerConfigPage, StudyPlannerViewPage } from '@/features/student';
 import { TeacherLayout, TeacherDashboard, TeacherCoursesPage, TeacherCourseDetailsPage, CourseCreationPage, ResourcesPage, EarningsPage, CommunityPage as TeacherCommunityPage, TeacherSettingsPage, StudentsPage, TeacherPendingPage } from '@/features/teacher';
@@ -55,6 +56,7 @@ export const AppRoutes = () => {
           <Route path="/select-role" element={<Navigate to={paths.auth.register} replace />} />
           <Route path="/slect-role" element={<Navigate to={paths.auth.register} replace />} />
           <Route path={paths.auth.forgotPassword} element={<ForgotPasswordPage />} />
+          <Route path={paths.auth.resetPassword} element={<ResetPasswordPage />} />
           <Route path={paths.admin.login} element={<AdminLoginPage />} />
         </Route>
 

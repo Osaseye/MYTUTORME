@@ -31,24 +31,37 @@ export const NotificationDropdown = ({ userRole }: { userRole: 'student' | 'teac
     useEffect(() => {
         if (!user) return;
 
+        let isMounted = true;
+
         const q = query(
-            collection(db, 'notifications'), 
+            collection(db, 'notifications'),
             where('target', 'in', ['all', userRole])
         );
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const fetched = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Notification));
-            // Sort client-side due to where('target', 'in')
-            fetched.sort((a, b) => {
-                const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-                const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-                return timeB - timeA;
-            });
-            setNotifications(fetched);
-            setLoading(false);
-        });
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                if (!isMounted) return;
+                const fetched = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Notification));
+                // Sort client-side due to where('target', 'in')
+                fetched.sort((a, b) => {
+                    const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+                    const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+                    return timeB - timeA;
+                });
+                setNotifications(fetched);
+                setLoading(false);
+            },
+            (error) => {
+                console.error('Notification listener error:', error);
+                if (isMounted) setLoading(false);
+            }
+        );
 
-        return () => unsubscribe();
+        return () => {
+            isMounted = false;
+            unsubscribe();
+        };
     }, [user, userRole]);
 
     const handleMarkAsRead = async (id: string) => {
