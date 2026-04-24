@@ -37,20 +37,26 @@ service cloud.firestore {
 
     // Flashcards & decks are scoped to the owner
     match /flashcards/{flashcardId} {
-      allow read, write: if request.auth != null && (
+      allow read: if request.auth != null && (
         resource == null ||
         request.auth.uid == resource.data.userId ||
-        request.auth.uid == request.resource.data.userId ||
         isAdmin()
+      );
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null && (
+        request.auth.uid == resource.data.userId || isAdmin()
       );
     }
 
     match /flashcard_decks/{deckId} {
-      allow read, write: if request.auth != null && (
+      allow read: if request.auth != null && (
         resource == null ||
         request.auth.uid == resource.data.userId ||
-        request.auth.uid == request.resource.data.userId ||
         isAdmin()
+      );
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null && (
+        request.auth.uid == resource.data.userId || isAdmin()
       );
     }
 

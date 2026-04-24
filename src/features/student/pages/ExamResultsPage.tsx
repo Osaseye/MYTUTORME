@@ -332,7 +332,7 @@ export const ExamResultsPage = () => {
                                       
                                       {(!isTheory && !isCorrect) && (
                                         <div className="mt-3">
-                                            <Link to={`/student/ai-tutor?topic=${encodeURIComponent(q.topic || (quizData?.subject + ' ' + quizData?.topic))}&question=${encodeURIComponent(q.text || q.question || '')}`}>
+                                            <Link to={`/student/ai-tutor?topic=${encodeURIComponent(q.topic || [quizData?.subject, quizData?.topic].filter(Boolean).join(' ') || 'General')}&question=${encodeURIComponent(q.text || q.question || '')}`}>
                                                 <Button size="sm" variant="outline" className="bg-indigo-50 border-blue-200 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">
                                                     <Sparkles className="w-4 h-4 mr-2" /> AI Deep Dive
                                                 </Button>

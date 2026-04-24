@@ -248,9 +248,12 @@ export const ExamTakingPage = () => {
       });
 
       const objQuestions = questions.filter(q => !isTheoryQuestion(q));
-      const percentScore = objQuestions.length > 0 ? (score / objQuestions.length) * 100 : 0;
+      // When exam has only theory questions, mark as pending (null) rather than 0%
+      const percentScore = objQuestions.length > 0 ? (score / objQuestions.length) * 100 : null;
       const hasTheoryQuestions = Object.keys(theoryAnswers).length > 0;
-      const passed = percentScore >= (examData.passingScore || 50);
+      const allTheory = objQuestions.length === 0 && hasTheoryQuestions;
+      // Only auto-determine pass/fail for exams with objective questions
+      const passed = allTheory ? null : (percentScore ?? 0) >= (examData.passingScore || 50);
 
       const attemptDocRef = await addDoc(collection(db, 'quiz_attempts'), {
         studentId: user.uid,

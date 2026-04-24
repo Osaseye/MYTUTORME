@@ -4,7 +4,7 @@ import { Html, Head, Preview, Body, Container, Section, Text, Button, Img, Link,
 interface WelcomeEmailProps { name: string; role: 'student' | 'teacher' | 'admin'; }
 
 export const WelcomeEmailTemplate = ({ name, role }: WelcomeEmailProps) => {
-  const dashboardUrl = role === 'teacher' ? 'https://mytutorme.org/teacher/dashboard' : 'https://mytutorme.org/student/dashboard';
+  const dashboardUrl = role === 'teacher' ? 'https://mytutorme.org/teacher/dashboard' : role === 'admin' ? 'https://mytutorme.org/admin/dashboard' : 'https://mytutorme.org/student/dashboard';
   const roleLabel = role === 'teacher' ? 'Teacher' : role === 'admin' ? 'Admin' : 'Student';
   
   return (
