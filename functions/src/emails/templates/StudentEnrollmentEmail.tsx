@@ -6,13 +6,13 @@ interface StudentEnrollmentEmailProps { studentName: string; courseTitle: string
 export const StudentEnrollmentEmail = ({ studentName, courseTitle, courseUrl, teacherName }: StudentEnrollmentEmailProps) => {
   return (
     <Html>
-      <Preview>You've successfully enrolled!</Preview>
+      <Preview>🎉 You're enrolled in {courseTitle}! Start learning now.</Preview>
       <Tailwind config={{
           theme: {
             extend: {
               colors: { 
                 primary: '#10B981', 
-                surface: '#faf8ff', 
+                surface: '#f8fafc', 
                 onSurface: '#0f172a', 
                 onSurfaceVariant: '#475569', 
                 outline: '#e2e8f0',
@@ -31,68 +31,89 @@ export const StudentEnrollmentEmail = ({ studentName, courseTitle, courseUrl, te
           <Font fontFamily="Manrope" fallbackFontFamily="sans-serif" webFont={{ url: "https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRqAuZuw1Bx9mbZk79FN_B_w.woff2", format: "woff2" }} fontWeight={700} />
           <Font fontFamily="Manrope" fallbackFontFamily="sans-serif" webFont={{ url: "https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRqAuZuw1Bx9mbZk79FN_B_w.woff2", format: "woff2" }} fontWeight={800} />
         </Head>
-        <Body className="bg-surface text-onSurface font-body m-0 p-0 antialiased py-8">
-          <Container className="max-w-[600px] mx-auto p-4 md:p-6">
+        <Body style={{ backgroundColor: '#f1f5f9', margin: '0', padding: '0', fontFamily: 'Inter, sans-serif' }}>
+          <Container style={{ maxWidth: '600px', margin: '32px auto', padding: '0' }}>
 
-              {/* Header */}
-              <Section className="mb-8 w-full px-2">
-                <Row>
-                  <Column align="left" style={{ width: '40px' }}>
-                    <Img src="https://www.mytutorme.org/icon.png" width="32" height="32" alt="TutorMe logo" />
-                  </Column>
-                  <Column align="left">
-                    <Text className="text-[22px] font-extrabold font-headline text-primary m-0 pl-2 tracking-tight">MyTutorMe</Text>
-                  </Column>
-                </Row>
-              </Section>
-            
-            {/* Main Content */}
-            <main className="px-2">
+            {/* Header */}
+            <Section style={{ backgroundColor: '#0f172a', borderRadius: '16px 16px 0 0', padding: '20px 32px' }}>
+              <Row>
+                <Column style={{ width: '40px' }}>
+                  <Img src="https://www.mytutorme.org/icon.png" width="32" height="32" alt="MyTutorMe logo" style={{ borderRadius: '8px' }} />
+                </Column>
+                <Column>
+                  <Text style={{ color: '#10B981', fontSize: '20px', fontWeight: '800', margin: '0', paddingLeft: '10px', fontFamily: 'Manrope, sans-serif' }}>MyTutorMe</Text>
+                </Column>
+              </Row>
+            </Section>
 
-              <Section className="overflow-hidden rounded-2xl bg-[#0f172a] p-10 mb-10 shadow-md relative">
-                <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-primary/20 rounded-full blur-3xl"></div>
-                <Text className="text-3xl md:text-4xl font-extrabold font-headline leading-tight mb-4 text-white relative z-10">
-                  You're In! 🎉
-                </Text>
-                <Text className="text-[16px] md:text-lg font-body text-slate-300 leading-relaxed mb-8 relative z-10">
-                  Get ready, {studentName}. You're officially enrolled in <strong>{courseTitle}</strong> taught by <strong className="text-white">{teacherName}</strong>. 
-                </Text>
-                <Button className="inline-flex items-center justify-center px-8 py-4 bg-primary text-white font-extrabold rounded-xl shadow-sm relative z-10" href={courseUrl}>
-                  Access Course Material
-                </Button>
+            {/* Hero */}
+            <Section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '40px 32px 36px', position: 'relative' }}>
+              <Text style={{ fontSize: '13px', color: '#10B981', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', margin: '0 0 12px', fontFamily: 'Manrope, sans-serif' }}>Enrollment Confirmed 🎉</Text>
+              <Text style={{ fontSize: '30px', fontWeight: '800', color: '#ffffff', margin: '0 0 10px', lineHeight: '1.2', fontFamily: 'Manrope, sans-serif' }}>
+                You're In, {studentName}!
+              </Text>
+              <Text style={{ fontSize: '15px', color: '#94a3b8', margin: '0 0 24px', lineHeight: '1.6' }}>
+                You're officially enrolled in <strong style={{ color: '#ffffff' }}>{courseTitle}</strong> taught by <strong style={{ color: '#10B981' }}>{teacherName}</strong>.
+              </Text>
+              <Button
+                href={courseUrl}
+                style={{ backgroundColor: '#10B981', color: '#ffffff', fontSize: '15px', fontWeight: '700', padding: '14px 32px', borderRadius: '10px', textDecoration: 'none', display: 'inline-block', fontFamily: 'Manrope, sans-serif' }}
+              >
+                Start Learning Now →
+              </Button>
+            </Section>
+
+            {/* Course detail card */}
+            <Section style={{ backgroundColor: '#ffffff', padding: '28px 32px' }}>
+              <Section style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px 24px', marginBottom: '24px' }}>
+                <Text style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px' }}>Enrolled Course</Text>
+                <Text style={{ fontSize: '20px', fontWeight: '700', color: '#0f172a', margin: '0 0 4px', fontFamily: 'Manrope, sans-serif' }}>{courseTitle}</Text>
+                <Text style={{ fontSize: '13px', color: '#475569', margin: '0' }}>Instructor: {teacherName}</Text>
               </Section>
+
+              <Text style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '0 0 16px', fontFamily: 'Manrope, sans-serif' }}>Tips for Success</Text>
               
-              <Section className="mb-4 bg-white p-8 rounded-xl shadow-sm border border-outline/30">
-                <Text className="text-xl font-bold font-headline mb-6 text-primary">Tips for Success</Text>
-                
-                <Row className="mb-4">
-                  <Column style={{ width: '40px', verticalAlign: 'top' }}><Text className="m-0 text-xl font-headline text-slate-300 font-bold">1</Text></Column>
-                  <Column><Text className="m-0 font-medium font-body text-[15px] text-onSurfaceVariant">Schedule consistent study blocks in your calendar.</Text></Column>
-                </Row>
-                <Row className="mb-4">
-                  <Column style={{ width: '40px', verticalAlign: 'top' }}><Text className="m-0 text-xl font-headline text-slate-300 font-bold">2</Text></Column>
-                  <Column><Text className="m-0 font-medium font-body text-[15px] text-onSurfaceVariant">Leverage the 24/7 AI tutor when you encounter roadblocks.</Text></Column>
-                </Row>
-                <Row className="mb-4">
-                  <Column style={{ width: '40px', verticalAlign: 'top' }}><Text className="m-0 text-xl font-headline text-slate-300 font-bold">3</Text></Column>
-                  <Column><Text className="m-0 font-medium font-body text-[15px] text-onSurfaceVariant">Engage with your fellow students in the course community.</Text></Column>
-                </Row>
-              </Section>
-            </main>
+              <Row style={{ marginBottom: '12px' }}>
+                <Column style={{ width: '36px', verticalAlign: 'top' }}>
+                  <Section style={{ width: '28px', height: '28px', backgroundColor: '#ecfdf5', borderRadius: '50%', textAlign: 'center' }}>
+                    <Text style={{ margin: '0', fontSize: '14px', lineHeight: '28px' }}>📅</Text>
+                  </Section>
+                </Column>
+                <Column><Text style={{ margin: '0', fontSize: '13px', color: '#475569', lineHeight: '1.5', paddingLeft: '8px' }}>Schedule consistent study blocks in your calendar to stay on track.</Text></Column>
+              </Row>
+              <Row style={{ marginBottom: '12px' }}>
+                <Column style={{ width: '36px', verticalAlign: 'top' }}>
+                  <Section style={{ width: '28px', height: '28px', backgroundColor: '#ecfdf5', borderRadius: '50%', textAlign: 'center' }}>
+                    <Text style={{ margin: '0', fontSize: '14px', lineHeight: '28px' }}>🤖</Text>
+                  </Section>
+                </Column>
+                <Column><Text style={{ margin: '0', fontSize: '13px', color: '#475569', lineHeight: '1.5', paddingLeft: '8px' }}>Leverage the 24/7 AI Tutor when you encounter challenging concepts.</Text></Column>
+              </Row>
+              <Row>
+                <Column style={{ width: '36px', verticalAlign: 'top' }}>
+                  <Section style={{ width: '28px', height: '28px', backgroundColor: '#ecfdf5', borderRadius: '50%', textAlign: 'center' }}>
+                    <Text style={{ margin: '0', fontSize: '14px', lineHeight: '28px' }}>💬</Text>
+                  </Section>
+                </Column>
+                <Column><Text style={{ margin: '0', fontSize: '13px', color: '#475569', lineHeight: '1.5', paddingLeft: '8px' }}>Engage with your fellow students in the community forum.</Text></Column>
+              </Row>
+            </Section>
 
+            {/* Footer */}
+            <Section style={{ backgroundColor: '#0f172a', borderRadius: '0 0 16px 16px', padding: '24px 32px', textAlign: 'center' }}>
+              <Text style={{ color: '#10B981', fontSize: '16px', fontWeight: '700', margin: '0 0 8px', fontFamily: 'Manrope, sans-serif' }}>MyTutorMe Intelligence</Text>
+              <Text style={{ color: '#64748b', fontSize: '11px', margin: '0 0 12px', lineHeight: '1.5' }}>
+                © 2026 MyTutorMe Intelligence. All rights reserved.
+              </Text>
+              <Row>
+                <Column align="center">
+                  <Link href="https://mytutorme.org/privacy" style={{ color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }}>Privacy Policy</Link>
+                  <Link href="https://mytutorme.org/terms" style={{ color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }}>Terms of Service</Link>
+                  <Link href="#" style={{ color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }}>Unsubscribe</Link>
+                </Column>
+              </Row>
+            </Section>
 
-              {/* Footer */}
-              <Section className="mt-12 pt-8 border-t border-solid border-outline/50 text-center">
-                <Text className="font-headline font-bold text-primary text-xl m-0">MyTutorMe Intelligence</Text>
-                <Text className="text-xs font-body text-onSurfaceVariant/80 max-w-[400px] mx-auto my-4 leading-relaxed">
-                  © 2026 MyTutorMe Intelligence. All rights reserved. Our mission is to democratize elite education through the power of artificial intelligence.
-                </Text>
-                <Section className="flex justify-center text-center mt-2">
-                  <Link href="#" className="inline-block text-xs font-body text-onSurfaceVariant mx-3 underline">Privacy Policy</Link>
-                  <Link href="#" className="inline-block text-xs font-body text-onSurfaceVariant mx-3 underline">Terms of Service</Link>
-                  <Link href="#" className="inline-block text-xs font-body text-onSurfaceVariant mx-3 underline">Unsubscribe</Link>
-                </Section>
-              </Section>
           </Container>
         </Body>
       </Tailwind>

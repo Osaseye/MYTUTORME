@@ -6,13 +6,13 @@ interface SubscriptionEmailProps { name: string; planName: string; amount: numbe
 export const SubscriptionSuccessEmail = ({ name, planName, amount }: SubscriptionEmailProps) => {
   return (
     <Html>
-      <Preview>Your subscription is active!</Preview>
+      <Preview>Your {planName} subscription is active — welcome to premium learning!</Preview>
       <Tailwind config={{
           theme: {
             extend: {
               colors: { 
                 primary: '#10B981', 
-                surface: '#faf8ff', 
+                surface: '#f8fafc', 
                 onSurface: '#0f172a', 
                 onSurfaceVariant: '#475569', 
                 outline: '#e2e8f0',
@@ -31,52 +31,87 @@ export const SubscriptionSuccessEmail = ({ name, planName, amount }: Subscriptio
           <Font fontFamily="Manrope" fallbackFontFamily="sans-serif" webFont={{ url: "https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRqAuZuw1Bx9mbZk79FN_B_w.woff2", format: "woff2" }} fontWeight={700} />
           <Font fontFamily="Manrope" fallbackFontFamily="sans-serif" webFont={{ url: "https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRqAuZuw1Bx9mbZk79FN_B_w.woff2", format: "woff2" }} fontWeight={800} />
         </Head>
-        <Body className="bg-surface text-onSurface font-body m-0 p-0 antialiased py-8">
-          <Container className="max-w-[600px] mx-auto p-4 md:p-6">
+        <Body style={{ backgroundColor: '#f1f5f9', margin: '0', padding: '0', fontFamily: 'Inter, sans-serif' }}>
+          <Container style={{ maxWidth: '600px', margin: '32px auto', padding: '0' }}>
 
-              {/* Header */}
-              <Section className="mb-8 w-full px-2">
+            {/* Header */}
+            <Section style={{ backgroundColor: '#0f172a', borderRadius: '16px 16px 0 0', padding: '20px 32px' }}>
+              <Row>
+                <Column style={{ width: '40px' }}>
+                  <Img src="https://www.mytutorme.org/icon.png" width="32" height="32" alt="MyTutorMe logo" style={{ borderRadius: '8px' }} />
+                </Column>
+                <Column>
+                  <Text style={{ color: '#10B981', fontSize: '20px', fontWeight: '800', margin: '0', paddingLeft: '10px', fontFamily: 'Manrope, sans-serif' }}>MyTutorMe</Text>
+                </Column>
+              </Row>
+            </Section>
+
+            {/* Hero */}
+            <Section style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)', padding: '40px 32px 36px', borderBottom: '1px solid #d1fae5', textAlign: 'center' }}>
+              <Section style={{ width: '72px', height: '72px', backgroundColor: '#10B981', borderRadius: '50%', margin: '0 auto 20px', textAlign: 'center' }}>
+                <Text style={{ fontSize: '32px', margin: '0', lineHeight: '72px' }}>✓</Text>
+              </Section>
+              <Text style={{ fontSize: '28px', fontWeight: '800', color: '#0f172a', margin: '0 0 10px', fontFamily: 'Manrope, sans-serif' }}>
+                Subscription Confirmed!
+              </Text>
+              <Text style={{ fontSize: '16px', color: '#047857', margin: '0 0 6px', fontWeight: '600', fontFamily: 'Manrope, sans-serif' }}>
+                {planName} Plan — Active
+              </Text>
+              <Text style={{ fontSize: '14px', color: '#475569', margin: '0 0 28px', lineHeight: '1.6' }}>
+                Hi {name}, your premium learning experience is now fully unlocked. You have access to all Pro features.
+              </Text>
+              <Button
+                href="https://mytutorme.org/student/dashboard"
+                style={{ backgroundColor: '#10B981', color: '#ffffff', fontSize: '15px', fontWeight: '700', padding: '14px 32px', borderRadius: '10px', textDecoration: 'none', display: 'inline-block', fontFamily: 'Manrope, sans-serif' }}
+              >
+                Access Your Dashboard →
+              </Button>
+            </Section>
+
+            {/* Billing summary */}
+            <Section style={{ backgroundColor: '#ffffff', padding: '28px 32px' }}>
+              <Text style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '0 0 16px', fontFamily: 'Manrope, sans-serif' }}>Payment Summary</Text>
+              <Section style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px 20px', marginBottom: '24px' }}>
+                <Row style={{ marginBottom: '8px' }}>
+                  <Column><Text style={{ margin: '0', fontSize: '13px', color: '#64748b' }}>Plan</Text></Column>
+                  <Column align="right"><Text style={{ margin: '0', fontSize: '13px', fontWeight: '600', color: '#0f172a' }}>{planName}</Text></Column>
+                </Row>
                 <Row>
-                  <Column align="left" style={{ width: '40px' }}>
-                    <Img src="https://www.mytutorme.org/icon.png" width="32" height="32" alt="TutorMe logo" />
-                  </Column>
-                  <Column align="left">
-                    <Text className="text-[22px] font-extrabold font-headline text-primary m-0 pl-2 tracking-tight">MyTutorMe</Text>
-                  </Column>
+                  <Column><Text style={{ margin: '0', fontSize: '13px', color: '#64748b' }}>Amount Charged</Text></Column>
+                  <Column align="right"><Text style={{ margin: '0', fontSize: '13px', fontWeight: '700', color: '#10B981' }}>₦{amount?.toLocaleString?.() ?? amount}</Text></Column>
                 </Row>
               </Section>
-            
-            {/* Main Content */}
-            <main className="px-2">
 
-              <Section className="bg-white border flex flex-col items-center border-outline/50 p-10 rounded-[24px] mb-8 shadow-sm text-center relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto relative z-10">
-                  <span className="text-3xl text-primary font-body">✓</span>
-                </div>
-                <Text className="text-3xl font-extrabold font-headline mb-4 text-[#0f172a] relative z-10">Subscription Confirmed!</Text>
-                <Text className="text-[16px] font-body text-onSurfaceVariant leading-relaxed mb-4 relative z-10">
-                  Welcome to <strong className="text-primary">{planName}</strong>. Your premium learning experience is now fully unlocked and ready.
-                </Text>
-                <Button className="inline-flex mt-6 px-10 py-4 bg-primary text-white font-bold rounded-xl shadow-sm relative z-10" href="https://mytutorme.org/dashboard">
-                  Go to Dashboard
-                </Button>
-              </Section>
-            </main>
+              <Text style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '0 0 14px', fontFamily: 'Manrope, sans-serif' }}>What's Unlocked</Text>
+              {[
+                '✨ Unlimited AI Tutor queries',
+                '📝 Unlimited mock exam generation',
+                '🃏 Advanced flashcard tools',
+                '📊 Detailed performance analytics',
+                '🎓 Priority course access'
+              ].map((feature, i) => (
+                <Row key={i} style={{ marginBottom: '8px' }}>
+                  <Column><Text style={{ margin: '0', fontSize: '13px', color: '#475569' }}>{feature}</Text></Column>
+                </Row>
+              ))}
+            </Section>
 
+            {/* Footer */}
+            <Section style={{ backgroundColor: '#0f172a', borderRadius: '0 0 16px 16px', padding: '24px 32px', textAlign: 'center' }}>
+              <Text style={{ color: '#10B981', fontSize: '16px', fontWeight: '700', margin: '0 0 8px', fontFamily: 'Manrope, sans-serif' }}>MyTutorMe Intelligence</Text>
+              <Text style={{ color: '#64748b', fontSize: '11px', margin: '0 0 12px', lineHeight: '1.5' }}>
+                © 2026 MyTutorMe Intelligence. All rights reserved.<br />
+                Questions? Contact us at support@mytutorme.org
+              </Text>
+              <Row>
+                <Column align="center">
+                  <Link href="https://mytutorme.org/privacy" style={{ color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }}>Privacy Policy</Link>
+                  <Link href="https://mytutorme.org/terms" style={{ color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }}>Terms of Service</Link>
+                  <Link href="#" style={{ color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }}>Unsubscribe</Link>
+                </Column>
+              </Row>
+            </Section>
 
-              {/* Footer */}
-              <Section className="mt-12 pt-8 border-t border-solid border-outline/50 text-center">
-                <Text className="font-headline font-bold text-primary text-xl m-0">MyTutorMe Intelligence</Text>
-                <Text className="text-xs font-body text-onSurfaceVariant/80 max-w-[400px] mx-auto my-4 leading-relaxed">
-                  © 2026 MyTutorMe Intelligence. All rights reserved. Our mission is to democratize elite education through the power of artificial intelligence.
-                </Text>
-                <Section className="flex justify-center text-center mt-2">
-                  <Link href="#" className="inline-block text-xs font-body text-onSurfaceVariant mx-3 underline">Privacy Policy</Link>
-                  <Link href="#" className="inline-block text-xs font-body text-onSurfaceVariant mx-3 underline">Terms of Service</Link>
-                  <Link href="#" className="inline-block text-xs font-body text-onSurfaceVariant mx-3 underline">Unsubscribe</Link>
-                </Section>
-              </Section>
           </Container>
         </Body>
       </Tailwind>

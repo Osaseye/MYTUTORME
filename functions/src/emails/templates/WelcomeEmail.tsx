@@ -1,18 +1,21 @@
 
-import { Html, Head, Preview, Body, Container, Section, Text, Button, Img, Link, Font, Tailwind, Row, Column } from '@react-email/components';
+import { Html, Head, Preview, Body, Container, Section, Text, Button, Img, Link, Font, Tailwind, Row, Column, Hr } from '@react-email/components';
 
 interface WelcomeEmailProps { name: string; role: 'student' | 'teacher' | 'admin'; }
 
 export const WelcomeEmailTemplate = ({ name, role }: WelcomeEmailProps) => {
+  const dashboardUrl = role === 'teacher' ? 'https://mytutorme.org/teacher/dashboard' : role === 'admin' ? 'https://mytutorme.org/admin/dashboard' : 'https://mytutorme.org/student/dashboard';
+  const roleLabel = role === 'teacher' ? 'Teacher' : role === 'admin' ? 'Admin' : 'Student';
+  
   return (
     <Html>
-      <Preview>Welcome to MyTutorMe! Your AI-First Journey to Academic Excellence Starts Now.</Preview>
+      <Preview>Welcome to MyTutorMe, {name}! Your AI-First Journey to Academic Excellence Starts Now.</Preview>
       <Tailwind config={{
           theme: {
             extend: {
               colors: { 
                 primary: '#10B981', 
-                surface: '#faf8ff', 
+                surface: '#f8fafc', 
                 onSurface: '#0f172a', 
                 onSurfaceVariant: '#475569', 
                 outline: '#e2e8f0',
@@ -31,77 +34,125 @@ export const WelcomeEmailTemplate = ({ name, role }: WelcomeEmailProps) => {
           <Font fontFamily="Manrope" fallbackFontFamily="sans-serif" webFont={{ url: "https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRqAuZuw1Bx9mbZk79FN_B_w.woff2", format: "woff2" }} fontWeight={700} />
           <Font fontFamily="Manrope" fallbackFontFamily="sans-serif" webFont={{ url: "https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRqAuZuw1Bx9mbZk79FN_B_w.woff2", format: "woff2" }} fontWeight={800} />
         </Head>
-        <Body className="bg-surface text-onSurface font-body m-0 p-0 antialiased py-8">
-          <Container className="max-w-[600px] mx-auto p-4 md:p-6">
+        <Body style={{ backgroundColor: '#f1f5f9', margin: '0', padding: '0', fontFamily: 'Inter, sans-serif' }}>
+          <Container style={{ maxWidth: '600px', margin: '32px auto', padding: '0' }}>
 
-              {/* Header */}
-              <Section className="mb-8 w-full px-2">
-                <Row>
-                  <Column align="left" style={{ width: '40px' }}>
-                    <Img src="https://www.mytutorme.org/icon.png" width="32" height="32" alt="TutorMe logo" />
-                  </Column>
-                  <Column align="left">
-                    <Text className="text-[22px] font-extrabold font-headline text-primary m-0 pl-2 tracking-tight">MyTutorMe</Text>
-                  </Column>
-                </Row>
-              </Section>
-            
-            {/* Main Content */}
-            <main className="px-2">
-              
-              <Section className="overflow-hidden rounded-2xl bg-emerald-500/10 p-8 md:p-10 mb-8 border border-emerald-500/20">
-                <Text className="text-3xl md:text-5xl font-extrabold font-headline leading-tight mb-4 text-[#0f172a]">
-                  Welcome to MyTutorMe! Your AI-First Journey Starts Now.
+            {/* Header Bar */}
+            <Section style={{ backgroundColor: '#0f172a', borderRadius: '16px 16px 0 0', padding: '20px 32px' }}>
+              <Row>
+                <Column style={{ width: '40px' }}>
+                  <Img src="https://www.mytutorme.org/icon.png" width="32" height="32" alt="MyTutorMe logo" style={{ borderRadius: '8px' }} />
+                </Column>
+                <Column>
+                  <Text style={{ color: '#10B981', fontSize: '20px', fontWeight: '800', margin: '0', paddingLeft: '10px', fontFamily: 'Manrope, sans-serif' }}>MyTutorMe</Text>
+                </Column>
+                <Column align="right">
+                  <Text style={{ color: '#64748b', fontSize: '11px', margin: '0', textTransform: 'uppercase', letterSpacing: '1px' }}>{roleLabel} Account</Text>
+                </Column>
+              </Row>
+            </Section>
+
+            {/* Main Card */}
+            <Section style={{ backgroundColor: '#ffffff', padding: '0' }}>
+
+              {/* Hero gradient section */}
+              <Section style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 50%, #fffbeb 100%)', padding: '40px 32px 32px', borderBottom: '1px solid #e2e8f0' }}>
+                <Text style={{ fontSize: '13px', color: '#10B981', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', margin: '0 0 12px', fontFamily: 'Manrope, sans-serif' }}>
+                  🎉 Welcome Aboard
                 </Text>
-                <Text className="text-lg md:text-xl font-body text-onSurfaceVariant mb-8 leading-relaxed">
-                  Experience a new era of learning with a personalized 24/7 AI Tutor designed to accelerate your understanding and boost your GPA through targeted, intelligent support.
+                <Text style={{ fontSize: '32px', fontWeight: '800', color: '#0f172a', margin: '0 0 12px', lineHeight: '1.2', fontFamily: 'Manrope, sans-serif' }}>
+                  Hello, {name}!<br />Your journey starts here.
                 </Text>
-                <Button className="inline-flex items-center justify-center px-8 py-4 bg-primary text-white font-bold rounded-xl" href="https://mytutorme.org/dashboard">
-                  Start Your First Lesson
+                <Text style={{ fontSize: '16px', color: '#475569', margin: '0 0 28px', lineHeight: '1.6' }}>
+                  Experience a new era of learning with your own 24/7 AI Tutor — designed to accelerate your understanding and help you achieve your academic goals.
+                </Text>
+                <Button
+                  href={dashboardUrl}
+                  style={{ backgroundColor: '#10B981', color: '#ffffff', fontSize: '15px', fontWeight: '700', padding: '14px 32px', borderRadius: '10px', textDecoration: 'none', display: 'inline-block', fontFamily: 'Manrope, sans-serif' }}
+                >
+                  Go to Dashboard →
                 </Button>
               </Section>
 
-              <Section className="mb-10 mt-8">
-                <Text className="text-2xl font-bold font-headline mb-4">Meet Your Personal Mentor</Text>
-                <Text className="text-[16px] text-onSurfaceVariant leading-relaxed mb-6 font-body">
-                  MyTutorMe isn't just a platform; it's an intelligent companion. Our 24/7 AI Tutor analyzes your learning patterns to provide real-time explanations, helping you master complex concepts in minutes rather than hours. Whether it's Calculus at midnight or Literature at dawn, we're here to ensure your GPA reflects your true potential.
-                </Text>
+              {/* Features Grid */}
+              <Section style={{ padding: '32px 32px 8px' }}>
+                <Text style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a', margin: '0 0 20px', fontFamily: 'Manrope, sans-serif' }}>What You Can Do</Text>
+                <Row style={{ marginBottom: '16px' }}>
+                  <Column style={{ width: '48%', paddingRight: '8px', verticalAlign: 'top' }}>
+                    <Section style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
+                      <Text style={{ fontSize: '22px', margin: '0 0 6px' }}>🤖</Text>
+                      <Text style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', margin: '0 0 4px', fontFamily: 'Manrope, sans-serif' }}>AI Tutor</Text>
+                      <Text style={{ fontSize: '12px', color: '#64748b', margin: '0', lineHeight: '1.5' }}>Get instant answers to any academic question, 24/7.</Text>
+                    </Section>
+                  </Column>
+                  <Column style={{ width: '48%', paddingLeft: '8px', verticalAlign: 'top' }}>
+                    <Section style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
+                      <Text style={{ fontSize: '22px', margin: '0 0 6px' }}>📝</Text>
+                      <Text style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', margin: '0 0 4px', fontFamily: 'Manrope, sans-serif' }}>Mock Exams</Text>
+                      <Text style={{ fontSize: '12px', color: '#64748b', margin: '0', lineHeight: '1.5' }}>Practice with AI-generated exams and track progress.</Text>
+                    </Section>
+                  </Column>
+                </Row>
+                <Row style={{ marginBottom: '16px' }}>
+                  <Column style={{ width: '48%', paddingRight: '8px', verticalAlign: 'top' }}>
+                    <Section style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
+                      <Text style={{ fontSize: '22px', margin: '0 0 6px' }}>🃏</Text>
+                      <Text style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', margin: '0 0 4px', fontFamily: 'Manrope, sans-serif' }}>Flashcards</Text>
+                      <Text style={{ fontSize: '12px', color: '#64748b', margin: '0', lineHeight: '1.5' }}>Master concepts with smart, AI-generated flashcards.</Text>
+                    </Section>
+                  </Column>
+                  <Column style={{ width: '48%', paddingLeft: '8px', verticalAlign: 'top' }}>
+                    <Section style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
+                      <Text style={{ fontSize: '22px', margin: '0 0 6px' }}>📊</Text>
+                      <Text style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', margin: '0 0 4px', fontFamily: 'Manrope, sans-serif' }}>GPA Tracker</Text>
+                      <Text style={{ fontSize: '12px', color: '#64748b', margin: '0', lineHeight: '1.5' }}>Monitor your academic performance over time.</Text>
+                    </Section>
+                  </Column>
+                </Row>
               </Section>
 
-              <Section className="bg-white p-8 rounded-xl mb-12 shadow-sm border border-outline/30">
-                <Text className="text-xl font-bold font-headline mb-6 text-primary flex items-center">
-                  <Img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" width="24" height="24" className="mr-2 inline-block opacity-70" />
-                  Getting Started Checklist
-                </Text>
-                
-                <Row className="mb-4 bg-surface p-4 rounded-lg">
-                  <Column style={{ width: '40px' }}><div className="w-6 h-6 rounded border-2 border-primary flex items-center justify-center text-primary text-sm font-bold opacity-100">✓</div></Column>
-                  <Column><Text className="m-0 font-medium font-body text-[15px]">Verify your student email address</Text></Column>
+              {/* Getting Started */}
+              <Section style={{ margin: '0 32px 32px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px 24px' }}>
+                <Text style={{ fontSize: '15px', fontWeight: '700', color: '#10B981', margin: '0 0 16px', fontFamily: 'Manrope, sans-serif' }}>✅ Getting Started Checklist</Text>
+                <Row style={{ marginBottom: '10px' }}>
+                  <Column style={{ width: '28px', verticalAlign: 'top' }}>
+                    <Section style={{ width: '20px', height: '20px', backgroundColor: '#10B981', borderRadius: '4px', textAlign: 'center' }}>
+                      <Text style={{ color: '#fff', fontSize: '12px', fontWeight: '700', margin: '0', lineHeight: '20px' }}>✓</Text>
+                    </Section>
+                  </Column>
+                  <Column><Text style={{ margin: '0', fontSize: '13px', color: '#475569', lineHeight: '20px' }}>Verify your email address</Text></Column>
                 </Row>
-                <Row className="mb-4 bg-surface p-4 rounded-lg">
-                  <Column style={{ width: '40px' }}><div className="w-6 h-6 rounded border-2 border-outline flex items-center justify-center"></div></Column>
-                  <Column><Text className="m-0 font-medium font-body text-[15px]">Set your academic study goals</Text></Column>
+                <Row style={{ marginBottom: '10px' }}>
+                  <Column style={{ width: '28px', verticalAlign: 'top' }}>
+                    <Section style={{ width: '20px', height: '20px', border: '2px solid #cbd5e1', borderRadius: '4px' }}><Text style={{ margin: '0' }}></Text></Section>
+                  </Column>
+                  <Column><Text style={{ margin: '0', fontSize: '13px', color: '#475569', lineHeight: '20px' }}>Complete your profile and set your goals</Text></Column>
                 </Row>
-                <Row className="bg-surface p-4 rounded-lg">
-                  <Column style={{ width: '40px' }}><div className="w-6 h-6 rounded border-2 border-outline flex items-center justify-center"></div></Column>
-                  <Column><Text className="m-0 font-medium font-body text-[15px]">Try your first AI Tutor session</Text></Column>
+                <Row>
+                  <Column style={{ width: '28px', verticalAlign: 'top' }}>
+                    <Section style={{ width: '20px', height: '20px', border: '2px solid #cbd5e1', borderRadius: '4px' }}><Text style={{ margin: '0' }}></Text></Section>
+                  </Column>
+                  <Column><Text style={{ margin: '0', fontSize: '13px', color: '#475569', lineHeight: '20px' }}>Start your first AI Tutor session</Text></Column>
                 </Row>
               </Section>
-            </main>
+            </Section>
 
+            {/* Footer */}
+            <Section style={{ backgroundColor: '#0f172a', borderRadius: '0 0 16px 16px', padding: '24px 32px', textAlign: 'center' }}>
+              <Text style={{ color: '#10B981', fontSize: '16px', fontWeight: '700', margin: '0 0 8px', fontFamily: 'Manrope, sans-serif' }}>MyTutorMe Intelligence</Text>
+              <Text style={{ color: '#64748b', fontSize: '11px', margin: '0 0 12px', lineHeight: '1.5' }}>
+                © 2026 MyTutorMe Intelligence. All rights reserved.<br />
+                Democratizing elite education through AI.
+              </Text>
+              <Row>
+                <Column align="center">
+                  <Link href="https://mytutorme.org/privacy" style={{ color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }}>Privacy Policy</Link>
+                  <Link href="https://mytutorme.org/terms" style={{ color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }}>Terms of Service</Link>
+                  <Link href="#" style={{ color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }}>Unsubscribe</Link>
+                </Column>
+              </Row>
+            </Section>
 
-              {/* Footer */}
-              <Section className="mt-12 pt-8 border-t border-solid border-outline/50 text-center">
-                <Text className="font-headline font-bold text-primary text-xl m-0">MyTutorMe Intelligence</Text>
-                <Text className="text-xs font-body text-onSurfaceVariant/80 max-w-[400px] mx-auto my-4 leading-relaxed">
-                  © 2026 MyTutorMe Intelligence. All rights reserved. Our mission is to democratize elite education through the power of artificial intelligence.
-                </Text>
-                <Section className="flex justify-center text-center mt-2">
-                  <Link href="#" className="inline-block text-xs font-body text-onSurfaceVariant mx-3 underline">Privacy Policy</Link>
-                  <Link href="#" className="inline-block text-xs font-body text-onSurfaceVariant mx-3 underline">Terms of Service</Link>
-                  <Link href="#" className="inline-block text-xs font-body text-onSurfaceVariant mx-3 underline">Unsubscribe</Link>
-                </Section>
-              </Section>
           </Container>
         </Body>
       </Tailwind>
