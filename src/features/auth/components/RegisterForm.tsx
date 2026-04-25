@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { registerSchema, type RegisterCredentials } from '../types';
 import { registerUser, registerWithGoogle } from '../api/auth';
+import { InAppBrowserGuard } from './InAppBrowserGuard';
 
 export const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showBrowserGuard, setShowBrowserGuard] = useState(false);
 
   const {
     register,
@@ -64,10 +66,7 @@ export const RegisterForm = () => {
         'auth/user-not-found': error.message,
       };
       if (error?.code === 'auth/disallowed-useragent') {
-        toast.error('Browser not supported', {
-          description: error.message,
-          duration: 8000,
-        });
+        setShowBrowserGuard(true);
       } else {
         const errorMessage = messages[error?.code] ?? error?.message ?? 'Google sign-up failed. Please try again.';
         console.log('[RegisterForm] Showing error toast:', errorMessage);
@@ -78,6 +77,8 @@ export const RegisterForm = () => {
   };
 
   return (
+    <>
+    <InAppBrowserGuard isOpen={showBrowserGuard} onClose={() => setShowBrowserGuard(false)} />
     <div className="w-full space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold font-display text-slate-900 dark:text-white">Create an account</h1>
@@ -244,5 +245,6 @@ export const RegisterForm = () => {
         </Link>
       </div>
     </div>
+    </>
   );
 };

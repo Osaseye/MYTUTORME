@@ -10,12 +10,14 @@ import { Input } from '@/components/ui/input';
 import { paths } from '@/app/routes/paths';
 import { loginSchema, type LoginCredentials } from '../types';
 import { clearPendingOAuthRoleSelection, loginUser, loginWithGoogle } from '../api/auth';
+import { InAppBrowserGuard } from './InAppBrowserGuard';
 
 export const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [suspendedError, setSuspendedError] = useState(false);
+  const [showBrowserGuard, setShowBrowserGuard] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get('returnTo');
@@ -78,10 +80,7 @@ export const LoginForm = () => {
         setSuspendedError(true);
         toast.error('Account Suspended');
       } else if (error?.code === 'auth/disallowed-useragent') {
-        toast.error('Browser not supported', {
-          description: error.message,
-          duration: 8000,
-        });
+        setShowBrowserGuard(true);
       } else if (error?.code === 'auth/user-not-found') {
         toast.error(error.message ? error.message : 'No account found. Please sign up first.');
       } else {
@@ -94,6 +93,8 @@ export const LoginForm = () => {
   };
 
   return (
+    <>
+    <InAppBrowserGuard isOpen={showBrowserGuard} onClose={() => setShowBrowserGuard(false)} />
     <div className="w-full space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold font-display text-slate-900 dark:text-white">Welcome back</h1>
@@ -217,5 +218,6 @@ export const LoginForm = () => {
         </Link>
       </div>
     </div>
+    </>
   );
 };

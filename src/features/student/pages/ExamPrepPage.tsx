@@ -2,7 +2,6 @@ import {
    
   Calendar, 
   Clock, 
-  BrainCircuit, 
    
   TrendingUp,
   FileText,
