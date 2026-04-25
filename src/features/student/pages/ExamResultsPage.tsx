@@ -134,9 +134,11 @@ export const ExamResultsPage = () => {
           <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
              <div className="text-center md:text-left">
                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold mb-4 ${
-                  attemptData.hasTheoryQuestions ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' : scoreClass
+                  attemptData.hasTheoryQuestions && attemptData.theoryGradingStatus === 'pending'
+                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+                    : scoreClass
                 }`}>
-                  {attemptData.hasTheoryQuestions
+                  {attemptData.hasTheoryQuestions && attemptData.theoryGradingStatus === 'pending'
                     ? <>&#x23F3; Partially Graded</>
                     : <>{scoreIcon} {attemptData.passed ? 'Exam Passed' : 'Exam Failed'}</>
                   }
@@ -145,13 +147,13 @@ export const ExamResultsPage = () => {
                    Exam Finished
                 </h1>
                 <p className="text-slate-600 dark:text-slate-400 text-lg max-w-xl">
-                   {attemptData.hasTheoryQuestions
+                   {attemptData.hasTheoryQuestions && attemptData.theoryGradingStatus === 'pending'
                      ? "Your objective score is shown. Theory questions are pending AI grading."
                      : attemptData.passed 
                        ? "Great job! Keep practicing to maintain your score."
                        : "Don't worry, utilize the AI breakdown to understand your weak points."}
                 </p>
-                {attemptData.hasTheoryQuestions && (
+                {attemptData.hasTheoryQuestions && attemptData.theoryGradingStatus === 'pending' && (
                   <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 font-medium">
                     📝 Theory answers submitted for grading &bull; MCQ score shown below
                   </div>
@@ -251,6 +253,7 @@ export const ExamResultsPage = () => {
                           const imageUrl = isImageAnswer ? studentAnswer.replace('[IMAGE_UPLOAD:', '').replace(/\]$/, '') : null;
                           const isCorrect = !isTheory && studentAnswer === q.correctAnswer;
                           const theoryGradingStatus = attemptData.theoryGradingStatus;
+                          const theoryResult = isTheory ? (attemptData.theoryGradingResults?.[q.id] || null) : null;
                           
                           return (
                              <div key={i} className={`p-4 rounded-xl border ${
@@ -265,12 +268,26 @@ export const ExamResultsPage = () => {
                                       {i + 1}
                                    </div>
                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1">
+                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                                           {isTheory && (
                                             <span className="text-xs font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">Theory</span>
                                           )}
                                           {isTheory && theoryGradingStatus === 'pending' && (
                                             <span className="text-xs font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">⏳ Pending Grading</span>
+                                          )}
+                                          {isTheory && theoryGradingStatus === 'graded' && theoryResult && (
+                                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                                              theoryResult.score >= theoryResult.maxScore * 0.7
+                                                ? 'bg-green-100 text-green-700'
+                                                : theoryResult.score >= theoryResult.maxScore * 0.4
+                                                ? 'bg-amber-100 text-amber-700'
+                                                : 'bg-red-100 text-red-700'
+                                            }`}>
+                                              {theoryResult.score}/{theoryResult.maxScore} marks
+                                            </span>
+                                          )}
+                                          {isTheory && theoryGradingStatus === 'error' && (
+                                            <span className="text-xs font-medium bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Grading Error</span>
                                           )}
                                         </div>
                                         <div className="text-slate-900 dark:text-white font-medium mb-3 prose dark:prose-invert max-w-none text-sm">
@@ -321,6 +338,20 @@ export const ExamResultsPage = () => {
                                             {q.correctAnswer}
                                             <CheckCircle className="w-4 h-4 inline ml-2"/>
                                          </div>
+                                      )}
+
+                                      {/* AI grading feedback for theory questions */}
+                                      {isTheory && theoryGradingStatus === 'graded' && theoryResult && (
+                                        <div className={`rounded-lg p-3 mb-2 border ${
+                                          theoryResult.score >= theoryResult.maxScore * 0.7
+                                            ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
+                                            : theoryResult.score >= theoryResult.maxScore * 0.4
+                                            ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800'
+                                            : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
+                                        }`}>
+                                          <p className="text-xs font-bold uppercase tracking-wide mb-1 text-slate-700 dark:text-slate-300">AI Examiner Feedback</p>
+                                          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{theoryResult.feedback}</p>
+                                        </div>
                                       )}
 
                                       {!isTheory && !isCorrect && q.explanation && (

@@ -337,7 +337,7 @@ export const ExamTakingPage = () => {
                     <span className="font-display font-bold text-lg">{examData.title}</span>
                 </div>
 
-                <div data-tour-target="exam-timer" className="flex items-center gap-4">
+                <div data-tour-target="exam-timer" className="flex items-center gap-3">
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono font-medium ${
                         timeLeft < 300 
                             ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' 
@@ -346,6 +346,15 @@ export const ExamTakingPage = () => {
                       <Clock className="w-4 h-4" />
                       {formatTime(timeLeft)}
                     </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsSubmitModalOpen(true)}
+                      className="gap-1.5 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                      <span className="hidden sm:inline">End Exam</span>
+                    </Button>
                 </div>
             </div>
         </div>
@@ -418,12 +427,51 @@ export const ExamTakingPage = () => {
 
                     <Button 
                         variant="outline"
-                        className={`w-full gap-2 ${flaggedQuestions.includes(currentQuestion.id) ? 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100' : ''}`}
+                        className={`w-full gap-2 ${flaggedQuestions.includes(currentQuestion.id) ? 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800' : ''}`}
                         onClick={toggleFlag}
                     >
                         <Flag className={`w-4 h-4 ${flaggedQuestions.includes(currentQuestion.id) ? 'fill-current' : ''}`} />
-                        {flaggedQuestions.includes(currentQuestion.id) ? 'Flagged for Review' : 'Flag for Review'}
+                        {flaggedQuestions.includes(currentQuestion.id) ? 'Unflag Question' : 'Flag for Review'}
                     </Button>
+
+                    {/* Flagged Questions List */}
+                    {flaggedQuestions.length > 0 && (
+                      <div className="mt-4 border-t border-slate-100 dark:border-slate-800 pt-4">
+                        <p className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                          <Flag className="w-3 h-3 fill-current" /> Flagged for Review ({flaggedQuestions.length})
+                        </p>
+                        <div className="flex flex-col gap-1.5">
+                          {flaggedQuestions.map((flaggedId) => {
+                            const flaggedIdx = questions.findIndex(q => q.id === flaggedId);
+                            if (flaggedIdx === -1) return null;
+                            const flaggedQ = questions[flaggedIdx];
+                            const isAnswered = !!answers[flaggedId];
+                            return (
+                              <button
+                                key={flaggedId}
+                                onClick={() => setCurrentQuestionIndex(flaggedIdx)}
+                                className={`flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors border
+                                  ${currentQuestionIndex === flaggedIdx
+                                    ? 'bg-orange-100 border-orange-300 text-orange-700 dark:bg-orange-900/30 dark:border-orange-700 dark:text-orange-300'
+                                    : 'bg-orange-50 border-orange-100 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/10 dark:border-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/20'
+                                  }`}
+                              >
+                                <span className="w-5 h-5 rounded bg-orange-200 dark:bg-orange-800 text-orange-700 dark:text-orange-300 flex items-center justify-center font-bold shrink-0">
+                                  {flaggedIdx + 1}
+                                </span>
+                                <span className="truncate flex-1">
+                                  {(flaggedQ.text || flaggedQ.question || `Question ${flaggedIdx + 1}`).replace(/\*\*/g, '').slice(0, 45)}{(flaggedQ.text || flaggedQ.question || '').length > 45 ? '…' : ''}
+                                </span>
+                                {isAnswered
+                                  ? <Check className="w-3 h-3 text-green-500 shrink-0" />
+                                  : <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />
+                                }
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                 </div>
 
                 <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/10 p-6 rounded-2xl shadow-sm border border-green-100 dark:border-green-900/30">

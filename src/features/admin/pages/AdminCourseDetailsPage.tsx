@@ -359,7 +359,7 @@ export const AdminCourseDetailsPage = () => {
     <div className="space-y-8 max-w-[1400px] mx-auto pb-12">
 
       {/* ── Sticky header ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 -mx-6 -mt-6 p-6 md:px-10 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 -mx-4 -mt-4 md:-mx-6 md:-mt-6 p-4 md:p-6 md:px-10 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" className="shrink-0 rounded-full h-10 w-10" onClick={() => navigate('/admin/moderation')}>
             <ChevronLeft className="h-5 w-5" />
@@ -399,7 +399,7 @@ export const AdminCourseDetailsPage = () => {
         )}
       </div>
 
-      <div className="space-y-8 px-6 md:px-10">
+      <div className="space-y-8">
 
         {/* ── Generated course editor ── */}
         {isGeneratedCourse && (
@@ -504,7 +504,19 @@ export const AdminCourseDetailsPage = () => {
                 )}
 
                 {/* Drop zone */}
-                <div className="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-emerald-400 transition-all rounded-xl cursor-pointer group">
+                <div
+                  className="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-emerald-400 transition-all rounded-xl cursor-pointer group"
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => {
+                    e.preventDefault();
+                    if (e.dataTransfer.files?.length) {
+                      const dropped = Array.from(e.dataTransfer.files).filter(f =>
+                        /\.(pdf|txt|docx|pptx)$/i.test(f.name)
+                      );
+                      if (dropped.length) setNewMaterialFiles(prev => [...prev, ...dropped]);
+                    }
+                  }}
+                >
                   <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-full group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/30 transition-colors mb-3">
                     <UploadCloud className="h-5 w-5 text-slate-400 group-hover:text-emerald-600 transition-colors" />
                   </div>
@@ -517,8 +529,9 @@ export const AdminCourseDetailsPage = () => {
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     onChange={e => {
                       if (e.target.files?.length) {
-                        setNewMaterialFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                        const selected = Array.from(e.target.files);
                         e.target.value = '';
+                        setNewMaterialFiles(prev => [...prev, ...selected]);
                       }
                     }}
                   />

@@ -97,7 +97,7 @@ export const AdminSupportPage = () => {
     return (
         <div className="space-y-8 max-w-[1600px] mx-auto pb-10">
             {/* Header section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 -mx-6 -mt-6 p-6 md:px-10 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 -mx-4 -mt-4 md:-mx-6 md:-mt-6 p-4 md:p-6 md:px-10 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
                 <div>
                     <div className="flex items-center gap-3 mb-1">
                         <MessageCircle className="h-6 w-6 text-indigo-500" />
@@ -107,7 +107,7 @@ export const AdminSupportPage = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 px-6 md:px-10">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 
                 {/* Tickets Section */}
                 <div className="xl:col-span-2 space-y-6">

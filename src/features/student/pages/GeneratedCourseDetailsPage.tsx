@@ -134,9 +134,14 @@ export const GeneratedCourseDetailsPage = () => {
       return;
     }
 
-    const mcqQuestions = flattenedQuestions.filter((q) => q.type === 'mcq' && Array.isArray(q.options) && q.options.length > 0);
-    if (!mcqQuestions.length) {
-      toast.error('No valid multiple-choice questions found for this exam.');
+    // Include all valid questions: MCQ must have options, theory must have question text
+    const allQuestions = flattenedQuestions.filter((q) => {
+      if (q.type === 'mcq') return Array.isArray(q.options) && q.options.length > 0;
+      return !!q.question; // theory / short-answer
+    });
+
+    if (!allQuestions.length) {
+      toast.error('No valid questions found for this exam.');
       return;
     }
 
@@ -145,13 +150,17 @@ export const GeneratedCourseDetailsPage = () => {
       setStartingExam(true);
 
       const questionIds: string[] = [];
-      for (const q of mcqQuestions) {
+      for (const q of allQuestions) {
+        const isTheory = q.type !== 'mcq';
         const qRef = await addDoc(collection(db, 'questions'), {
           text: q.question,
-          options: q.options,
-          correctAnswer: q.correctAnswer || '',
+          type: isTheory ? 'theory' : 'multiple-choice',
+          ...(isTheory
+            ? {}
+            : { options: q.options, correctAnswer: q.correctAnswer || '' }),
           explanation: q.explanation || 'Review the relevant study material for this concept.',
-          topic: q.topicArea || q.sectionName || course.title || 'General'
+          topic: q.topicArea || q.sectionName || course.title || 'General',
+          marks: q.marks || 1,
         });
         questionIds.push(qRef.id);
       }

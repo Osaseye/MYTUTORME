@@ -77,6 +77,11 @@ export const LoginForm = () => {
       if (error?.code === 'auth/account-suspended') {
         setSuspendedError(true);
         toast.error('Account Suspended');
+      } else if (error?.code === 'auth/disallowed-useragent') {
+        toast.error('Browser not supported', {
+          description: error.message,
+          duration: 8000,
+        });
       } else if (error?.code === 'auth/user-not-found') {
         toast.error(error.message ? error.message : 'No account found. Please sign up first.');
       } else {

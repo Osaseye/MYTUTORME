@@ -4,6 +4,7 @@ import { AppRoutes } from './app/routes';
 import { GlobalLoader } from './components/ui/global-loader';
 import { AnimatePresence, motion } from 'framer-motion';
 import { PWAInstallPopup } from '@/components/shared/PWAInstallPopup';
+import { PWAUpdatePrompt } from '@/components/shared/PWAUpdatePrompt';
 
 function App() {
   const [isInitializing, setIsInitializing] = useState(true);
@@ -38,6 +39,7 @@ function App() {
           >
             <AppRoutes />
             <PWAInstallPopup hideButton={true} />
+            <PWAUpdatePrompt />
           </motion.div>
         )}
       </AnimatePresence>

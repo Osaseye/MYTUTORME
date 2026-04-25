@@ -8,6 +8,7 @@ import LandingPage from '@/features/landing/LandingPage';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
+import { RoleSelectionPage } from '@/features/auth/pages/RoleSelectionPage';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
 import { OnboardingLayout, StudentOnboarding, TeacherOnboarding } from '@/features/onboarding';
@@ -53,8 +54,8 @@ export const AppRoutes = () => {
         <Route element={<AuthLayout />}>
           <Route path={paths.auth.login} element={<LoginPage />} />
           <Route path={paths.auth.register} element={<RegisterPage />} />
-          <Route path="/select-role" element={<Navigate to={paths.auth.register} replace />} />
-          <Route path="/slect-role" element={<Navigate to={paths.auth.register} replace />} />
+          <Route path="/select-role" element={<RoleSelectionPage />} />
+          <Route path="/slect-role" element={<Navigate to="/select-role" replace />} />
           <Route path={paths.auth.forgotPassword} element={<ForgotPasswordPage />} />
           <Route path={paths.auth.resetPassword} element={<ResetPasswordPage />} />
           <Route path={paths.admin.login} element={<AdminLoginPage />} />

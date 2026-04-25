@@ -142,10 +142,21 @@ const shouldPreferRedirectForGoogleAuth = () => {
   return isPWA || isSmallScreen || isMobileUA;
 };
 
+// Detect in-app browsers (WebViews) that Google blocks for OAuth.
+// These are browsers embedded inside apps like Facebook, Instagram, etc.
+const isInAppBrowser = () => {
+  const ua = navigator.userAgent;
+  return /FBAN|FBAV|Instagram|Twitter\/|LinkedInApp|WhatsApp|Line\/|MicroMessenger|Snapchat|GSA\//.test(ua);
+};
+
 export const loginWithGoogle = async (): Promise<GoogleLoginResult | undefined> => {
+  if (isInAppBrowser()) {
+    throw { code: 'auth/disallowed-useragent', message: 'Google Sign-In is not supported in this browser. Please open MyTutorMe in Chrome or Safari and try again.' };
+  }
+
   const provider = new GoogleAuthProvider();
   let result;
-  
+
   if (shouldPreferRedirectForGoogleAuth()) {
     console.log('[Google Auth] Redirect-preferred environment detected for login, using signInWithRedirect');
     markPendingOAuthRoleSelection();
@@ -234,6 +245,10 @@ export const completeGoogleRoleSelection = async (role: AuthRole) => {
 };
 
 export const registerWithGoogle = async (role: AuthRole) => {
+  if (isInAppBrowser()) {
+    throw { code: 'auth/disallowed-useragent', message: 'Google Sign-In is not supported in this browser. Please open MyTutorMe in Chrome or Safari and try again.' };
+  }
+
   const provider = new GoogleAuthProvider();
   let result;
   

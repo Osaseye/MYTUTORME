@@ -18,28 +18,54 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
     }
 
-    // Admin generator uploads: only the uploader can read/write
-    match /admin-generator-notes/{userId}/{allPaths=**} {
+    // Admin generator uploads: only the uploader can read/write.
+    // storageUploadService.ts uploads to users/{userId}/{folder}/... so rules must match that prefix.
+    match /users/{userId}/admin-generator-notes/{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    match /admin-generator-past-questions/{userId}/{allPaths=**} {
+    match /users/{userId}/admin-generator-past-questions/{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Flashcard generator uploads: students upload source material for flashcard generation
+    match /users/{userId}/flashcard-uploads/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId
+        && request.resource.size < 20 * 1024 * 1024;
+    }
+
+    // Exam generator uploads: students upload source material for exam generation
+    match /users/{userId}/exam-uploads/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId
+        && request.resource.size < 20 * 1024 * 1024;
+    }
+
+    // AI tutor image uploads: students upload images/files into AI tutor chat
+    match /users/{userId}/ai-tutor-images/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId
+        && request.resource.size < 20 * 1024 * 1024;
     }
 
     // Theory exam uploads: students upload their own answer images
-    match /theory-answers/{userId}/{allPaths=**} {
-      allow read: if request.auth != null && (
-        request.auth.uid == userId
-      );
+    match /users/{userId}/theory-answers/{allPaths=**} {
+      allow read: if request.auth != null && request.auth.uid == userId;
       allow write: if request.auth != null && request.auth.uid == userId
         && request.resource.size < 20 * 1024 * 1024
         && (request.resource.contentType.matches('image/.*') || request.resource.contentType == 'application/pdf');
     }
 
     // Assignment uploads: students upload their own assignments
-    match /assignments/{userId}/{allPaths=**} {
+    match /users/{userId}/assignments/{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Admin course thumbnails (uploaded directly to course-thumbnails/{courseId}/...)
+    // These are publicly readable so course cards can show the thumbnail.
+    match /course-thumbnails/{courseId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
     }
   }
 }

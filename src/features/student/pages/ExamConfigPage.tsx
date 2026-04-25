@@ -562,6 +562,18 @@ export const ExamConfigPage = () => {
                 </div>
             </div>
         </div>
+
+        {/* Mobile sticky loading bar — visible only on screens where the sidebar button is hidden */}
+        {(isGenerating || isUploadingFiles) && (
+            <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-2xl px-4 py-3">
+                <div className="flex items-center justify-center gap-3 text-primary">
+                    <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
+                    <span className="font-semibold text-sm text-slate-900 dark:text-white">
+                        {isUploadingFiles ? 'Uploading files...' : 'Generating your exam...'}
+                    </span>
+                </div>
+            </div>
+        )}
     </div>
   );
 };

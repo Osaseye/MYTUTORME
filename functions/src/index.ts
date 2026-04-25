@@ -16,6 +16,8 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 export { generateCourseContent } from "./endpoints/ai-generation-admin";
+export { generateMockExam, generateStudyPlan, generateFlashcardDeck } from "./endpoints/ai-generation";
+export { gradeTheoryAnswers } from "./triggers/examGrading";
 
 // Use an environment variable for secret keys in production.
 // Set it via: firebase functions:secrets:set FLUTTERWAVE_SECRET_KEY

@@ -492,7 +492,7 @@ export const AiTutorPage = () => {
                                                       >
                                                         Copy
                                                       </button>
-                                                      <code className={cn(className, "block p-4 bg-slate-900 rounded-lg text-sm overflow-x-auto")} {...props}>{children}</code>
+                                                      <code className={cn(className, "block p-4 bg-slate-900 text-slate-100 rounded-lg text-sm overflow-x-auto")} {...props}>{children}</code>
                                                     </div>
                                                   );
                                                 },

@@ -27,9 +27,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   checkAuth: () => {
     set({ isLoading: true });
-    
-    // Handle redirect result from OAuth on mobile
-    getRedirectResult(auth).then(async (result) => {
+
+    // Process the OAuth redirect result BEFORE onAuthStateChanged runs.
+    // Without this, onAuthStateChanged fires concurrently and may exhaust retries
+    // before the user doc has been created, signing the user out and leaving them
+    // stuck on the register page.
+    const redirectResultPromise = getRedirectResult(auth).then(async (result) => {
       try {
         if (result) {
           console.log('[Auth] Redirect result found, user UID:', result.user.uid);
@@ -47,7 +50,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           if (!userDoc.exists()) {
             const intendedRole = localStorage.getItem('oauth_intended_role');
             console.log('[Auth] User document not found, intended role:', intendedRole);
-            
+
             if (intendedRole === 'student' || intendedRole === 'teacher') {
               console.log('[Auth] Creating user document with role:', intendedRole);
               try {
@@ -83,6 +86,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Wait for redirect result processing to complete before reading auth state.
+      // This prevents the race where onAuthStateChanged fires before the user doc
+      // has been created by getRedirectResult, causing a spurious sign-out.
+      await redirectResultPromise;
       if (firebaseUser) {
         set({ isLoading: true }); // Ensure loading state while fetching profile
         try {

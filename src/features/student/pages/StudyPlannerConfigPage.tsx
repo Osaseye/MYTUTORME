@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useState } from 'react';
-import { Calendar, Target, BrainCircuit, Sparkles, ChevronRight } from 'lucide-react';
+import { Calendar, Target, BrainCircuit, Sparkles, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
@@ -132,8 +132,9 @@ export const StudyPlannerConfigPage = () => {
            >
               {isGenerating ? (
                  <>
-                   <Sparkles className="w-5 h-5 animate-pulse" />
-                   Structuring Roadmap...
+                   <Loader2 className="w-5 h-5 animate-spin" />
+                   <span className="hidden sm:inline">Structuring Roadmap...</span>
+                   <span className="sm:hidden">Generating...</span>
                  </>
               ) : (
                  <>
@@ -157,6 +158,16 @@ export const StudyPlannerConfigPage = () => {
 
         </div>
       </div>
+
+      {/* Mobile sticky loading bar */}
+      {isGenerating && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-2xl px-4 py-3">
+          <div className="flex items-center justify-center gap-3 text-primary">
+            <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
+            <span className="font-semibold text-sm text-slate-900 dark:text-white">Building your study plan...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

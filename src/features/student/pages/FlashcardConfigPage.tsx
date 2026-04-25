@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { useState, useRef } from 'react';
-import { Layers, Sparkles, BookOpen, ChevronRight, BrainCircuit, UploadCloud, X, FileText } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Layers, Sparkles, BookOpen, ChevronRight, BrainCircuit, UploadCloud, X, FileText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useNavigate, Link } from 'react-router-dom';
@@ -10,6 +10,35 @@ import { Input } from '@/components/ui/input';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 
 import { uploadFilesToStorage } from '@/utils/storageUploadService';
+
+const FilePreview = ({ file, onRemove }: { file: File; onRemove: () => void }) => {
+  const [url, setUrl] = useState<string>('');
+  useEffect(() => {
+    if (file.type.startsWith('image/')) {
+      const u = URL.createObjectURL(file);
+      setUrl(u);
+      return () => URL.revokeObjectURL(u);
+    }
+  }, [file]);
+
+  return (
+    <div className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-2 text-center">
+      {file.type.startsWith('image/') && url ? (
+        <img src={url} alt="Upload" className="w-full h-full object-cover" />
+      ) : (
+        <div className="flex flex-col items-center">
+          <FileText className="w-8 h-8 text-slate-400 mb-2" />
+          <span className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">{file.name || 'Document'}</span>
+        </div>
+      )}
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        <button onClick={(e) => { e.stopPropagation(); onRemove(); }} className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
   export const FlashcardConfigPage = () => {
     const navigate = useNavigate();
@@ -172,21 +201,7 @@ import { uploadFilesToStorage } from '@/utils/storageUploadService';
               {selectedFiles.length > 0 && (
                   <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                       {selectedFiles.map((file, idx) => (
-                          <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-2 text-center">
-                              {file.type.startsWith('image/') ? (
-                                  <img src={URL.createObjectURL(file)} alt="Upload" className="w-full h-full object-cover" />
-                              ) : (
-                                  <div className="flex flex-col items-center">
-                                      <FileText className="w-8 h-8 text-slate-400 mb-2" />
-                                      <span className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">{file.name || 'Document'}</span>
-                                  </div>
-                              )}
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                  <button onClick={(e) => { e.stopPropagation(); removeFile(idx); }} className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600">
-                                      <X className="w-4 h-4" />
-                                  </button>
-                              </div>
-                          </div>
+                          <FilePreview key={idx} file={file} onRemove={() => removeFile(idx)} />
                       ))}
                   </div>
               )}
@@ -218,8 +233,9 @@ import { uploadFilesToStorage } from '@/utils/storageUploadService';
            >
               {isGenerating ? (
                  <>
-                   <Sparkles className="w-5 h-5 animate-pulse" />
-                   Generating Deck from Smart Pool...
+                   <Loader2 className="w-5 h-5 animate-spin" />
+                   <span className="hidden sm:inline">Generating Deck...</span>
+                   <span className="sm:hidden">Generating...</span>
                  </>
               ) : (
                  <>
@@ -243,6 +259,16 @@ import { uploadFilesToStorage } from '@/utils/storageUploadService';
 
         </div>
       </div>
+
+      {/* Mobile sticky loading bar */}
+      {isGenerating && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-2xl px-4 py-3">
+          <div className="flex items-center justify-center gap-3 text-primary">
+            <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
+            <span className="font-semibold text-sm text-slate-900 dark:text-white">Generating your flashcard deck...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

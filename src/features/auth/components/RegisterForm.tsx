@@ -63,9 +63,16 @@ export const RegisterForm = () => {
         'auth/account-suspended': 'Your account has been suspended.',
         'auth/user-not-found': error.message,
       };
-      const errorMessage = messages[error?.code] ?? error?.message ?? 'Google sign-up failed. Please try again.';
-      console.log('[RegisterForm] Showing error toast:', errorMessage);
-      toast.error(errorMessage);
+      if (error?.code === 'auth/disallowed-useragent') {
+        toast.error('Browser not supported', {
+          description: error.message,
+          duration: 8000,
+        });
+      } else {
+        const errorMessage = messages[error?.code] ?? error?.message ?? 'Google sign-up failed. Please try again.';
+        console.log('[RegisterForm] Showing error toast:', errorMessage);
+        toast.error(errorMessage);
+      }
       setIsOAuthLoading(false);
     }
   };

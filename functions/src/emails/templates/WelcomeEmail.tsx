@@ -1,5 +1,5 @@
 
-import { Html, Head, Preview, Body, Container, Section, Text, Button, Img, Link, Font, Tailwind, Row, Column, Hr } from '@react-email/components';
+import { Html, Head, Preview, Body, Container, Section, Text, Button, Img, Link, Font, Tailwind, Row, Column } from '@react-email/components';
 
 interface WelcomeEmailProps { name: string; role: 'student' | 'teacher' | 'admin'; }
 

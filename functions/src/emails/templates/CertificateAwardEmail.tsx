@@ -10,7 +10,6 @@ import {
   Img,
   Link,
   Font,
-  Tailwind,
   Row,
   Column
 } from '@react-email/components';

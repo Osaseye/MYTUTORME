@@ -139,7 +139,7 @@ export const FinancialsPage = () => {
     return (
         <div className="space-y-8 max-w-[1600px] mx-auto pb-10">
             {/* Header section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 -mx-6 -mt-6 p-6 md:px-10 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 -mx-4 -mt-4 md:-mx-6 md:-mt-6 p-4 md:p-6 md:px-10 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
                 <div>
                     <div className="flex items-center gap-3 mb-1">
                         <Activity className="h-6 w-6 text-emerald-500" />
@@ -158,7 +158,7 @@ export const FinancialsPage = () => {
             </div>
 
             {/* Metrics Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-6 md:px-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <MetricCard 
                     title="Gross Revenue" 
                     value={formatCurrency(totalRevenue)} 
@@ -194,7 +194,7 @@ export const FinancialsPage = () => {
                 />
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 px-6 md:px-10">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 {/* Recent Transactions List */}
                 <Card className="xl:col-span-2 shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden">
                     <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
