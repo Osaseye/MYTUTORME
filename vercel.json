@@ -1,8 +1,8 @@
 {
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+  "routes": [
+    { "src": "/invite/(.*)", "dest": "/api/invite/$1" },
+    { "src": "/public/chat/(.*)", "dest": "/api/public/chat/$1" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
