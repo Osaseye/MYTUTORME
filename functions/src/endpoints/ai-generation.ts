@@ -54,7 +54,7 @@ export const generateMockExam = functions.https.onCall({ timeoutSeconds: 540, me
         throw new functions.https.HttpsError("unauthenticated", "Must be logged in to generate exams.");
     }
     
-    const { subject, topic, difficulty, count, mode } = data;
+    const { subject, topic, difficulty, count, mode, questionType = 'mcq' } = data;
     if (!subject || !topic || !difficulty || !count || !mode) {
         throw new functions.https.HttpsError("invalid-argument", "Missing required exam parameters.");
     }
@@ -74,6 +74,7 @@ export const generateMockExam = functions.https.onCall({ timeoutSeconds: 540, me
             .where('subject', '==', subject)
             .where('topic', '==', topic)
             .where('difficulty', '==', difficulty)
+            .where('questionType', '==', questionType || 'mcq')
             .get();
         
         const existingQuestions = qSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -89,18 +90,43 @@ export const generateMockExam = functions.https.onCall({ timeoutSeconds: 540, me
 
             const shortfall = count - existingQuestions.length;
             const generationCount = shortfall < 5 ? 5 : shortfall;
-            
-            let prompt = `You are an expert exam creator.
-            Generate exactly ${generationCount} multiple-choice questions for the subject "${subject}" specifically on the topic "${topic}" at a "${difficulty}" difficulty level.
-            
-            Return a strict JSON array. Each object MUST have this schema:
-            {
+
+            const isTheoryOnly = questionType === 'theory';
+            const isMixed = questionType === 'mixed';
+
+            let typeInstruction: string;
+            let schemaExample: string;
+            if (isTheoryOnly) {
+                typeInstruction = `Generate exactly ${generationCount} theory/short-answer questions`;
+                schemaExample = `{
+                "text": "The question text",
+                "type": "theory",
+                "marks": 5,
+                "modelAnswer": "A detailed model answer for this question."
+            }`;
+            } else if (isMixed) {
+                const mcqCount = Math.ceil(generationCount / 2);
+                const theoryCount = generationCount - mcqCount;
+                typeInstruction = `Generate exactly ${generationCount} questions: ${mcqCount} multiple-choice questions and ${theoryCount} theory/short-answer questions, interleaved`;
+                schemaExample = `{ "text": "...", "type": "multiple-choice", "options": ["A","B","C","D"], "correctAnswer": "...", "explanation": "..." }
+            OR
+            { "text": "...", "type": "theory", "marks": 5, "modelAnswer": "..." }`;
+            } else {
+                typeInstruction = `Generate exactly ${generationCount} multiple-choice questions`;
+                schemaExample = `{
                 "text": "The question text",
                 "type": "multiple-choice",
                 "options": ["A", "B", "C", "D"],
                 "correctAnswer": "The exact string of the correct option",
                 "explanation": "A short, helpful explanation of why this answer is correct."
             }`;
+            }
+            
+            let prompt = `You are an expert exam creator.
+            ${typeInstruction} for the subject "${subject}" specifically on the topic "${topic}" at a "${difficulty}" difficulty level.
+            
+            Return a strict JSON array. Each object MUST follow the appropriate schema:
+            ${schemaExample}`;
 
             const model = getVertexAi().preview.getGenerativeModel({
                 model: 'gemini-2.5-flash',
@@ -116,12 +142,22 @@ export const generateMockExam = functions.https.onCall({ timeoutSeconds: 540, me
                     if (fObj.storagePath) {
                         try {
                             const [fileBuf] = await admin.storage().bucket().file(fObj.storagePath).download();
-                            parts.push({
-                                inlineData: {
-                                    data: fileBuf.toString('base64'),
-                                    mimeType: fObj.mimeType
+                            const mime: string = fObj.mimeType || '';
+                            const isDocx = mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || mime === 'application/msword' || fObj.storagePath.match(/\.(docx|doc)$/i);
+                            if (isDocx) {
+                                const mammoth = require('mammoth');
+                                const docxResult = await mammoth.extractRawText({ buffer: fileBuf });
+                                if (docxResult.value) {
+                                    parts.push({ text: `\n\n[Document content]:\n${docxResult.value}` });
                                 }
-                            });
+                            } else {
+                                parts.push({
+                                    inlineData: {
+                                        data: fileBuf.toString('base64'),
+                                        mimeType: mime || 'application/octet-stream'
+                                    }
+                                });
+                            }
                         } catch (err) {
                             console.error('Error downloading file from storage:', err);
                         }
@@ -152,6 +188,7 @@ export const generateMockExam = functions.https.onCall({ timeoutSeconds: 540, me
                     subject,
                     topic,
                     difficulty,
+                    questionType: questionType || 'mcq',
                     aiGenerated: true,
                     createdAt: admin.firestore.FieldValue.serverTimestamp()
                 });

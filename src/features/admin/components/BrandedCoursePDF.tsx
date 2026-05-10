@@ -96,6 +96,16 @@ const styles = StyleSheet.create({
     color: '#334155',
     marginBottom: 8,
   },
+  studyGuideH1: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#0f172a',
+    marginTop: 18,
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+    paddingBottom: 4,
+  },
   studyGuideH2: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -109,6 +119,13 @@ const styles = StyleSheet.create({
     color: '#1e293b',
     marginTop: 10,
     marginBottom: 5,
+  },
+  studyGuideH4: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#334155',
+    marginTop: 8,
+    marginBottom: 4,
   },
   studyGuideBullet: {
     fontSize: 11,
@@ -144,6 +161,42 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontFamily: 'Courier',
     lineHeight: 1.5,
+  },
+  // Diagram block (ASCII art / block diagrams)
+  diagramBlock: {
+    borderWidth: 1,
+    borderColor: BRAND.primary,
+    borderRadius: 6,
+    marginBottom: 12,
+    marginTop: 6,
+    backgroundColor: '#f8fafc',
+  },
+  diagramHeader: {
+    backgroundColor: BRAND.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  diagramHeaderText: {
+    color: '#ffffff',
+    fontSize: 8,
+    fontFamily: 'Helvetica',
+    letterSpacing: 0.5,
+    fontWeight: 'bold',
+  },
+  diagramBody: {
+    padding: 14,
+    alignItems: 'center',
+  },
+  diagramLine: {
+    color: '#1e293b',
+    fontSize: 9,
+    fontFamily: 'Courier',
+    lineHeight: 1.6,
   },
   // Numbered list item
   numberedItem: {
@@ -208,12 +261,14 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginBottom: 10,
     marginTop: 6,
-    overflow: 'hidden',
   },
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
+  },
+  tableLastRow: {
+    borderBottomWidth: 0,
   },
   tableHeaderRow: {
     backgroundColor: '#f1f5f9',
@@ -227,8 +282,26 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderRightColor: '#e2e8f0',
   },
+  tableCellLast: {
+    borderRightWidth: 0,
+  },
   tableHeaderCell: {
     fontWeight: 'bold',
+  },
+  imageBlock: {
+    marginVertical: 10,
+    alignItems: 'center',
+  },
+  imageBlockImg: {
+    maxWidth: '100%',
+    objectFit: 'contain',
+  },
+  imageCaption: {
+    fontSize: 9,
+    color: '#64748b',
+    marginTop: 4,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   sectionTitle: {
     fontSize: 16,
@@ -331,15 +404,29 @@ const inlineRender = (text: string, baseStyle: any, key: string) => {
   );
 };
 
+// Returns inline children (Text spans) without the outer Text wrapper — used inside table cells.
+const inlineChildren = (text: string) => {
+  const normalised = text.replace(/(?<!\*)\*(?!\*)([^*]+)\*(?!\*)/g, '$1');
+  const parts = normalised.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) =>
+    part.startsWith('**') && part.endsWith('**')
+      ? <Text key={i} style={{ fontWeight: 'bold' }}>{part.slice(2, -2)}</Text>
+      : part
+  );
+};
+
 type StudyBlock =
+  | { type: 'h1'; text: string }
   | { type: 'h2'; text: string }
   | { type: 'h3'; text: string }
+  | { type: 'h4'; text: string }
   | { type: 'paragraph'; text: string }
   | { type: 'bullet'; text: string }
   | { type: 'numbered'; text: string; number: string }
   | { type: 'code'; text: string; lang?: string }
   | { type: 'callout'; text: string }
   | { type: 'divider' }
+  | { type: 'image'; src: string; alt: string }
   | { type: 'table'; rows: string[][] };
 
 const parseMarkdownishContent = (content: string): StudyBlock[] => {
@@ -352,6 +439,14 @@ const parseMarkdownishContent = (content: string): StudyBlock[] => {
     const trimmed = line.trim();
 
     if (!trimmed) {
+      i += 1;
+      continue;
+    }
+
+    // Markdown image: ![alt](url)
+    const imageMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (imageMatch) {
+      blocks.push({ type: 'image', alt: imageMatch[1], src: imageMatch[2] });
       i += 1;
       continue;
     }
@@ -370,14 +465,24 @@ const parseMarkdownishContent = (content: string): StudyBlock[] => {
       continue;
     }
 
-    // Headings
-    if (trimmed.startsWith('## ')) {
-      blocks.push({ type: 'h2', text: trimmed.replace(/^##\s+/, '') });
+    // Headings — order matters: check longer prefixes first
+    if (trimmed.startsWith('#### ')) {
+      blocks.push({ type: 'h4', text: trimmed.replace(/^#{4}\s+/, '') });
       i += 1;
       continue;
     }
     if (trimmed.startsWith('### ')) {
       blocks.push({ type: 'h3', text: trimmed.replace(/^###\s+/, '') });
+      i += 1;
+      continue;
+    }
+    if (trimmed.startsWith('## ')) {
+      blocks.push({ type: 'h2', text: trimmed.replace(/^##\s+/, '') });
+      i += 1;
+      continue;
+    }
+    if (trimmed.startsWith('# ')) {
+      blocks.push({ type: 'h1', text: trimmed.replace(/^#\s+/, '') });
       i += 1;
       continue;
     }
@@ -439,12 +544,13 @@ const parseMarkdownishContent = (content: string): StudyBlock[] => {
     while (
       i < lines.length &&
       lines[i].trim() &&
-      !lines[i].trim().startsWith('##') &&
-      !lines[i].trim().startsWith('###') &&
+      !lines[i].trim().startsWith('#') &&
       !/^[-*]\s+/.test(lines[i].trim()) &&
       !/^\d+\.\s+/.test(lines[i].trim()) &&
       !lines[i].trim().startsWith('```') &&
       !lines[i].trim().startsWith('> ') &&
+      !lines[i].trim().startsWith('![') &&
+      !lines[i].trim().includes('|') &&
       !/^-{3,}$/.test(lines[i].trim())
     ) {
       paragraphLines.push(lines[i].trim());
@@ -460,12 +566,20 @@ const renderStudyBlocks = (content: string) => {
   const blocks = parseMarkdownishContent(content);
 
   return blocks.map((block, index) => {
+    if (block.type === 'h1') {
+      return inlineRender(block.text, styles.studyGuideH1, `h1-${index}`);
+    }
+
     if (block.type === 'h2') {
       return inlineRender(block.text, styles.studyGuideH2, `h2-${index}`);
     }
 
     if (block.type === 'h3') {
       return inlineRender(block.text, styles.studyGuideH3, `h3-${index}`);
+    }
+
+    if (block.type === 'h4') {
+      return inlineRender(block.text, styles.studyGuideH4, `h4-${index}`);
     }
 
     if (block.type === 'bullet') {
@@ -503,9 +617,49 @@ const renderStudyBlocks = (content: string) => {
       return <View key={`div-${index}`} style={styles.divider} />;
     }
 
+    if (block.type === 'image') {
+      return (
+        <View key={`img-${index}`} style={styles.imageBlock}>
+          <Image
+            src={block.src}
+            style={styles.imageBlockImg}
+          />
+          {block.alt && (
+            <Text style={styles.imageCaption}>{block.alt}</Text>
+          )}
+        </View>
+      );
+    }
+
     if (block.type === 'code') {
       const codeLines = block.text.split('\n');
-      const label = block.lang ? block.lang.toUpperCase() : 'CODE';
+      const langLower = (block.lang || '').toLowerCase();
+
+      // Render diagram/ASCII-art fences with a light branded box instead of dark code block
+      const isDiagram =
+        langLower === 'diagram' ||
+        langLower === 'ascii' ||
+        langLower === 'text' ||
+        langLower === '' ||
+        langLower === 'code';
+
+      if (isDiagram) {
+        return (
+          <View key={`diag-${index}`} style={styles.diagramBlock}>
+            <View style={styles.diagramHeader}>
+              <Text style={styles.diagramHeaderText}>DIAGRAM</Text>
+            </View>
+            <View style={styles.diagramBody}>
+              {codeLines.map((line, li) => (
+                <Text key={li} style={styles.diagramLine}>{line || ' '}</Text>
+              ))}
+            </View>
+          </View>
+        );
+      }
+
+      // Real code block (has a specific language like js, python, assembly, etc.)
+      const label = block.lang!.toUpperCase();
       return (
         <View key={`c-${index}`}>
           <View style={styles.codeBlockHeader}>
@@ -522,17 +676,47 @@ const renderStudyBlocks = (content: string) => {
 
     if (block.type === 'table') {
       const [header, ...bodyRows] = block.rows;
+      // Normalise row lengths so all rows have the same column count
+      const colCount = Math.max(header.length, ...bodyRows.map(r => r.length));
+      const normaliseRow = (row: string[]) => {
+        const out = [...row];
+        while (out.length < colCount) out.push('');
+        return out;
+      };
       return (
         <View key={`t-${index}`} style={styles.tableBlock}>
           <View style={[styles.tableRow, styles.tableHeaderRow]}>
-            {header.map((cell, cIdx) => (
-              <Text key={`th-${index}-${cIdx}`} style={[styles.tableCell, styles.tableHeaderCell]}>{cell}</Text>
+            {normaliseRow(header).map((cell, cIdx) => (
+              <Text
+                key={`th-${index}-${cIdx}`}
+                style={[
+                  styles.tableCell,
+                  styles.tableHeaderCell,
+                  cIdx === colCount - 1 ? styles.tableCellLast : {},
+                ]}
+              >
+                {inlineChildren(cell)}
+              </Text>
             ))}
           </View>
           {bodyRows.map((row, rIdx) => (
-            <View key={`tr-${index}-${rIdx}`} style={styles.tableRow}>
-              {row.map((cell, cIdx) => (
-                <Text key={`td-${index}-${rIdx}-${cIdx}`} style={styles.tableCell}>{cell}</Text>
+            <View
+              key={`tr-${index}-${rIdx}`}
+              style={[
+                styles.tableRow,
+                rIdx === bodyRows.length - 1 ? styles.tableLastRow : {},
+              ]}
+            >
+              {normaliseRow(row).map((cell, cIdx) => (
+                <Text
+                  key={`td-${index}-${rIdx}-${cIdx}`}
+                  style={[
+                    styles.tableCell,
+                    cIdx === colCount - 1 ? styles.tableCellLast : {},
+                  ]}
+                >
+                  {inlineChildren(cell)}
+                </Text>
               ))}
             </View>
           ))}

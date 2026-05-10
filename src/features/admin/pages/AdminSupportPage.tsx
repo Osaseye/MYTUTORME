@@ -10,6 +10,10 @@ import {
   Mail,
   Clock,
   CheckCircle2,
+  Star,
+  ChevronDown,
+  ChevronUp,
+  MessageSquareText,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,9 +33,34 @@ interface SupportTicket {
   createdAt: any;
 }
 
+interface FeedbackResponse {
+  id: string;
+  userType: string;
+  usageDuration: string;
+  featuresUsed: string[];
+  courseRating: number;
+  contentRelevant: string;
+  contentIssues: string[];
+  courseComments: string;
+  examRating: number;
+  usedAiTutorDuringExam: string;
+  aiTutorRating: number;
+  examComments: string;
+  overallRating: number;
+  likedMost: string;
+  wouldImprove: string;
+  nps: number | null;
+  awarenessFeatures: string[];
+  otherComments: string;
+  submittedAt: any;
+}
+
 export const AdminSupportPage = () => {
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
     const [loading, setLoading] = useState(true);
+    const [feedbackResponses, setFeedbackResponses] = useState<FeedbackResponse[]>([]);
+    const [feedbackLoading, setFeedbackLoading] = useState(true);
+    const [expandedFeedback, setExpandedFeedback] = useState<string | null>(null);
     
     // Announcement state
     const [announcementTitle, setAnnouncementTitle] = useState('');
@@ -48,6 +77,19 @@ export const AdminSupportPage = () => {
         }, (error) => {
             console.error("Failed to fetch tickets:", error);
             setLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        const q = query(collection(db, 'feedbackResponses'), orderBy('submittedAt', 'desc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const fetched = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as FeedbackResponse));
+            setFeedbackResponses(fetched);
+            setFeedbackLoading(false);
+        }, (error) => {
+            console.error('Failed to fetch feedback:', error);
+            setFeedbackLoading(false);
         });
         return () => unsubscribe();
     }, []);
@@ -217,6 +259,146 @@ export const AdminSupportPage = () => {
                         </CardContent>
                     </Card>
                 </div>
+            </div>
+
+            {/* ── Feedback Responses Section ─────────────────────────────── */}
+            <div className="mt-4">
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+                    <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    <MessageSquareText className="h-5 w-5 text-emerald-500" /> User Feedback Responses
+                                </CardTitle>
+                                <CardDescription>Responses submitted via the /feedback page.</CardDescription>
+                            </div>
+                            <Badge variant="outline" className="text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200">
+                                {feedbackResponses.length} total
+                            </Badge>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        {feedbackLoading ? (
+                            <div className="p-12 text-center text-slate-500">Loading responses...</div>
+                        ) : feedbackResponses.length === 0 ? (
+                            <div className="p-16 text-center">
+                                <MessageSquareText className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                                <p className="text-slate-500">No feedback responses yet.</p>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                                {feedbackResponses.map((fb) => {
+                                    const isOpen = expandedFeedback === fb.id;
+                                    const npsColor = fb.nps !== null
+                                        ? fb.nps >= 9 ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20'
+                                        : fb.nps >= 7 ? 'text-lime-600 bg-lime-50 dark:bg-lime-900/20'
+                                        : 'text-red-500 bg-red-50 dark:bg-red-900/20'
+                                        : '';
+                                    return (
+                                        <div key={fb.id} className="bg-white dark:bg-slate-900">
+                                            {/* Summary row */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setExpandedFeedback(isOpen ? null : fb.id)}
+                                                className="w-full text-left px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                                            >
+                                                <div className="flex items-center justify-between gap-4 flex-wrap">
+                                                    <div className="flex items-center gap-3 flex-wrap">
+                                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{fb.userType || '—'}</span>
+                                                        <span className="text-xs text-slate-400">{fb.usageDuration || '—'}</span>
+                                                        {/* Overall stars */}
+                                                        <div className="flex items-center gap-0.5">
+                                                            {[1,2,3,4,5].map(s => (
+                                                                <Star key={s} className={`w-3.5 h-3.5 ${s <= fb.overallRating ? 'text-emerald-500 fill-emerald-500' : 'text-slate-300 dark:text-slate-600'}`} />
+                                                            ))}
+                                                        </div>
+                                                        {fb.nps !== null && (
+                                                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${npsColor}`}>NPS {fb.nps}</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-xs text-slate-400">{formatDate(fb.submittedAt)}</span>
+                                                        {isOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                                                    </div>
+                                                </div>
+                                                {/* Features used pills */}
+                                                {fb.featuresUsed?.length > 0 && (
+                                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                                        {fb.featuresUsed.map(f => (
+                                                            <span key={f} className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">{f.replace(/_/g, ' ')}</span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </button>
+
+                                            {/* Expanded detail */}
+                                            {isOpen && (
+                                                <div className="px-6 pb-6 pt-2 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 dark:bg-slate-950/30 border-t border-slate-100 dark:border-slate-800">
+                                                    {/* Ratings */}
+                                                    <div className="space-y-3">
+                                                        <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Ratings</h4>
+                                                        {[
+                                                            { label: 'Course Quality', val: fb.courseRating },
+                                                            { label: 'Exam Prep', val: fb.examRating },
+                                                            { label: 'AI Tutor', val: fb.aiTutorRating },
+                                                            { label: 'Overall', val: fb.overallRating },
+                                                        ].map(r => (
+                                                            <div key={r.label} className="flex items-center justify-between">
+                                                                <span className="text-sm text-slate-600 dark:text-slate-300">{r.label}</span>
+                                                                <div className="flex gap-0.5">
+                                                                    {[1,2,3,4,5].map(s => (
+                                                                        <Star key={s} className={`w-3.5 h-3.5 ${s <= r.val ? 'text-emerald-500 fill-emerald-500' : 'text-slate-300 dark:text-slate-600'}`} />
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    {/* Exam & Tutor */}
+                                                    <div className="space-y-3">
+                                                        <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Exam & AI Tutor</h4>
+                                                        <p className="text-sm text-slate-600 dark:text-slate-300"><span className="font-medium">AI Tutor used:</span> {fb.usedAiTutorDuringExam || '—'}</p>
+                                                        <p className="text-sm text-slate-600 dark:text-slate-300"><span className="font-medium">Content relevance:</span> {fb.contentRelevant || '—'}</p>
+                                                        {fb.contentIssues?.length > 0 && (
+                                                            <div>
+                                                                <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Content issues:</p>
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {fb.contentIssues.map(i => <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-900/20 text-red-600">{i}</span>)}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        {fb.awarenessFeatures?.length > 0 && (
+                                                            <div>
+                                                                <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Didn't know about:</p>
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {fb.awarenessFeatures.map(f => <span key={f} className="text-xs px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600">{f.replace(/_/g, ' ')}</span>)}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Open-ended responses */}
+                                                    {[
+                                                        { label: 'Liked most', val: fb.likedMost },
+                                                        { label: 'Would improve', val: fb.wouldImprove },
+                                                        { label: 'Course comments', val: fb.courseComments },
+                                                        { label: 'Exam comments', val: fb.examComments },
+                                                        { label: 'Other', val: fb.otherComments },
+                                                    ].filter(f => f.val).map(f => (
+                                                        <div key={f.label} className="md:col-span-2">
+                                                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">{f.label}</p>
+                                                            <p className="text-sm text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg p-3 leading-relaxed">{f.val}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );

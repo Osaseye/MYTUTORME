@@ -144,7 +144,7 @@ const shouldPreferRedirectForGoogleAuth = () => {
 
 // Detect in-app browsers (WebViews) that Google blocks for OAuth.
 // These are browsers embedded inside apps like Facebook, Instagram, etc.
-const isInAppBrowser = () => {
+export const isInAppBrowser = () => {
   const ua = navigator.userAgent;
   return /FBAN|FBAV|Instagram|Twitter\/|LinkedInApp|WhatsApp|Line\/|MicroMessenger|Snapchat|GSA\//.test(ua);
 };

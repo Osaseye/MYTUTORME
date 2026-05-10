@@ -53,13 +53,13 @@ const FilePreview = ({ file, onRemove }: { file: File; onRemove: () => void }) =
   
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
-      if (!files) return;
+      if (!files || !files.length) return;
   
-      setSelectedFiles(prev => [...prev, ...Array.from(files)]);
-      
+      const selected = Array.from(files);
       if (fileInputRef.current) {
           fileInputRef.current.value = '';
       }
+      setSelectedFiles(prev => [...prev, ...selected]);
     };
   
     const removeFile = (index: number) => {

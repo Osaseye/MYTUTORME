@@ -14,7 +14,8 @@ import {
   PanelLeftOpen,
   Loader2,
   ChevronLeft,
-  FileText
+  FileText,
+  Share2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollToTop } from '@/components/ui/scroll-to-top';
@@ -29,7 +30,8 @@ import { useAuthStore } from '@/features/auth/hooks/useAuth';
 import { uploadFilesToStorage } from '@/utils/storageUploadService';
 import { FreePlanUsageCard } from '@/components/shared/FreePlanUsageCard';
 import { getDownloadURL, ref } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
+import { storage, db } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 const StorageImagePreview = ({ img }: { img: any }) => {
     const [url, setUrl] = useState<string>('');
@@ -101,6 +103,8 @@ export const AiTutorPage = () => {
     const [activeTopic, setActiveTopic] = useState('');
     const [selectedImages, setSelectedImages] = useState<File[]>([]);
     const [isUploadingImages, setIsUploadingImages] = useState(false);
+    const [showShareDialog, setShowShareDialog] = useState(false);
+    const [pendingShareTitle, setPendingShareTitle] = useState('');
     
     const { user } = useAuthStore();
     const { hasAccess } = usePlanGate('unlimited_ai');  
@@ -130,20 +134,21 @@ export const AiTutorPage = () => {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
-        if (!files) return;
+        if (!files || !files.length) return;
+
+        const selected = Array.from(files);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
 
         setSelectedImages(prev => {
-            const newFiles = [...prev, ...Array.from(files)];
+            const newFiles = [...prev, ...selected];
             if (newFiles.length > 5) {
                 toast.error('You can only upload a maximum of 5 files per message.');
                 return newFiles.slice(0, 5);
             }
             return newFiles;
         });
-        
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
     };
 
     const removeImage = (index: number) => {
@@ -203,6 +208,42 @@ export const AiTutorPage = () => {
         }
     };
 
+    const shareCurrentChat = () => {
+        if (!currentSessionId) {
+            toast.error('Start a conversation first before sharing.');
+            return;
+        }
+        const currentTitle = sessionHistory.find(s => s.id === currentSessionId)?.title || '';
+        setPendingShareTitle(currentTitle);
+        setShowShareDialog(true);
+    };
+
+    const confirmShare = async () => {
+        if (!currentSessionId) return;
+        const chatTitle = pendingShareTitle.trim() || 'Nova AI Conversation';
+        try {
+            await updateDoc(doc(db, 'ai_sessions', currentSessionId), {
+                isPublic: true,
+                title: chatTitle,
+                sharedBy: user?.displayName || 'Someone',
+            });
+            const shareUrl = `${window.location.origin}/public/chat/${currentSessionId}`;
+            const shareText = `${user?.displayName || 'Someone'} shared a Nova AI chat "${chatTitle}" with you`;
+            setShowShareDialog(false);
+            if (navigator.share) {
+                await navigator.share({ title: chatTitle, text: shareText, url: shareUrl });
+            } else {
+                await navigator.clipboard.writeText(shareUrl);
+                toast.success('Share link copied to clipboard!');
+            }
+        } catch (e: any) {
+            if (e?.name !== 'AbortError') {
+                console.error('Share failed:', e);
+                toast.error('Could not share this chat right now.');
+            }
+        }
+    };
+
     // Auto-resize textarea
     useEffect(() => {
         if (textareaRef.current) {
@@ -213,24 +254,67 @@ export const AiTutorPage = () => {
 
     return (
         <div className="flex flex-col md:flex-row h-full w-full bg-slate-50 dark:bg-slate-900 overflow-hidden">
+            {/* Share Dialog */}
+            {showShareDialog && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Share this chat</h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Give this conversation a name so recipients know what it's about.</p>
+                        <input
+                            type="text"
+                            className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-primary"
+                            placeholder="e.g. Quadratic Equations Help"
+                            value={pendingShareTitle}
+                            onChange={e => setPendingShareTitle(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') confirmShare(); }}
+                            autoFocus
+                        />
+                        <div className="flex gap-2 justify-end">
+                            <button
+                                onClick={() => setShowShareDialog(false)}
+                                className="px-4 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmShare}
+                                className="px-4 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary/90 font-medium"
+                            >
+                                Share
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Mobile Header */}
             <div className="md:hidden flex flex-col p-4 gap-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50 flex-shrink-0 z-50 shadow-sm">
                 {/* Top Row: Back Button, Title, History */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                     <button 
                         onClick={() => navigate(-1)}
-                        className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900"
+                        className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900 flex-shrink-0"
                     >
                         <ChevronLeft className="w-5 h-5 mr-1" />
                         Back
                     </button>
-                    <span className="font-bold text-slate-900 dark:text-white">AI Tutor</span>
-                    <button
-                        onClick={() => setShowHistory(!showHistory)}
-                        className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
-                    >
-                        <History className="w-5 h-5" />
-                    </button>
+                    <span className="font-bold text-slate-900 dark:text-white truncate text-center flex-1">AI Tutor</span>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                        {messages.length > 0 && (
+                            <button
+                                onClick={shareCurrentChat}
+                                className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+                                title="Share this chat"
+                            >
+                                <Share2 className="w-5 h-5" />
+                            </button>
+                        )}
+                        <button
+                            onClick={() => setShowHistory(!showHistory)}
+                            className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+                        >
+                            <History className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
                 
                 {/* Bottom Row: Subject & Topic Inputs */}
@@ -381,6 +465,16 @@ export const AiTutorPage = () => {
                         >
                             {isSidebarOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
                         </button>
+                        
+                        {messages.length > 0 && (
+                            <button
+                                onClick={shareCurrentChat}
+                                className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-500 hover:text-primary dark:hover:text-primary shadow-sm transition-colors"
+                                title="Share this conversation"
+                            >
+                                <Share2 className="w-5 h-5" />
+                            </button>
+                        )}
                         
                         <input
                             type="text"
@@ -558,17 +652,19 @@ export const AiTutorPage = () => {
                         )}
 
                         <div className="flex items-end">
-                            <button onClick={() => fileInputRef.current?.click()} className="p-3 m-1.5 ml-2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors rounded-full hover:bg-slate-200 dark:hover:bg-[#333] flex-shrink-0" title="Add File">
-                                <PlusCircle className="w-6 h-6 stroke-[1.5]" />
-                            </button>
-                            <input 
-                                type="file" 
-                                ref={fileInputRef}
-                                className="hidden" 
-                                accept="image/*, .pdf, .doc, .docx, .txt"
-                                multiple
-                                onChange={handleFileChange}
-                            />
+                            <div className="relative p-3 m-1.5 ml-2 flex-shrink-0">
+                                <PlusCircle className="w-6 h-6 stroke-[1.5] text-slate-500" />
+                                <input 
+                                    id="ai-tutor-file-input"
+                                    type="file" 
+                                    ref={fileInputRef}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                                    accept="image/*,.pdf,.doc,.docx,.txt"
+                                    multiple
+                                    title="Add File"
+                                    onChange={handleFileChange}
+                                />
+                            </div>
                             <textarea 
                                 ref={textareaRef}
                                 className="w-full bg-transparent border-none focus:ring-0 p-4 pl-1 resize-none text-[15px] font-medium leading-relaxed max-h-[40vh] overflow-y-auto text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none" 

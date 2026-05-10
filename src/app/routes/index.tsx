@@ -18,9 +18,13 @@ import { AdminLayout, AdminDashboard, AdminLoginPage, UserManagementPage, Course
 import { SupportPage } from '@/pages/SupportPage';
 import { VerifyCertificatePage } from '@/pages/VerifyCertificatePage';
 import { PublicExamPage } from '@/pages/PublicExamPage';
+import { PublicChatPage } from '@/pages/PublicChatPage';
 import { CourseInvitePage } from '@/pages/CourseInvitePage';
 import { NotificationsPage } from '@/pages/NotificationsPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { FeedbackPage } from '@/pages/FeedbackPage';
+import { PrivacyPolicyPage } from '@/pages/PrivacyPolicyPage';
+import { TermsPage } from '@/pages/TermsPage';
 
 export const AppRoutes = () => {
   const isPWA = window.matchMedia("(display-mode: standalone)").matches;
@@ -49,8 +53,15 @@ export const AppRoutes = () => {
         } />
         <Route path={paths.support} element={<SupportPage />} />
         <Route path={paths.verifyCertificate} element={<VerifyCertificatePage />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
+        <Route path={paths.privacy} element={<PrivacyPolicyPage />} />
+        <Route path={paths.terms} element={<TermsPage />} />
         <Route path="/public/exam/:quizId" element={<PublicExamPage />} />
+        <Route path="/public/chat/:sessionId" element={<PublicChatPage />} />
+        <Route path="/og/chat/:sessionId" element={<PublicChatPage />} />
         <Route path="/invite/:courseId" element={<CourseInvitePage />} />
+        <Route path="/og/invite/:courseId" element={<CourseInvitePage />} />
+        <Route path="/i/:courseId" element={<CourseInvitePage />} />
         <Route element={<AuthLayout />}>
           <Route path={paths.auth.login} element={<LoginPage />} />
           <Route path={paths.auth.register} element={<RegisterPage />} />

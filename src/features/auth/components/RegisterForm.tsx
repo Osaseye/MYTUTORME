@@ -7,15 +7,13 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { registerSchema, type RegisterCredentials } from '../types';
-import { registerUser, registerWithGoogle } from '../api/auth';
+import { registerUser } from '../api/auth';
 import { InAppBrowserGuard } from './InAppBrowserGuard';
 
 export const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showBrowserGuard, setShowBrowserGuard] = useState(false);
 
   const {
     register,
@@ -49,36 +47,7 @@ export const RegisterForm = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setIsOAuthLoading(true);
-    try {
-      console.log('[RegisterForm] Starting Google sign-up with role:', selectedRole);
-      await registerWithGoogle(selectedRole);
-      // onAuthStateChanged handles the rest
-      console.log('[RegisterForm] Google sign-up call completed, waiting for auth state change');
-      toast.success('Signing up with Google...', { description: 'Please wait while we set up your account.' });
-    } catch (error: any) {
-      console.error('[RegisterForm] Google sign-up error:', error);
-      const messages: Record<string, string> = {
-        'auth/popup-closed-by-user': 'Google sign-up was cancelled. Please try again.',
-        'auth/cancelled-popup-request': 'Google sign-up is already in progress.',
-        'auth/account-suspended': 'Your account has been suspended.',
-        'auth/user-not-found': error.message,
-      };
-      if (error?.code === 'auth/disallowed-useragent') {
-        setShowBrowserGuard(true);
-      } else {
-        const errorMessage = messages[error?.code] ?? error?.message ?? 'Google sign-up failed. Please try again.';
-        console.log('[RegisterForm] Showing error toast:', errorMessage);
-        toast.error(errorMessage);
-      }
-      setIsOAuthLoading(false);
-    }
-  };
-
   return (
-    <>
-    <InAppBrowserGuard isOpen={showBrowserGuard} onClose={() => setShowBrowserGuard(false)} />
     <div className="w-full space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold font-display text-slate-900 dark:text-white">Create an account</h1>
@@ -88,13 +57,13 @@ export const RegisterForm = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
+        <InAppBrowserGuard />
         <Button
           variant="outline"
           type="button"
-          className="w-full"
-          onClick={handleGoogleLogin}
-          isLoading={isOAuthLoading}
-          disabled={isOAuthLoading || isLoading}
+          className="w-full opacity-40"
+          disabled={true}
+          tabIndex={-1}
         >
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             <path
@@ -245,6 +214,5 @@ export const RegisterForm = () => {
         </Link>
       </div>
     </div>
-    </>
   );
 };

@@ -79,6 +79,11 @@ export const AdminCourseDetailsPage = () => {
   const [newMaterialFiles, setNewMaterialFiles] = useState<File[]>([]);
   const [isProcessingMaterial, setIsProcessingMaterial] = useState(false);
 
+  // Past questions enrichment upload
+  const [newPastQFiles, setNewPastQFiles] = useState<File[]>([]);
+  const [isProcessingPastQ, setIsProcessingPastQ] = useState(false);
+
+
   // Question editor
   const [sections, setSections] = useState<Section[]>([]);
   const [collapsedSections, setCollapsedSections] = useState<Record<number, boolean>>({});
@@ -254,12 +259,13 @@ export const AdminCourseDetailsPage = () => {
       const result = await generateCourseContent({
         courseId,
         courseTitle: course?.title || editTitle,
+        studyMaterialOnly: true,
         hasPastQuestions: false,
         notesData,
         pastQuestionsData: null,
       }) as any;
 
-      const newContent: string = result?.data?.studyMaterial?.content || result?.data?.examData?.studyMaterial?.content || '';
+      const newContent: string = result?.studyMaterial?.content || result?.data?.studyMaterial?.content || '';
       if (!newContent) {
         toast.error('Could not extract content from the uploaded files. Try a different file format.');
         return;
@@ -280,6 +286,75 @@ export const AdminCourseDetailsPage = () => {
 
   const removeMaterialFile = (i: number) =>
     setNewMaterialFiles(prev => prev.filter((_, idx) => idx !== i));
+
+  // ── Past questions enrichment ────────────────────────────────────────────────
+  const handleProcessPastQuestions = async () => {
+    if (!newPastQFiles.length || !user || !courseId) return;
+    if (!editStudyMaterial.trim()) {
+      toast.error('Please add study material content first — it is used as the knowledge source for generating questions.');
+      return;
+    }
+    setIsProcessingPastQ(true);
+    try {
+      // Treat existing study material text as the notes source
+      // btoa() only handles Latin1 — encode via UTF-8 first to support all characters
+      const studyMaterialBase64 = btoa(
+        new Uint8Array(new TextEncoder().encode(editStudyMaterial))
+          .reduce((s, b) => s + String.fromCharCode(b), '')
+      );
+      const notesData = [{ name: 'study_material.txt', mimeType: 'text/plain', data: studyMaterialBase64 }];
+
+      const paths = await uploadFilesToStorage(newPastQFiles, user.uid, 'admin-generator-past-questions');
+      const pastQuestionsData = newPastQFiles.map((f, i) => ({
+        name: f.name,
+        mimeType: f.type || 'application/octet-stream',
+        storagePath: paths[i],
+      }));
+
+      const result = await generateCourseContent({
+        courseId,
+        courseTitle: course?.title || editTitle,
+        hasPastQuestions: true,
+        questionsOnly: true,
+        notesData,
+        pastQuestionsData,
+      }) as any;
+
+      const newSections: Section[] = parseSections(result?.sections ? result : result?.data || result);
+      if (!newSections.length) {
+        toast.error('No new questions were extracted from the uploaded files. Try a different format.');
+        return;
+      }
+
+      // Merge new sections into existing ones (match by name, else append)
+      setSections(prev => {
+        const merged = [...prev];
+        for (const ns of newSections) {
+          const existingIdx = merged.findIndex(s => s.name.toLowerCase() === ns.name.toLowerCase());
+          if (existingIdx >= 0) {
+            merged[existingIdx] = {
+              ...merged[existingIdx],
+              questions: [...merged[existingIdx].questions, ...ns.questions],
+            };
+          } else {
+            merged.push(ns);
+          }
+        }
+        return merged;
+      });
+
+      setNewPastQFiles([]);
+      toast.success(`${newSections.reduce((n, s) => n + s.questions.length, 0)} new questions merged in. Click Save to persist.`);
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || 'Failed to process past question files');
+    } finally {
+      setIsProcessingPastQ(false);
+    }
+  };
+
+  const removePastQFile = (i: number) =>
+    setNewPastQFiles(prev => prev.filter((_, idx) => idx !== i));
 
   // ── Section helpers ──────────────────────────────────────────────────────────
   const toggleSection = (i: number) =>
@@ -510,10 +585,7 @@ export const AdminCourseDetailsPage = () => {
                   onDrop={e => {
                     e.preventDefault();
                     if (e.dataTransfer.files?.length) {
-                      const dropped = Array.from(e.dataTransfer.files).filter(f =>
-                        /\.(pdf|txt|docx|pptx)$/i.test(f.name)
-                      );
-                      if (dropped.length) setNewMaterialFiles(prev => [...prev, ...dropped]);
+                      setNewMaterialFiles(prev => [...prev, ...Array.from(e.dataTransfer.files)]);
                     }
                   }}
                 >
@@ -521,11 +593,11 @@ export const AdminCourseDetailsPage = () => {
                     <UploadCloud className="h-5 w-5 text-slate-400 group-hover:text-emerald-600 transition-colors" />
                   </div>
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Drag & drop or click to upload</p>
-                  <p className="text-xs text-slate-500 mt-1">PDF, DOCX, PPTX, TXT (max 10MB each)</p>
+                  <p className="text-xs text-slate-500 mt-1">PDF, DOCX, PPTX, TXT, PNG, JPG (max 10MB each)</p>
                   <input
                     type="file"
                     multiple
-                    accept=".pdf,.txt,.docx,.pptx,application/pdf,text/plain"
+                    accept=".pdf,.txt,.docx,.pptx,.doc,.png,.jpg,.jpeg,application/pdf,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/png,image/jpeg"
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     onChange={e => {
                       if (e.target.files?.length) {
@@ -574,6 +646,81 @@ export const AdminCourseDetailsPage = () => {
                 <Button variant="outline" size="sm" onClick={addSection} className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400">
                   <Plus className="h-4 w-4 mr-1.5" />Add Section
                 </Button>
+              </div>
+
+              {/* ── Enrich from past questions ── */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-emerald-600" />
+                  <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">Enrich Questions from Past Papers</span>
+                  <span className="text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">AI extracts & merges</span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Upload past exam papers (PDF, Word, or images). The AI will analyse the format and generate additional questions matching the style, then merge them into the sections above.
+                </p>
+
+                {newPastQFiles.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {newPastQFiles.map((f, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/20 rounded-xl">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg shrink-0">
+                            <FileText className="h-4 w-4 text-emerald-600" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">{f.name}</p>
+                            <p className="text-[10px] text-slate-500">{(f.size / 1024 / 1024).toFixed(2)} MB</p>
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => removePastQFile(i)} className="h-7 w-7 text-slate-400 hover:text-red-500 shrink-0">
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div
+                  className="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-emerald-400 transition-all rounded-xl cursor-pointer group"
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => {
+                    e.preventDefault();
+                    if (e.dataTransfer.files?.length) {
+                      setNewPastQFiles(prev => [...prev, ...Array.from(e.dataTransfer.files)]);
+                    }
+                  }}
+                >
+                  <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-full group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/30 transition-colors mb-3">
+                    <UploadCloud className="h-5 w-5 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+                  </div>
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Drag & drop or click to upload</p>
+                  <p className="text-xs text-slate-500 mt-1">PDF, DOCX, PNG, JPG (max 10MB each)</p>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={e => {
+                      if (e.target.files?.length) {
+                        const selected = Array.from(e.target.files);
+                        e.target.value = '';
+                        setNewPastQFiles(prev => [...prev, ...selected]);
+                      }
+                    }}
+                  />
+                </div>
+
+                {newPastQFiles.length > 0 && (
+                  <Button
+                    onClick={handleProcessPastQuestions}
+                    disabled={isProcessingPastQ}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    {isProcessingPastQ
+                      ? <><span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline-block" />AI is analysing past papers…</>
+                      : <><Sparkles className="h-4 w-4 mr-2" />Process & Merge into Exam Questions</>}
+                  </Button>
+                )}
               </div>
 
               {sections.length === 0 && (

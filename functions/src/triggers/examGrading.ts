@@ -131,15 +131,101 @@ Return ONLY a JSON object with exactly these fields:
       const theoryScorePercent =
         totalPossible > 0 ? (totalEarned / totalPossible) * 100 : 0;
 
+      // === COMPUTE COMBINED FINAL SCORE ===
+      // Re-fetch all questions to compute a marks-weighted overall score
+      // and update the topicBreakdown with theory results.
+      let finalScore: number = theoryScorePercent;
+      let finalPassed: boolean = theoryScorePercent >= 50;
+      const updatedTopicBreakdown: Record<string, { correct: number; total: number }> = {
+        ...(attempt.topicBreakdown || {}),
+      };
+
+      try {
+        const quizRef = db.collection('quizzes').doc(attempt.quizId);
+        const quizSnap2 = await quizRef.get();
+        const allQuestionIds: string[] = quizSnap2.exists
+          ? (quizSnap2.data()!.questionIds || [])
+          : [];
+        const passingMark: number = quizSnap2.exists
+          ? Number(quizSnap2.data()!.passingScore) || 50
+          : 50;
+
+        if (allQuestionIds.length > 0) {
+          const allQSnaps = await Promise.all(
+            allQuestionIds.map((id) => db.collection('questions').doc(id).get())
+          );
+
+          let combinedEarned = 0;
+          let combinedPossible = 0;
+
+          for (const qSnap of allQSnaps) {
+            if (!qSnap.exists) continue;
+            const qData = qSnap.data()!;
+            const qId = qSnap.id;
+            const marks = Number(qData.marks) || 1;
+            const topic: string = qData.topicArea || qData.topic || 'General';
+            const isTheory =
+              qData.type === 'theory' ||
+              qData.type === 'short-answer' ||
+              (!qData.options || (qData.options as any[]).length === 0);
+
+            combinedPossible += marks;
+
+            if (!updatedTopicBreakdown[topic]) {
+              updatedTopicBreakdown[topic] = { correct: 0, total: 0 };
+            }
+
+            if (isTheory) {
+              const result = gradingResults[qId];
+              if (result) {
+                combinedEarned += result.score;
+                // Count as "correct" if >= 50% of marks awarded
+                if (result.score >= marks * 0.5) {
+                  updatedTopicBreakdown[topic].correct =
+                    (updatedTopicBreakdown[topic].correct || 0) + 1;
+                }
+              }
+            } else {
+              // MCQ — re-evaluate from stored answers
+              const studentAnswer = attempt.answers?.[qId];
+              const correctAnswer = qData.correctAnswer || qData.answer;
+              if (studentAnswer !== undefined && studentAnswer === correctAnswer) {
+                combinedEarned += marks;
+                updatedTopicBreakdown[topic].correct =
+                  (updatedTopicBreakdown[topic].correct || 0) + 1;
+              }
+            }
+          }
+
+          if (combinedPossible > 0) {
+            finalScore = (combinedEarned / combinedPossible) * 100;
+          }
+        }
+
+        finalPassed = finalScore >= passingMark;
+      } catch (combineErr) {
+        console.error('Error computing combined score, falling back:', combineErr);
+        // Fallback: if all-theory, use theory percent; for mixed use rough average
+        if (attempt.score === null || attempt.score === undefined) {
+          finalScore = theoryScorePercent;
+        } else {
+          finalScore = (Number(attempt.score) + theoryScorePercent) / 2;
+        }
+        finalPassed = finalScore >= 50;
+      }
+
       await snap.ref.update({
         theoryGradingStatus: 'graded',
         theoryGradingResults: gradingResults,
         theoryScore: theoryScorePercent,
+        score: finalScore,
+        passed: finalPassed,
+        topicBreakdown: updatedTopicBreakdown,
         theoryGradedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
       console.log(
-        `Theory grading complete for attempt ${attemptId}: ${totalEarned}/${totalPossible}`
+        `Theory grading complete for attempt ${attemptId}: ${totalEarned}/${totalPossible} theory, final score ${finalScore.toFixed(1)}%`
       );
       return null;
     } catch (error) {

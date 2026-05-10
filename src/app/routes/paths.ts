@@ -1,6 +1,8 @@
 export const paths = {
   support: '/support',
   verifyCertificate: '/verify',
+  privacy: '/privacy',
+  terms: '/terms',
   auth: {
     login: '/login',
     register: '/register',

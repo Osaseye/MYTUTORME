@@ -1,26 +1,20 @@
 import { useState } from 'react'; 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AlertCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { paths } from '@/app/routes/paths';
 import { loginSchema, type LoginCredentials } from '../types';
-import { clearPendingOAuthRoleSelection, loginUser, loginWithGoogle } from '../api/auth';
+import { loginUser } from '../api/auth';
 import { InAppBrowserGuard } from './InAppBrowserGuard';
 
 export const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [suspendedError, setSuspendedError] = useState(false);
-  const [showBrowserGuard, setShowBrowserGuard] = useState(false);
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const returnTo = searchParams.get('returnTo');
 
   const {
     register,
@@ -53,48 +47,7 @@ export const LoginForm = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setIsOAuthLoading(true);
-    setSuspendedError(false);
-    try {
-      console.log('[LoginForm] Starting Google login');
-      // Reset any stale pending-role state from previous interrupted OAuth attempts.
-      clearPendingOAuthRoleSelection();
-      const result = await loginWithGoogle();
-      if (!result) {
-        return;
-      }
-      if (result.needsRoleSelection) {
-        console.log('[LoginForm] New Google user needs role selection first');
-        navigate(`${paths.auth.register}${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`, { replace: true });
-        toast.info('Finish sign up to choose your role and continue');
-        return;
-      }
-      // onAuthStateChanged handles the rest
-      console.log('[LoginForm] Google login call completed, waiting for auth state change');
-      toast.success('Signing in with Google...', { description: 'Please wait.' });
-    } catch (error: any) {
-      clearPendingOAuthRoleSelection();
-      console.error('[LoginForm] Google login error:', error);
-      if (error?.code === 'auth/account-suspended') {
-        setSuspendedError(true);
-        toast.error('Account Suspended');
-      } else if (error?.code === 'auth/disallowed-useragent') {
-        setShowBrowserGuard(true);
-      } else if (error?.code === 'auth/user-not-found') {
-        toast.error(error.message ? error.message : 'No account found. Please sign up first.');
-      } else {
-        const errMsg = error?.message ?? 'Google login failed. Please try again.';
-        console.log('[LoginForm] Showing error toast:', errMsg);
-        toast.error(errMsg);
-      }
-      setIsOAuthLoading(false);
-    }
-  };
-
   return (
-    <>
-    <InAppBrowserGuard isOpen={showBrowserGuard} onClose={() => setShowBrowserGuard(false)} />
     <div className="w-full space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold font-display text-slate-900 dark:text-white">Welcome back</h1>
@@ -116,13 +69,13 @@ export const LoginForm = () => {
       )}
 
       <div className="grid grid-cols-1 gap-4">
+        <InAppBrowserGuard />
         <Button
           variant="outline"
           type="button"
-          className="w-full"
-          onClick={handleGoogleLogin}
-          isLoading={isOAuthLoading}
-          disabled={isOAuthLoading || isLoading}
+          className="w-full opacity-40"
+          disabled={true}
+          tabIndex={-1}
         >
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             <path
@@ -218,6 +171,5 @@ export const LoginForm = () => {
         </Link>
       </div>
     </div>
-    </>
   );
 };

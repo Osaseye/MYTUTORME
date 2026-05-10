@@ -50,7 +50,7 @@ const getVertexAi = () => new vertexai_1.VertexAI({
 exports.gradeTheoryAnswers = functions.firestore
     .document('quiz_attempts/{attemptId}')
     .onCreate(async (snap, context) => {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f;
     const attempt = snap.data();
     const attemptId = context.params.attemptId;
     // Only run if there are pending theory answers
@@ -139,13 +139,88 @@ Return ONLY a JSON object with exactly these fields:
         const totalEarned = Object.values(gradingResults).reduce((sum, r) => sum + r.score, 0);
         const totalPossible = Object.values(gradingResults).reduce((sum, r) => sum + r.maxScore, 0);
         const theoryScorePercent = totalPossible > 0 ? (totalEarned / totalPossible) * 100 : 0;
+        // === COMPUTE COMBINED FINAL SCORE ===
+        // Re-fetch all questions to compute a marks-weighted overall score
+        // and update the topicBreakdown with theory results.
+        let finalScore = theoryScorePercent;
+        let finalPassed = theoryScorePercent >= 50;
+        const updatedTopicBreakdown = Object.assign({}, (attempt.topicBreakdown || {}));
+        try {
+            const quizRef = db.collection('quizzes').doc(attempt.quizId);
+            const quizSnap2 = await quizRef.get();
+            const allQuestionIds = quizSnap2.exists
+                ? (quizSnap2.data().questionIds || [])
+                : [];
+            const passingMark = quizSnap2.exists
+                ? Number(quizSnap2.data().passingScore) || 50
+                : 50;
+            if (allQuestionIds.length > 0) {
+                const allQSnaps = await Promise.all(allQuestionIds.map((id) => db.collection('questions').doc(id).get()));
+                let combinedEarned = 0;
+                let combinedPossible = 0;
+                for (const qSnap of allQSnaps) {
+                    if (!qSnap.exists)
+                        continue;
+                    const qData = qSnap.data();
+                    const qId = qSnap.id;
+                    const marks = Number(qData.marks) || 1;
+                    const topic = qData.topicArea || qData.topic || 'General';
+                    const isTheory = qData.type === 'theory' ||
+                        qData.type === 'short-answer' ||
+                        (!qData.options || qData.options.length === 0);
+                    combinedPossible += marks;
+                    if (!updatedTopicBreakdown[topic]) {
+                        updatedTopicBreakdown[topic] = { correct: 0, total: 0 };
+                    }
+                    if (isTheory) {
+                        const result = gradingResults[qId];
+                        if (result) {
+                            combinedEarned += result.score;
+                            // Count as "correct" if >= 50% of marks awarded
+                            if (result.score >= marks * 0.5) {
+                                updatedTopicBreakdown[topic].correct =
+                                    (updatedTopicBreakdown[topic].correct || 0) + 1;
+                            }
+                        }
+                    }
+                    else {
+                        // MCQ — re-evaluate from stored answers
+                        const studentAnswer = (_f = attempt.answers) === null || _f === void 0 ? void 0 : _f[qId];
+                        const correctAnswer = qData.correctAnswer || qData.answer;
+                        if (studentAnswer !== undefined && studentAnswer === correctAnswer) {
+                            combinedEarned += marks;
+                            updatedTopicBreakdown[topic].correct =
+                                (updatedTopicBreakdown[topic].correct || 0) + 1;
+                        }
+                    }
+                }
+                if (combinedPossible > 0) {
+                    finalScore = (combinedEarned / combinedPossible) * 100;
+                }
+            }
+            finalPassed = finalScore >= passingMark;
+        }
+        catch (combineErr) {
+            console.error('Error computing combined score, falling back:', combineErr);
+            // Fallback: if all-theory, use theory percent; for mixed use rough average
+            if (attempt.score === null || attempt.score === undefined) {
+                finalScore = theoryScorePercent;
+            }
+            else {
+                finalScore = (Number(attempt.score) + theoryScorePercent) / 2;
+            }
+            finalPassed = finalScore >= 50;
+        }
         await snap.ref.update({
             theoryGradingStatus: 'graded',
             theoryGradingResults: gradingResults,
             theoryScore: theoryScorePercent,
+            score: finalScore,
+            passed: finalPassed,
+            topicBreakdown: updatedTopicBreakdown,
             theoryGradedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-        console.log(`Theory grading complete for attempt ${attemptId}: ${totalEarned}/${totalPossible}`);
+        console.log(`Theory grading complete for attempt ${attemptId}: ${totalEarned}/${totalPossible} theory, final score ${finalScore.toFixed(1)}%`);
         return null;
     }
     catch (error) {

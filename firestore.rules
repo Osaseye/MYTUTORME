@@ -88,7 +88,8 @@ service cloud.firestore {
 
     match /ai_sessions/{sessionId} {
       allow create: if request.auth != null && request.auth.uid == request.resource.data.studentId;
-      allow read, update, delete: if request.auth != null && (request.auth.uid == resource.data.studentId || isAdmin());
+      allow read: if resource.data.isPublic == true || (request.auth != null && (request.auth.uid == resource.data.studentId || isAdmin()));
+      allow update, delete: if request.auth != null && (request.auth.uid == resource.data.studentId || isAdmin());
     }
 
     match /gpa_records/{userId} {

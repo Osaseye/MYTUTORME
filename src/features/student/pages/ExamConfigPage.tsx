@@ -123,6 +123,7 @@ export const ExamConfigPage = () => {
   }, [user]);
   
   const [questionCount, setQuestionCount] = useState([10]);
+  const [questionType, setQuestionType] = useState<'mcq' | 'theory' | 'mixed'>('mcq');
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard' | 'adaptive'>('medium');
   const [mode, setMode] = useState<'standard' | 'practice'>('standard');
   const [timeLimit, setTimeLimit] = useState<boolean>(true);
@@ -206,6 +207,7 @@ export const ExamConfigPage = () => {
             difficulty,
             count: questionCount[0],
             mode,
+            questionType,
             fileData: fileDataForApi
           });
   
@@ -397,6 +399,26 @@ export const ExamConfigPage = () => {
                                 </div>
                             </div>
 
+                            {/* Question Type Selection */}
+                            <div>
+                                <label className="block font-medium text-slate-700 dark:text-slate-300 mb-3">Question Type</label>
+                                <div className="flex gap-2">
+                                    {([['mcq', 'MCQ'], ['theory', 'Theory'], ['mixed', 'Mixed']] as const).map(([val, label]) => (
+                                        <button
+                                            key={val}
+                                            onClick={() => setQuestionType(val)}
+                                            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-colors ${
+                                                questionType === val
+                                                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                                                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                            }`}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             {/* Difficulty Selection */}
                             <div>
                                 <label className="block font-medium text-slate-700 dark:text-slate-300 mb-3">Difficulty Level</label>
@@ -498,6 +520,10 @@ export const ExamConfigPage = () => {
                              <div className="flex justify-between text-sm">
                                 <span className="text-slate-500">Duration</span>
                                 <span className="font-medium text-slate-900 dark:text-white">{timeLimit ? `~${Math.round(questionCount[0] * 1.5)} Mins` : 'Unlimited'}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-slate-500">Question Type</span>
+                                <span className="font-medium capitalize text-slate-900 dark:text-white">{questionType === 'mcq' ? 'MCQ' : questionType === 'theory' ? 'Theory' : 'Mixed'}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-slate-500">Difficulty</span>

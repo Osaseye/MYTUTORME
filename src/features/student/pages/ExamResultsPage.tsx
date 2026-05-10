@@ -98,12 +98,20 @@ export const ExamResultsPage = () => {
     );
   }
 
+  // For theory-only exams the initial `score` is null until AI grading completes.
+  // After grading, the trigger writes the final score back. Use theoryScore as
+  // fallback so the page doesn't show 0% while grading is still in-flight.
+  const displayScore: number =
+    attemptData.score !== null && attemptData.score !== undefined
+      ? attemptData.score
+      : (attemptData.theoryScore ?? 0);
+
   const scoreClass = attemptData.passed 
     ? "text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40" 
     : "text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/40";
 
   const scoreIcon = attemptData.passed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />;
-  const strokeDashoffset = 440 - (440 * attemptData.score) / 100;
+  const strokeDashoffset = 440 - (440 * displayScore) / 100;
 
   // Process Topic Breakdown
   const breakdowns = Object.entries(attemptData.topicBreakdown || {}).map(([topic, stats]: [string, any]) => {
@@ -178,7 +186,7 @@ export const ExamResultsPage = () => {
                       ></circle>
                    </svg>
                    <div className="absolute flex flex-col items-center">
-                      <span className="text-4xl font-display font-bold text-slate-900 dark:text-white">{Math.round(attemptData.score)}%</span>
+                      <span className="text-4xl font-display font-bold text-slate-900 dark:text-white">{Math.round(displayScore)}%</span>
                       <span className="text-sm font-medium text-slate-500 uppercase">Score</span>
                    </div>
                 </div>

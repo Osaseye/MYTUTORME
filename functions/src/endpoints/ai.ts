@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { VertexAI } from "@google-cloud/vertexai";
+import * as mammoth from 'mammoth';
 import { getAiTutorContext } from "../lib/ai-context";
 
 const db = admin.firestore();
@@ -11,6 +12,50 @@ const getVertexAi = () => new VertexAI({
   project: process.env.GCLOUD_PROJECT || admin.app().options.projectId!,
   location: "us-central1" // Vertex AI endpoints are region-specific
 });
+
+// MIME types that Gemini 2.5-pro supports as raw inlineData
+const GEMINI_INLINE_SUPPORTED = new Set([
+  'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif',
+  'application/pdf',
+  'text/plain',
+  'audio/wav', 'audio/mp3', 'audio/aiff', 'audio/aac', 'audio/ogg', 'audio/flac',
+]);
+
+/**
+ * Convert a file buffer + metadata to a Gemini-compatible part.
+ * - Images / PDFs / plain text → inlineData (Gemini supports these directly).
+ * - DOCX / DOC → extract text with mammoth → send as a text part.
+ * - Other unsupported types → return null (skipped with a warning).
+ */
+async function fileBufferToGeminiPart(
+  buffer: Buffer,
+  mimeType: string,
+  fileName?: string
+): Promise<any | null> {
+  const normalizedMime = mimeType.toLowerCase();
+
+  if (GEMINI_INLINE_SUPPORTED.has(normalizedMime) || normalizedMime.startsWith('image/')) {
+    return { inlineData: { data: buffer.toString('base64'), mimeType: normalizedMime } };
+  }
+
+  // DOCX / DOC — extract text with mammoth
+  if (
+    normalizedMime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    normalizedMime === 'application/msword'
+  ) {
+    try {
+      const result = await mammoth.extractRawText({ buffer });
+      const label = fileName ? `[Attached document: ${fileName}]\n\n` : '[Attached document]\n\n';
+      return { text: label + result.value.trim() };
+    } catch (err) {
+      console.error('mammoth extraction failed:', err);
+      return null;
+    }
+  }
+
+  console.warn(`Unsupported file MIME type for Gemini inlineData: ${mimeType}. Skipping.`);
+  return null;
+}
 
 
 
@@ -72,22 +117,16 @@ export const askAiTutor = functions.https.onCall(async (request) => {
                         if (img.storagePath) {
                             try {
                                 const [buffer] = await admin.storage().bucket().file(img.storagePath).download();
-                                parts.push({
-                                    inlineData: {
-                                        data: buffer.toString('base64'),
-                                        mimeType: img.mimeType
-                                    }
-                                });
+                                const part = await fileBufferToGeminiPart(buffer, img.mimeType || 'application/octet-stream', img.name);
+                                if (part) parts.push(part);
                             } catch (err) {
-                                console.error(`Failed to download history image ${img.storagePath}`, err);
+                                console.error(`Failed to download history file ${img.storagePath}`, err);
                             }
                         } else if (img.data) {
-                            parts.push({
-                                inlineData: {
-                                    data: img.data.split(',')[1] || img.data,
-                                    mimeType: img.mimeType
-                                }
-                            });
+                            const rawData = img.data.split(',')[1] || img.data;
+                            const buf = Buffer.from(rawData, 'base64');
+                            const part = await fileBufferToGeminiPart(buf, img.mimeType || 'image/jpeg', img.name);
+                            if (part) parts.push(part);
                         }
                     }
                 }
@@ -149,23 +188,21 @@ export const askAiTutor = functions.https.onCall(async (request) => {
             if (img.storagePath) {
                 try {
                     const [buffer] = await admin.storage().bucket().file(img.storagePath).download();
-                    parts.push({
-                        inlineData: {
-                            data: buffer.toString('base64'),
-                            mimeType: img.mimeType
-                        }
-                    });
-                } catch (err) {
-                    console.error(`Failed to download uploaded image ${img.storagePath}`, err);
+                    const part = await fileBufferToGeminiPart(buffer, img.mimeType || 'application/octet-stream', img.name);
+                    if (part) parts.push(part);
+                    else {
+                        throw new functions.https.HttpsError("invalid-argument", `Unsupported file type: ${img.mimeType}. Please upload images, PDFs, or plain text files.`);
+                    }
+                } catch (err: any) {
+                    if (err instanceof functions.https.HttpsError) throw err;
+                    console.error(`Failed to download uploaded file ${img.storagePath}`, err);
                     throw new functions.https.HttpsError("internal", "Failed to process uploaded file.");
                 }
             } else if (img.data) {
-                parts.push({
-                    inlineData: {
-                        data: img.data.split(',')[1] || img.data,
-                        mimeType: img.mimeType
-                    }
-                });
+                const rawData = img.data.split(',')[1] || img.data;
+                const buf = Buffer.from(rawData, 'base64');
+                const part = await fileBufferToGeminiPart(buf, img.mimeType || 'image/jpeg', img.name);
+                if (part) parts.push(part);
             }
         }
     }

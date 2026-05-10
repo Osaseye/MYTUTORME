@@ -9,6 +9,7 @@ interface ExamGenerationOptions {
   difficulty: 'easy' | 'medium' | 'hard' | 'adaptive';
   count: number;
   mode: 'standard' | 'practice';
+  questionType?: 'mcq' | 'theory' | 'mixed';
   fileData?: { data: string, mimeType: string }[];
 }
 
