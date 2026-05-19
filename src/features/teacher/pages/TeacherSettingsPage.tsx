@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, Lock, User, Globe, CreditCard, Sparkles, Check, Smartphone } from "lucide-react";
 import { PWAInstallPopup } from "@/components/shared/PWAInstallPopup";
+import { EmailVerificationBanner } from "@/components/shared/EmailVerificationBanner";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useState, useEffect, useRef } from "react";
 import { updateDoc, doc } from "firebase/firestore";
@@ -197,6 +198,7 @@ export const TeacherSettingsPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <EmailVerificationBanner />
       <h1 className="text-3xl font-bold font-display text-slate-900 mb-8">
         Instructor Settings
       </h1>

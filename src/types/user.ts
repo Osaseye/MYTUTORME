@@ -33,6 +33,8 @@ export interface User {
     mockExams: number;
     flashcards: number;
   };
+  emailVerified?: boolean;
+  lastVerificationEmailSent?: number;
 }
 
 export interface StudentProfile extends User {

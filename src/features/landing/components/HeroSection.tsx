@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
+import heroDashboard from '../../../assets/landing/dashboard.png';
 
 export const HeroSection = () => {
     return (
       <section className="relative pt-20 lg:pt-28 pb-16 overflow-hidden flex flex-col justify-center">
-        <div className="absolute inset-0 z-0 grid-bg-complex opacity-100 pointer-events-none"></div>
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[120px] filter pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-[600px] h-[600px] bg-lime-500/10 rounded-full blur-[120px] filter pointer-events-none"></div>
+        <div className="absolute inset-0 z-0 grid-bg-complex opacity-60 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/8 rounded-full blur-[100px] filter pointer-events-none"></div>
   
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 lg:mt-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center lg:items-start xl:items-center">
@@ -41,22 +41,34 @@ export const HeroSection = () => {
                   Explore Platform
                 </a>
               </div>
+
+              {/* Feature chips */}
+              <div className="flex flex-wrap justify-center lg:justify-start gap-2 px-4 lg:px-0">
+                {/* Nova chip — uses the real avatar */}
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 backdrop-blur-sm shadow-sm">
+                  <img src="/nova.png" alt="Nova" className="w-4 h-4 rounded-full object-cover" />
+                  Nova AI Tutor
+                </span>
+                {[
+                  { icon: 'analytics',  label: 'GPA Tracker' },
+                  { icon: 'quiz',       label: 'JAMB / WAEC' },
+                  { icon: 'wifi_off',   label: 'Works Offline' },
+                ].map(({ icon, label }) => (
+                  <span key={label} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 backdrop-blur-sm shadow-sm">
+                    <span className="material-symbols-outlined text-sm text-emerald-500">{icon}</span>
+                    {label}
+                  </span>
+                ))}
+              </div>
             </div>
     
-            {/* Right Column: Image & Floating Stats */}
+            {/* Right Column: App Screenshot */}
             <div className="relative w-full flex justify-center lg:justify-end mt-10 lg:mt-0">
-              <div className="relative w-full max-w-md lg:max-w-lg xl:max-w-xl">
-                {/* Visual Glow behind image */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/30 to-teal-500/30 rounded-full blur-[80px]"></div>
-                
-                {/* Main Subject Image */}
-                <img
-                  src="/hero-student.png"
-                  alt="Student learning with AI"
-                  className="relative z-10 w-full h-auto object-contain drop-shadow-2xl max-h-[600px] lg:scale-110 xl:scale-125 origin-bottom"
-                />
-
-              </div>
+              <img
+                src={heroDashboard}
+                alt="MyTutorMe student dashboard"
+                className="relative z-10 w-full max-w-2xl xl:max-w-4xl h-auto object-contain drop-shadow-2xl"
+              />
             </div>
           </div>
   
@@ -66,11 +78,22 @@ export const HeroSection = () => {
               Trusted by students from
             </p>
             <div className="flex flex-wrap justify-center gap-8 md:gap-16 items-center opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
-              {['Babcock University', 'New Horizon', 'Adeleke Univeristy', 'Bells University'].map((uni) => (
+              {['Babcock University', 'New Horizon', 'Adeleke University', 'Bells University'].map((uni) => (
                 <div key={uni} className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-3xl text-emerald-600 dark:text-emerald-400">account_balance</span>
                   <span className="font-display font-bold text-xl text-slate-700 dark:text-slate-300">{uni}</span>
                 </div>
+              ))}
+            </div>
+
+            {/* Nigerian exam badges */}
+            <div className="mt-10 flex flex-wrap justify-center gap-3">
+              <p className="w-full text-xs text-slate-400 uppercase tracking-widest mb-1">Curriculum-aligned for</p>
+              {['JAMB CBT', 'WAEC', 'NECO', 'POST-UTME'].map((exam) => (
+                <span key={exam} className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
+                  <span className="material-symbols-outlined text-sm">verified</span>
+                  {exam}
+                </span>
               ))}
             </div>
           </div>

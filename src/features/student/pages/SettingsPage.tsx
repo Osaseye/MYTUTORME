@@ -20,6 +20,7 @@ import { User, Bell, Lock, GraduationCap, Upload, ShieldCheck, Loader2, CreditCa
 import { Switch } from '@/components/ui/switch';
 import { PaymentModal } from '@/components/shared/PaymentModal';
 import { PWAInstallPopup } from '@/components/shared/PWAInstallPopup';
+import { EmailVerificationBanner } from '@/components/shared/EmailVerificationBanner';
 import { useNavigate } from 'react-router-dom';
 import { paths } from '@/app/routes/paths';
 
@@ -204,6 +205,7 @@ import { paths } from '@/app/routes/paths';
 
   return (
     <div className="container max-w-5xl mx-auto py-4 md:py-8 px-4 md:px-8">
+      <EmailVerificationBanner />
       {/* Mobile Menu View */}
       {mobileView === 'menu' && (
         <div className="block md:hidden space-y-6 pb-20">

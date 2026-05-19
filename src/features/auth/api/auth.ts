@@ -1,4 +1,5 @@
-import { auth, db } from '@/lib/firebase';
+import { auth, db, functions } from '@/lib/firebase';
+import { httpsCallable } from 'firebase/functions';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -32,7 +33,7 @@ export const isPendingOAuthRoleSelection = () => {
 };
 
 export const buildUserDoc = (
-  user: { uid: string; email: string | null; displayName: string | null; photoURL: string | null },
+  user: { uid: string; email: string | null; displayName: string | null; photoURL: string | null; emailVerified?: boolean },
   role: AuthRole,
 ) => {
   const baseUserData: Record<string, unknown> = {
@@ -56,6 +57,7 @@ export const buildUserDoc = (
     totalAmountPaid: 0,
     firstPaymentDate: null,
     acquisitionSource: 'organic',
+    emailVerified: user.emailVerified ?? false,
   };
 
   if (role === 'student') {
@@ -115,6 +117,7 @@ export const registerUser = async ({ email, password, name, role }: RegisterCred
     totalAmountPaid: 0,
     firstPaymentDate: null,
     acquisitionSource: 'organic',
+    emailVerified: false,
   };
 
   // Add role-specific fields
@@ -131,6 +134,13 @@ export const registerUser = async ({ email, password, name, role }: RegisterCred
   }
 
   await setDoc(doc(db, 'users', user.uid), userData);
+
+  // Fire-and-forget: send branded verification email via Cloud Function
+  httpsCallable(functions, 'sendVerificationEmail')({
+    uid: user.uid,
+    email: user.email!,
+    name,
+  }).catch(() => { /* non-critical, user can resend from /verify-email */ });
 
   return userCredential;
 };

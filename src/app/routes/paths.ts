@@ -8,6 +8,7 @@ export const paths = {
     register: '/register',
     forgotPassword: '/forgot-password',
     resetPassword: '/reset-password',
+    verifyEmail: '/verify-email',
   },
   onboarding: {
     student: '/onboarding/student',

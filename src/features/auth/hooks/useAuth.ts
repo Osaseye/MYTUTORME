@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { User } from '@/types/user';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, signOut as firebaseSignOut, getRedirectResult } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { buildUserDoc, clearPendingOAuthRoleSelection, isPendingOAuthRoleSelection } from '../api/auth';
 
 interface AuthState {
@@ -132,7 +132,27 @@ export const useAuthStore = create<AuthState>((set) => ({
           }
 
           if (userDoc.exists()) {
-            const userData = userDoc.data() as User;
+            let userData = userDoc.data() as User;
+            // Normalize createdAt: Firestore serverTimestamp() returns a Timestamp object,
+            // not a plain number. Convert to milliseconds so comparisons work correctly.
+            const rawCreatedAt = (userDoc.data() as any)?.createdAt;
+            if (rawCreatedAt !== undefined && typeof rawCreatedAt !== 'number') {
+              userData = {
+                ...userData,
+                createdAt: typeof rawCreatedAt.toMillis === 'function'
+                  ? rawCreatedAt.toMillis()
+                  : (rawCreatedAt.seconds ?? 0) * 1000,
+              };
+            }
+            // One-time sync: if Firebase Auth shows verified but Firestore doesn't know yet
+            if (firebaseUser.emailVerified && !userData.emailVerified) {
+              try {
+                await updateDoc(doc(db, 'users', firebaseUser.uid), { emailVerified: true });
+                userData = { ...userData, emailVerified: true };
+              } catch (_e) {
+                // non-critical
+              }
+            }
             console.log('[Auth] User authenticated successfully, role:', userData.role);
             set({ user: userData, isAuthenticated: true, isLoading: false });
           } else {
@@ -157,6 +177,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
 // Helper hook for components to easily access auth state
 export const useAuth = () => {
-  const { user, isLoading, isAuthenticated, signOut } = useAuthStore();
-  return { user, isLoading, isAuthenticated, signOut };
+  const { user, isLoading, isAuthenticated, signOut, setUser } = useAuthStore();
+  return { user, isLoading, isAuthenticated, signOut, setUser };
 };

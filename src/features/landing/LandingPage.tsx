@@ -1,8 +1,8 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { HeroSection } from './components/HeroSection';
-import { StatsSection } from './components/StatsSection';
-import { HowItWorksSection } from './components/HowItWorksSection';
+import { PainPointSection } from './components/PainPointSection';
+import { FeatureShowcaseSection } from './components/FeatureShowcaseSection';
 import { PricingSection } from './components/PricingSection';
 import { CoursesPreviewSection } from './components/CoursesPreviewSection';
 import { TestimonialsSection } from './components/TestimonialsSection';
@@ -17,9 +17,9 @@ export const LandingPage = () => {
             <section id="hero">
               <HeroSection />
             </section>
-            <StatsSection />
+            <PainPointSection />
             <section id="platform">
-              <HowItWorksSection />
+              <FeatureShowcaseSection />
             </section>
             <section id="pricing">
               <PricingSection />

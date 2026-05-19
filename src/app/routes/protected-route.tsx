@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { GlobalLoader } from '@/components/ui/global-loader';
+import { LEGACY_CUTOFF_TS } from '@/config/emailVerification';
 
 export const ProtectedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -16,6 +17,16 @@ export const ProtectedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => 
     }
     const returnTo = encodeURIComponent(`${location.pathname}${location.search}`);
     return <Navigate to={`/login?returnTo=${returnTo}`} replace />;
+  }
+
+  // Email verification guard: new users (post-cutoff) must verify before accessing the platform.
+  // Admins and Google OAuth users (emailVerified=true) pass through naturally.
+  if (
+    user.role !== 'admin' &&
+    user.createdAt >= LEGACY_CUTOFF_TS &&
+    !user.emailVerified
+  ) {
+    return <Navigate to="/verify-email" replace />;
   }
 
   if (!user.isOnboardingComplete) {

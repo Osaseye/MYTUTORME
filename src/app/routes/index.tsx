@@ -11,6 +11,7 @@ import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { RoleSelectionPage } from '@/features/auth/pages/RoleSelectionPage';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
+import { VerifyEmailPage } from '@/features/auth/pages/VerifyEmailPage';
 import { OnboardingLayout, StudentOnboarding, TeacherOnboarding } from '@/features/onboarding';
 import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, GeneratedCourseDetailsPage, AssignmentHelperPage, GpaTrackerPage, CertificatePage, MyCertificatesPage, SettingsPage, ExamPrepPage, ExamConfigPage, ExamResultsPage, ExamTakingPage, FlashcardConfigPage, FlashcardPlayerPage, CommunityPage, StudyPlannerConfigPage, StudyPlannerViewPage } from '@/features/student';
 import { TeacherLayout, TeacherDashboard, TeacherCoursesPage, TeacherCourseDetailsPage, CourseCreationPage, ResourcesPage, EarningsPage, CommunityPage as TeacherCommunityPage, TeacherSettingsPage, StudentsPage, TeacherPendingPage } from '@/features/teacher';
@@ -54,6 +55,7 @@ export const AppRoutes = () => {
         <Route path={paths.support} element={<SupportPage />} />
         <Route path={paths.verifyCertificate} element={<VerifyCertificatePage />} />
         <Route path="/feedback" element={<FeedbackPage />} />
+        <Route path={paths.auth.verifyEmail} element={<VerifyEmailPage />} />
         <Route path={paths.privacy} element={<PrivacyPolicyPage />} />
         <Route path={paths.terms} element={<TermsPage />} />
         <Route path="/public/exam/:quizId" element={<PublicExamPage />} />

@@ -17,22 +17,22 @@ export const HowItWorksSection = () => {
   
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
               <StepCard
-                icon="upload_file"
+                icon="person_add"
                 step="1"
-                title="Upload Curriculum"
-                desc="Simply scan your syllabus or textbook. Our AI instantly indexes the content."
+                title="Set Up Your Profile"
+                desc="Choose your school, department, and level. MyTutorMe maps your exact curriculum so everything is relevant from day one."
               />
               <StepCard
-                icon="model_training"
+                icon="auto_awesome"
                 step="2"
-                title="Get Personalized Plan"
-                desc="Receive a tailored study schedule and practice questions based on your gaps."
+                title="Nova Builds Your Plan"
+                desc="Your AI tutor Nova personalises a study plan around your enrolled courses, upcoming exams, and current GPA targets."
               />
               <StepCard
-                icon="trending_up"
+                icon="emoji_events"
                 step="3"
-                title="Track & Improve"
-                desc="Watch your scores rise with real-time feedback and predictive exam simulations."
+                title="Study, Track & Ace Your Exams"
+                desc="Practice with past questions, simulate your final grade, and ask Nova anything — from JAMB prep to tricky lecture topics."
               />
             </div>
           </div>

@@ -8,6 +8,7 @@ import { SubscriptionSuccessEmail } from "./emails/templates/SubscriptionSuccess
 import { CourseReceiptEmail } from "./emails/templates/CourseReceiptEmail";
 
 import { SubscriptionCancelledEmail } from "./emails/templates/SubscriptionCancelledEmail";
+import { EmailVerificationEmail } from "./emails/templates/EmailVerificationEmail";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -695,3 +696,52 @@ export * from "./triggers/course";
 export * from "./endpoints/course";
 export * from "./endpoints/ai";
 export * from "./endpoints/ai-generation";
+
+/**
+ * Callable function to send a branded email verification link.
+ * Enforces a 60-second rate limit per user via Firestore.
+ */
+export const sendVerificationEmail = functions.https.onCall(async (request: any) => {
+  const data = request.data || request;
+  const { uid, email, name } = data;
+
+  if (!uid || !email) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing uid or email.");
+  }
+
+  // Rate-limit: one email per 60 seconds per user
+  const userRef = db.collection("users").doc(uid);
+  const userSnap = await userRef.get();
+  if (userSnap.exists) {
+    const lastSent: number | undefined = userSnap.data()?.lastVerificationEmailSent;
+    if (lastSent && Date.now() - lastSent < 60_000) {
+      throw new functions.https.HttpsError(
+        "resource-exhausted",
+        "Please wait before requesting another verification email."
+      );
+    }
+  }
+
+  // Generate the Firebase email-verification link.
+  // Firebase verifies the email, then redirects to our /verify-email page.
+  const actionCodeSettings = {
+    url: "https://mytutorme.org/verify-email",
+  };
+  const verificationLink = await admin
+    .auth()
+    .generateEmailVerificationLink(email, actionCodeSettings);
+
+  await sendEmail({
+    to: email,
+    subject: "Verify your email address – MyTutorMe",
+    react: React.createElement(EmailVerificationEmail, {
+      name: name || "there",
+      verificationLink,
+    }),
+  });
+
+  // Record timestamp for rate-limiting
+  await userRef.set({ lastVerificationEmailSent: Date.now() }, { merge: true });
+
+  return { success: true };
+});
