@@ -4,12 +4,12 @@ import { Html, Head, Preview, Body, Container, Section, Text, Button, Img, Link,
 interface WelcomeEmailProps { name: string; role: 'student' | 'teacher' | 'admin'; }
 
 export const WelcomeEmailTemplate = ({ name, role }: WelcomeEmailProps) => {
-  const dashboardUrl = role === 'teacher' ? 'https://mytutorme.org/teacher/dashboard' : role === 'admin' ? 'https://mytutorme.org/admin/dashboard' : 'https://mytutorme.org/student/dashboard';
+  const ctaUrl = 'https://mytutorme.org';
   const roleLabel = role === 'teacher' ? 'Teacher' : role === 'admin' ? 'Admin' : 'Student';
   
   return (
     <Html>
-      <Preview>Welcome to MyTutorMe, {name}! Your AI-First Journey to Academic Excellence Starts Now.</Preview>
+      <Preview>Welcome to MyTutorMe, {name}! Your journey to academic excellence starts now.</Preview>
       <Tailwind config={{
           theme: {
             extend: {
@@ -67,10 +67,10 @@ export const WelcomeEmailTemplate = ({ name, role }: WelcomeEmailProps) => {
                   Experience a new era of learning with your own 24/7 AI Tutor — designed to accelerate your understanding and help you achieve your academic goals.
                 </Text>
                 <Button
-                  href={dashboardUrl}
+                  href={ctaUrl}
                   style={{ backgroundColor: '#10B981', color: '#ffffff', fontSize: '15px', fontWeight: '700', padding: '14px 32px', borderRadius: '10px', textDecoration: 'none', display: 'inline-block', fontFamily: 'Manrope, sans-serif' }}
                 >
-                  Go to Dashboard →
+                  Open MyTutorMe →
                 </Button>
               </Section>
 
@@ -113,12 +113,10 @@ export const WelcomeEmailTemplate = ({ name, role }: WelcomeEmailProps) => {
 
               {/* Getting Started */}
               <Section style={{ margin: '0 32px 32px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px 24px' }}>
-                <Text style={{ fontSize: '15px', fontWeight: '700', color: '#10B981', margin: '0 0 16px', fontFamily: 'Manrope, sans-serif' }}>✅ Getting Started Checklist</Text>
+                <Text style={{ fontSize: '15px', fontWeight: '700', color: '#10B981', margin: '0 0 16px', fontFamily: 'Manrope, sans-serif' }}>🚀 Getting Started</Text>
                 <Row style={{ marginBottom: '10px' }}>
                   <Column style={{ width: '28px', verticalAlign: 'top' }}>
-                    <Section style={{ width: '20px', height: '20px', backgroundColor: '#10B981', borderRadius: '4px', textAlign: 'center' }}>
-                      <Text style={{ color: '#fff', fontSize: '12px', fontWeight: '700', margin: '0', lineHeight: '20px' }}>✓</Text>
-                    </Section>
+                    <Section style={{ width: '20px', height: '20px', border: '2px solid #cbd5e1', borderRadius: '4px' }}><Text style={{ margin: '0' }}></Text></Section>
                   </Column>
                   <Column><Text style={{ margin: '0', fontSize: '13px', color: '#475569', lineHeight: '20px' }}>Verify your email address</Text></Column>
                 </Row>
@@ -139,16 +137,16 @@ export const WelcomeEmailTemplate = ({ name, role }: WelcomeEmailProps) => {
 
             {/* Footer */}
             <Section style={{ backgroundColor: '#0f172a', borderRadius: '0 0 16px 16px', padding: '24px 32px', textAlign: 'center' }}>
-              <Text style={{ color: '#10B981', fontSize: '16px', fontWeight: '700', margin: '0 0 8px', fontFamily: 'Manrope, sans-serif' }}>MyTutorMe Intelligence</Text>
+              <Text style={{ color: '#10B981', fontSize: '16px', fontWeight: '700', margin: '0 0 8px', fontFamily: 'Manrope, sans-serif' }}>MyTutorMe</Text>
               <Text style={{ color: '#64748b', fontSize: '11px', margin: '0 0 12px', lineHeight: '1.5' }}>
-                © 2026 MyTutorMe Intelligence. All rights reserved.<br />
+                © 2026 MyTutorMe. All rights reserved.<br />
                 Democratizing elite education through AI.
               </Text>
               <Row>
                 <Column align="center">
                   <Link href="https://mytutorme.org/privacy" style={{ color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }}>Privacy Policy</Link>
                   <Link href="https://mytutorme.org/terms" style={{ color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }}>Terms of Service</Link>
-                  <Link href="#" style={{ color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }}>Unsubscribe</Link>
+                  <Link href="mailto:support@mytutorme.org" style={{ color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }}>Support</Link>
                 </Column>
               </Row>
             </Section>

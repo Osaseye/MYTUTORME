@@ -13,6 +13,7 @@ import {
   Row,
   Column,
   Hr,
+  Link,
 } from '@react-email/components';
 
 interface EmailVerificationEmailProps {
@@ -23,7 +24,7 @@ interface EmailVerificationEmailProps {
 export const EmailVerificationEmail = ({ name, verificationLink }: EmailVerificationEmailProps) => {
   return (
     <Html>
-      <Preview>Verify your email address to access MyTutorMe</Preview>
+      <Preview>One tap to verify — then you're in, {name}.</Preview>
       <Tailwind
         config={{
           theme: {
@@ -73,140 +74,173 @@ export const EmailVerificationEmail = ({ name, verificationLink }: EmailVerifica
           />
         </Head>
 
-        <Body style={{ backgroundColor: '#f1f5f9', margin: '0', padding: '0', fontFamily: 'Inter, sans-serif' }}>
-          <Container style={{ maxWidth: '600px', margin: '32px auto', padding: '0' }}>
+        <Body style={{ backgroundColor: '#0B1120', margin: '0', padding: '0', fontFamily: 'Inter, sans-serif' }}>
+          <Container style={{ maxWidth: '600px', margin: '0 auto', padding: '32px 16px' }}>
 
-            {/* Header Bar */}
-            <Section style={{ backgroundColor: '#0f172a', borderRadius: '16px 16px 0 0', padding: '20px 32px' }}>
+            {/* ── LOGO BAR ── */}
+            <Section style={{ textAlign: 'center', marginBottom: '32px' }}>
               <Row>
-                <Column style={{ width: '40px' }}>
+                <Column align="center">
                   <Img
                     src="https://www.mytutorme.org/icon.png"
-                    width="32"
-                    height="32"
-                    alt="MyTutorMe logo"
-                    style={{ borderRadius: '8px' }}
+                    width="44"
+                    height="44"
+                    alt="MyTutorMe"
+                    style={{ borderRadius: '12px', display: 'inline-block' }}
                   />
-                </Column>
-                <Column>
-                  <Text
-                    style={{
-                      color: '#10B981',
-                      fontSize: '20px',
-                      fontWeight: '800',
-                      margin: '0',
-                      paddingLeft: '10px',
-                      fontFamily: 'Manrope, sans-serif',
-                    }}
-                  >
+                  <Text style={{
+                    color: '#10B981',
+                    fontSize: '18px',
+                    fontWeight: '800',
+                    margin: '8px 0 0',
+                    fontFamily: 'Manrope, sans-serif',
+                    letterSpacing: '-0.3px',
+                  }}>
                     MyTutorMe
-                  </Text>
-                </Column>
-                <Column align="right">
-                  <Text
-                    style={{
-                      color: '#64748b',
-                      fontSize: '11px',
-                      margin: '0',
-                      textTransform: 'uppercase',
-                      letterSpacing: '1px',
-                    }}
-                  >
-                    Email Verification
                   </Text>
                 </Column>
               </Row>
             </Section>
 
-            {/* Main Card */}
-            <Section style={{ backgroundColor: '#ffffff' }}>
+            {/* ── MAIN CARD ── */}
+            <Section style={{
+              backgroundColor: '#111827',
+              borderRadius: '20px',
+              border: '1px solid #1e293b',
+              overflow: 'hidden',
+            }}>
 
-              {/* Hero gradient section */}
-              <Section
-                style={{
-                  background: 'linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 50%, #fffbeb 100%)',
-                  padding: '40px 32px 32px',
-                  borderBottom: '1px solid #e2e8f0',
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: '13px',
-                    color: '#10B981',
-                    fontWeight: '700',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1.5px',
-                    margin: '0 0 12px',
-                    fontFamily: 'Manrope, sans-serif',
-                  }}
-                >
-                  ✉️ Verify Your Email
+              {/* Accent strip */}
+              <Section style={{
+                background: 'linear-gradient(90deg, #10B981 0%, #059669 100%)',
+                height: '4px',
+                padding: '0',
+              }}>
+                <Text style={{ margin: '0', fontSize: '0' }}> </Text>
+              </Section>
+
+              {/* Hero content */}
+              <Section style={{ padding: '48px 40px 40px' }}>
+
+                {/* Icon */}
+                <Section style={{ marginBottom: '32px' }}>
+                  <Row>
+                    <Column align="center">
+                      <Section style={{
+                        width: '72px',
+                        height: '72px',
+                        backgroundColor: 'rgba(16,185,129,0.12)',
+                        borderRadius: '20px',
+                        border: '1px solid rgba(16,185,129,0.25)',
+                        display: 'inline-block',
+                        textAlign: 'center',
+                      }}>
+                        <Text style={{ fontSize: '32px', margin: '0', lineHeight: '72px' }}>✉️</Text>
+                      </Section>
+                    </Column>
+                  </Row>
+                </Section>
+
+                {/* Headline */}
+                <Text style={{
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  color: '#10B981',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1.5px',
+                  margin: '0 0 12px',
+                  textAlign: 'center',
+                  fontFamily: 'Manrope, sans-serif',
+                }}>
+                  Verify Your Email
                 </Text>
-                <Text
-                  style={{
-                    fontSize: '28px',
-                    fontWeight: '800',
-                    color: '#0f172a',
-                    margin: '0 0 12px',
-                    lineHeight: '1.2',
-                    fontFamily: 'Manrope, sans-serif',
-                  }}
-                >
-                  Hi {name},<br />confirm your email address.
+                <Text style={{
+                  fontSize: '30px',
+                  fontWeight: '800',
+                  color: '#f1f5f9',
+                  margin: '0 0 16px',
+                  lineHeight: '1.2',
+                  textAlign: 'center',
+                  fontFamily: 'Manrope, sans-serif',
+                }}>
+                  Hi {name}, you're<br />almost there.
                 </Text>
-                <Text
-                  style={{
-                    fontSize: '15px',
-                    color: '#475569',
-                    margin: '0 0 28px',
-                    lineHeight: '1.6',
-                  }}
-                >
-                  Click the button below to verify your email and unlock full access to MyTutorMe.
-                  This link expires in <strong>24 hours</strong>.
+                <Text style={{
+                  fontSize: '15px',
+                  color: '#94a3b8',
+                  margin: '0 0 36px',
+                  lineHeight: '1.7',
+                  textAlign: 'center',
+                }}>
+                  Confirm your email address to unlock everything MyTutorMe has to offer — your AI tutor, mock exams, courses, and more. This link is valid for <strong style={{ color: '#e2e8f0' }}>24 hours</strong>.
                 </Text>
-                <Button
-                  href={verificationLink}
-                  style={{
-                    backgroundColor: '#10B981',
-                    color: '#ffffff',
-                    fontSize: '15px',
-                    fontWeight: '700',
-                    padding: '14px 32px',
-                    borderRadius: '10px',
-                    textDecoration: 'none',
-                    display: 'inline-block',
-                    fontFamily: 'Manrope, sans-serif',
-                  }}
-                >
-                  Verify Email Address →
-                </Button>
+
+                {/* CTA Button */}
+                <Section style={{ textAlign: 'center', marginBottom: '36px' }}>
+                  <Button
+                    href={verificationLink}
+                    style={{
+                      backgroundColor: '#10B981',
+                      color: '#ffffff',
+                      fontSize: '16px',
+                      fontWeight: '700',
+                      padding: '16px 40px',
+                      borderRadius: '12px',
+                      textDecoration: 'none',
+                      display: 'inline-block',
+                      fontFamily: 'Manrope, sans-serif',
+                      letterSpacing: '-0.2px',
+                    }}
+                  >
+                    Verify My Email →
+                  </Button>
+                </Section>
+
+                {/* Divider */}
+                <Hr style={{ borderColor: '#1e293b', margin: '0 0 28px' }} />
+
+                {/* Fallback link */}
+                <Text style={{ fontSize: '12px', color: '#475569', textAlign: 'center', margin: '0 0 4px' }}>
+                  Button not working?
+                </Text>
+                <Text style={{ fontSize: '11px', color: '#334155', textAlign: 'center', margin: '0', wordBreak: 'break-all' }}>
+                  <Link href={verificationLink} style={{ color: '#10B981', textDecoration: 'underline' }}>
+                    {verificationLink}
+                  </Link>
+                </Text>
               </Section>
 
               {/* Security note */}
-              <Section style={{ padding: '28px 32px' }}>
-                <Hr style={{ borderColor: '#e2e8f0', margin: '0 0 24px' }} />
-                <Text style={{ fontSize: '13px', color: '#64748b', margin: '0', lineHeight: '1.6' }}>
-                  If you didn't create a MyTutorMe account, you can safely ignore this email.
-                  Your email address will not be used without verification.
-                </Text>
+              <Section style={{
+                backgroundColor: '#0f172a',
+                padding: '20px 40px',
+                borderTop: '1px solid #1e293b',
+              }}>
+                <Row>
+                  <Column style={{ width: '20px', verticalAlign: 'top', paddingTop: '1px' }}>
+                    <Text style={{ margin: '0', fontSize: '14px' }}>🔒</Text>
+                  </Column>
+                  <Column style={{ paddingLeft: '10px' }}>
+                    <Text style={{ fontSize: '12px', color: '#475569', margin: '0', lineHeight: '1.6' }}>
+                      Didn't create a MyTutorMe account? You can safely ignore this email — your address will not be used without your confirmation.
+                    </Text>
+                  </Column>
+                </Row>
               </Section>
             </Section>
 
-            {/* Footer */}
-            <Section
-              style={{
-                backgroundColor: '#0f172a',
-                borderRadius: '0 0 16px 16px',
-                padding: '20px 32px',
-              }}
-            >
-              <Text style={{ color: '#475569', fontSize: '12px', margin: '0', textAlign: 'center' }}>
-                © 2026 MyTutorMe ·{' '}
-                <a href="https://mytutorme.org" style={{ color: '#10B981', textDecoration: 'none' }}>
-                  mytutorme.org
-                </a>
+            {/* ── FOOTER ── */}
+            <Section style={{ textAlign: 'center', padding: '28px 0 0' }}>
+              <Text style={{ color: '#1e293b', fontSize: '12px', margin: '0 0 10px' }}>
+                © 2026 MyTutorMe · All rights reserved.
               </Text>
+              <Row>
+                <Column align="center">
+                  <Link href="https://mytutorme.org/privacy" style={{ color: '#334155', fontSize: '11px', textDecoration: 'underline', margin: '0 10px' }}>Privacy</Link>
+                  <Link href="https://mytutorme.org/terms" style={{ color: '#334155', fontSize: '11px', textDecoration: 'underline', margin: '0 10px' }}>Terms</Link>
+                  <Link href="mailto:support@mytutorme.org" style={{ color: '#334155', fontSize: '11px', textDecoration: 'underline', margin: '0 10px' }}>Support</Link>
+                </Column>
+              </Row>
             </Section>
 
           </Container>

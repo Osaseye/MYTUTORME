@@ -98,9 +98,9 @@ export const SubscriptionSuccessEmail = ({ name, planName, amount }: Subscriptio
 
             {/* Footer */}
             <Section style={{ backgroundColor: '#0f172a', borderRadius: '0 0 16px 16px', padding: '24px 32px', textAlign: 'center' }}>
-              <Text style={{ color: '#10B981', fontSize: '16px', fontWeight: '700', margin: '0 0 8px', fontFamily: 'Manrope, sans-serif' }}>MyTutorMe Intelligence</Text>
+              <Text style={{ color: '#10B981', fontSize: '16px', fontWeight: '700', margin: '0 0 8px', fontFamily: 'Manrope, sans-serif' }}>MyTutorMe</Text>
               <Text style={{ color: '#64748b', fontSize: '11px', margin: '0 0 12px', lineHeight: '1.5' }}>
-                © 2026 MyTutorMe Intelligence. All rights reserved.<br />
+                © 2026 MyTutorMe. All rights reserved.<br />
                 Questions? Contact us at support@mytutorme.org
               </Text>
               <Row>

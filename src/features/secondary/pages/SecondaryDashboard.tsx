@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { BookOpen, Target, Brain, FileEdit, TrendingUp, Flame, ChevronRight, Award } from 'lucide-react';

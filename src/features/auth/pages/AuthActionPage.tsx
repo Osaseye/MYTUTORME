@@ -12,13 +12,14 @@ type PageState = 'loading' | 'success' | 'error';
 export const AuthActionPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, setUser } = useAuthStore();
+  // Use getState() inside async callbacks to avoid stale closure issues
 
   const mode = searchParams.get('mode');
   const oobCode = searchParams.get('oobCode');
 
   const [state, setState] = useState<PageState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
     if (mode !== 'verifyEmail' || !oobCode) {
@@ -31,18 +32,29 @@ export const AuthActionPage = () => {
       try {
         await applyActionCode(auth, oobCode);
 
-        // Sync verified status to Firestore for the logged-in user (best-effort)
+        // After verification, reload the Firebase Auth user object so
+        // auth.currentUser.emailVerified reflects the new status immediately.
         if (auth.currentUser) {
+          try { await auth.currentUser.reload(); } catch (_e) { /* non-critical */ }
+        }
+
+        // Sync verified status to Firestore — use auth.currentUser (freshly reloaded above)
+        // or fall back to the store user. This runs even if the Zustand store was null
+        // when the effect closure was captured (slow-network race condition).
+        const currentUid = auth.currentUser?.uid ?? useAuthStore.getState().user?.uid;
+        if (currentUid) {
           try {
-            await updateDoc(doc(db, 'users', auth.currentUser.uid), { emailVerified: true });
+            await updateDoc(doc(db, 'users', currentUid), { emailVerified: true });
           } catch (_e) {
-            // non-critical — onAuthStateChanged will sync on next login
+            // non-critical — checkAuth will sync on the next auth state change
           }
         }
 
-        // Sync Zustand state immediately if user is already loaded
-        if (user) {
-          setUser({ ...user, emailVerified: true });
+        // Sync Zustand using getState() so we always get the latest loaded user,
+        // not the stale closure value captured when this effect first ran.
+        const latestUser = useAuthStore.getState().user;
+        if (latestUser) {
+          useAuthStore.getState().setUser({ ...latestUser, emailVerified: true });
         }
 
         setState('success');
@@ -64,14 +76,28 @@ export const AuthActionPage = () => {
     verify();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-redirect 3 seconds after success — eliminates the need for the user to click
+  // and avoids edge-cases where a stale render prevents the button from working.
+  useEffect(() => {
+    if (state !== 'success') return;
+    setCountdown(3);
+    const tick = setInterval(() => setCountdown((c) => Math.max(0, c - 1)), 1000);
+    const timer = setTimeout(() => {
+      handleContinue();
+    }, 3000);
+    return () => { clearInterval(tick); clearTimeout(timer); };
+  }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleContinue = () => {
-    if (!user) {
+    // Always read the freshest user state at click-time, not a stale closure.
+    const currentUser = useAuthStore.getState().user;
+    if (!currentUser) {
       navigate('/login', { replace: true });
       return;
     }
-    const destination = user.isOnboardingComplete
-      ? `/${user.role}/dashboard`
-      : user.role === 'teacher'
+    const destination = currentUser.isOnboardingComplete
+      ? `/${currentUser.role}/dashboard`
+      : currentUser.role === 'teacher'
       ? '/onboarding/teacher'
       : '/onboarding/student';
     navigate(destination, { replace: true });
@@ -134,6 +160,9 @@ export const AuthActionPage = () => {
               Continue to your account
               <ArrowRight className="w-4 h-4" />
             </Button>
+            <p className="mt-4 text-xs text-slate-600">
+              Redirecting automatically in {countdown}s…
+            </p>
           </>
         )}
 

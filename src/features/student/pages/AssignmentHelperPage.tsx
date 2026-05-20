@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -492,11 +492,11 @@ export const AssignmentHelperPage = () => {
       <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
         <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{data.summary}</p>
       </div>
-      {data.strengths.length > 0 && (
+      {(data.strengths?.length ?? 0) > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide mb-2">âœ“ Strengths</h4>
+          <h4 className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide mb-2">âœ" Strengths</h4>
           <ul className="flex flex-col gap-1.5">
-            {data.strengths.map((s, i) => (
+            {data.strengths?.map((s, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />{s}
               </li>
@@ -504,11 +504,11 @@ export const AssignmentHelperPage = () => {
           </ul>
         </div>
       )}
-      {data.improvements.length > 0 && (
+      {(data.improvements?.length ?? 0) > 0 && (
         <div>
           <h4 className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-2">âš¡ To Improve</h4>
           <ul className="flex flex-col gap-1.5">
-            {data.improvements.map((imp, i) => (
+            {data.improvements?.map((imp, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <ChevronRight className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />{imp}
               </li>
@@ -524,24 +524,35 @@ export const AssignmentHelperPage = () => {
     if (!steps.length) return null;
     const showUrgentBanner = mode === 'ai-check' && aiCheckData && aiCheckData.totalScore > 60;
     return (
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="mt-6 flex flex-col gap-4">
         {showUrgentBanner && (
-          <div className="flex items-center justify-between gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
-            <div className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-300 font-medium">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
-              High AI content detected. Humanize before submitting.
+          <div className="flex items-start sm:items-center justify-between gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-amber-100 dark:bg-amber-900/40 rounded-xl flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">High AI content detected</p>
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">Humanize before submitting to avoid detection</p>
+              </div>
             </div>
-            <button onClick={() => switchModeWithContext('humanize', question)} className="shrink-0 text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg transition-colors">
-              Fix Now â†’
+            <button onClick={() => switchModeWithContext('humanize', question)} className="shrink-0 flex items-center gap-1.5 text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl transition-colors shadow-sm">
+              <Wand2 className="w-3.5 h-3.5" /> Fix Now
             </button>
           </div>
         )}
-        <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
-          <span className="text-xs text-gray-400 dark:text-gray-500 self-center shrink-0 hidden sm:block">What's next?</span>
-          <div className="flex flex-wrap gap-2">
+        <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
+          <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">What's next?</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {steps.map(step => (
-              <button key={step.id} onClick={step.action} className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg transition-all ${step.primary ? 'bg-primary text-white hover:bg-primary/90 shadow-sm' : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-primary/50 hover:text-primary dark:hover:text-primary'}`}>
-                <step.icon className="w-3.5 h-3.5" />{step.label}
+              <button key={step.id} onClick={step.action} className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left group ${step.primary ? 'bg-primary/5 dark:bg-primary/10 border-primary/25 dark:border-primary/30 hover:bg-primary/10' : 'bg-white dark:bg-slate-800/60 border-gray-200 dark:border-gray-700 hover:border-primary/30 dark:hover:border-primary/30'}`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${step.primary ? 'bg-primary/10 dark:bg-primary/20' : 'bg-gray-100 dark:bg-slate-700'}`}>
+                  {step.id === 'nova'
+                    ? <img src="/nova.png" alt="Nova" className="w-5 h-5 object-contain" />
+                    : <step.icon className={`w-4 h-4 ${step.primary ? 'text-primary' : 'text-gray-500 dark:text-gray-400'}`} />
+                  }
+                </div>
+                <span className={`text-xs font-medium leading-tight ${step.primary ? 'text-primary' : 'text-gray-700 dark:text-gray-300 group-hover:text-primary dark:group-hover:text-primary transition-colors'}`}>{step.label}</span>
               </button>
             ))}
           </div>
@@ -686,21 +697,42 @@ export const AssignmentHelperPage = () => {
                 </div>
               )}
 
-              {/* Subject/course field */}
-              {showSubjectField && (
-                <input type="text" placeholder="Subject or course code (e.g. CSC 301, GST 101)" value={subjectContext} onChange={e => setSubjectContext(e.target.value)} className="w-full text-sm px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors" />
-              )}
-
-              {/* Crunch mode banner */}
-              {crunchMode && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
-                  <Zap className="w-4 h-4 text-amber-500 shrink-0" />
-                  <span className="text-xs text-amber-700 dark:text-amber-300 font-medium">Crunch mode â€” I have</span>
-                  <input type="number" min={1} max={24} value={crunchHours} onChange={e => setCrunchHours(Number(e.target.value))} className="w-14 text-center text-xs font-bold bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-600 rounded-md px-1 py-0.5 text-amber-800 dark:text-amber-200 focus:outline-none focus:ring-1 focus:ring-amber-400" />
-                  <span className="text-xs text-amber-700 dark:text-amber-300 font-medium">hour(s) left</span>
-                  <button onClick={() => setCrunchMode(false)} className="ml-auto text-amber-400 hover:text-amber-600 transition-colors"><X className="w-3.5 h-3.5" /></button>
+              {/* Subject/Course + Crunch Mode rows */}
+              <div className="flex flex-col gap-2">
+                {/* Subject row */}
+                <div className="bg-slate-50 dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/5 rounded-2xl px-4 py-2.5 shadow-sm flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-slate-400" />
+                      <span className="text-[13px] text-slate-600 dark:text-slate-300">Subject context</span>
+                    </div>
+                    <button onClick={() => { setShowSubjectField(s => !s); if (showSubjectField) setSubjectContext(''); }} className={`relative w-9 h-5 rounded-full transition-colors focus:outline-none ${showSubjectField ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-600'}`}>
+                      <span className={`absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${showSubjectField ? 'translate-x-4' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+                  {showSubjectField && (
+                    <input type="text" placeholder="e.g. CSC 301, Biology" value={subjectContext} onChange={e => setSubjectContext(e.target.value)} className="w-full text-[13px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
+                  )}
                 </div>
-              )}
+                {/* Crunch row */}
+                <div className="bg-slate-50 dark:bg-[#1a1a1a] border border-slate-200 dark:border-white/5 rounded-2xl px-4 py-2.5 shadow-sm flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-slate-400" />
+                      <span className="text-[13px] text-slate-600 dark:text-slate-300">Crunch mode</span>
+                    </div>
+                    <button onClick={() => setCrunchMode(c => !c)} className={`relative w-9 h-5 rounded-full transition-colors focus:outline-none ${crunchMode ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-600'}`}>
+                      <span className={`absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${crunchMode ? 'translate-x-4' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+                  {crunchMode && (
+                    <div className="flex items-center gap-2">
+                      <input type="number" min={1} max={24} value={crunchHours} onChange={e => setCrunchHours(Number(e.target.value))} className="w-14 text-center text-[13px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl px-2 py-1 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors" />
+                      <span className="text-[13px] text-slate-500 dark:text-slate-400">hours left</span>
+                    </div>
+                  )}
+                </div>
+              </div>
 
               {/* File attachment indicator */}
               {selectedFile && (
@@ -721,8 +753,6 @@ export const AssignmentHelperPage = () => {
                 <div className="flex items-center gap-1">
                   <button title="Insert equation" className="p-2 text-gray-400 hover:text-primary hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"><Sigma className="w-4 h-4" /></button>
                   <button title="Attach file" onClick={() => fileInputRef.current?.click()} disabled={isAnalyzing} className="p-2 text-gray-400 hover:text-primary hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"><Paperclip className="w-4 h-4" /></button>
-                  <button title={showSubjectField ? 'Hide subject field' : 'Add subject/course context'} onClick={() => setShowSubjectField(s => !s)} className={`p-2 rounded-lg transition-colors ${showSubjectField ? 'text-primary bg-primary/10' : 'text-gray-400 hover:text-primary hover:bg-gray-100 dark:hover:bg-slate-800'}`}><BookOpen className="w-4 h-4" /></button>
-                  <button title="Crunch mode" onClick={() => setCrunchMode(c => !c)} className={`p-2 rounded-lg transition-colors ${crunchMode ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/20' : 'text-gray-400 hover:text-amber-500 hover:bg-gray-100 dark:hover:bg-slate-800'}`}><Zap className="w-4 h-4" /></button>
                   {question.length > 0 && <span className="text-xs text-gray-400 ml-1 tabular-nums">{wordCount}w &middot; {question.length}c</span>}
                 </div>
                 <div className="flex items-center gap-2">
@@ -745,7 +775,7 @@ export const AssignmentHelperPage = () => {
             <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-slate-800/30">
               <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <modeConfig.icon className="w-4 h-4 text-primary" />
-                {modeConfig.label} â€” Output
+                {modeConfig.label} — Output
               </h2>
               {result && (
                 <div className="flex items-center gap-1">

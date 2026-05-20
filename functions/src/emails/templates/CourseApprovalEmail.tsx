@@ -81,8 +81,8 @@ export const CourseApprovalEmail = ({ teacherName, courseTitle, courseUrl }: Cou
 
             {/* Footer */}
             <Section style={{ backgroundColor: '#0f172a', borderRadius: '0 0 16px 16px', padding: '24px 32px', textAlign: 'center' }}>
-              <Text style={{ color: '#10B981', fontSize: '16px', fontWeight: '700', margin: '0 0 8px', fontFamily: 'Manrope, sans-serif' }}>MyTutorMe Intelligence</Text>
-              <Text style={{ color: '#64748b', fontSize: '11px', margin: '0 0 12px' }}>© 2026 MyTutorMe Intelligence. All rights reserved.</Text>
+              <Text style={{ color: '#10B981', fontSize: '16px', fontWeight: '700', margin: '0 0 8px', fontFamily: 'Manrope, sans-serif' }}>MyTutorMe</Text>
+              <Text style={{ color: '#64748b', fontSize: '11px', margin: '0 0 12px' }}>© 2026 MyTutorMe. All rights reserved.</Text>
               <Row>
                 <Column align="center">
                   <Link href="https://mytutorme.org/privacy" style={{ color: '#94a3b8', fontSize: '11px', textDecoration: 'underline', margin: '0 8px' }}>Privacy Policy</Link>

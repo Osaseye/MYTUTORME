@@ -66,9 +66,9 @@ export const SubscriptionCancelledEmail = ({ name }: CancelledEmailProps) => {
 
               {/* Footer */}
               <Section className="mt-12 pt-8 border-t border-solid border-outline/50 text-center">
-                <Text className="font-headline font-bold text-primary text-xl m-0">MyTutorMe Intelligence</Text>
+                <Text className="font-headline font-bold text-primary text-xl m-0">MyTutorMe</Text>
                 <Text className="text-xs font-body text-onSurfaceVariant/80 max-w-[400px] mx-auto my-4 leading-relaxed">
-                  © 2026 MyTutorMe Intelligence. All rights reserved. Our mission is to democratize elite education through the power of artificial intelligence.
+                  © 2026 MyTutorMe. All rights reserved. Our mission is to democratize elite education through the power of artificial intelligence.
                 </Text>
                 <Section className="flex justify-center text-center mt-2">
                   <Link href="#" className="inline-block text-xs font-body text-onSurfaceVariant mx-3 underline">Privacy Policy</Link>

@@ -131,7 +131,13 @@ export const SecondaryExamPrepPage = () => {
         </div>
       </div>
 
-      <FreePlanUsageCard feature="premium_mock_exams" />
+      <FreePlanUsageCard
+        currentUsage={examHistory.length}
+        maxLimit={5}
+        description="Free Plan Limit: Upgrade to Pro for unlimited mock exams and advanced analytics."
+        usageLabel="exams taken"
+        variant="default"
+      />
 
       {/* Tabs */}
       <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-full overflow-x-auto">
