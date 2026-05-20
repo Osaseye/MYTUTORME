@@ -15,13 +15,15 @@ import {
   Share2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useLocation } from 'react-router-dom';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 
 export const ExamResultsPage = () => {
   const { attemptId } = useParams();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/secondary/') ? '/secondary' : '/student';
   const [attemptData, setAttemptData] = useState<any>(null);
   const [quizData, setQuizData] = useState<any>(null);
    const [questionDetails, setQuestionDetails] = useState<any[]>([]);
@@ -371,7 +373,7 @@ export const ExamResultsPage = () => {
                                       
                                       {(!isTheory && !isCorrect) && (
                                         <div className="mt-3">
-                                            <Link to={`/student/ai-tutor?topic=${encodeURIComponent(q.topic || [quizData?.subject, quizData?.topic].filter(Boolean).join(' ') || 'General')}&question=${encodeURIComponent(q.text || q.question || '')}`}>
+                                            <Link to={`${basePath}/ai-tutor?topic=${encodeURIComponent(q.topic || [quizData?.subject, quizData?.topic].filter(Boolean).join(' ') || 'General')}&question=${encodeURIComponent(q.text || q.question || '')}`}>
                                                 <Button size="sm" variant="outline" className="bg-indigo-50 border-blue-200 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">
                                                     <Sparkles className="w-4 h-4 mr-2" /> AI Deep Dive
                                                 </Button>
@@ -464,7 +466,7 @@ export const ExamResultsPage = () => {
         </div>
 
         <div className="mt-8 flex flex-col md:flex-row justify-center gap-4">
-           <Link to="/student/dashboard" className="w-full md:w-auto">
+           <Link to={`${basePath}/dashboard`} className="w-full md:w-auto">
                <Button variant="secondary" className="px-6 py-6 rounded-[2rem] text-base w-full">
                   Back to Dashboard
                </Button>

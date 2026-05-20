@@ -3,7 +3,13 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { GlobalLoader } from '@/components/ui/global-loader';
 import { LEGACY_CUTOFF_TS } from '@/config/emailVerification';
 
-export const ProtectedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => {
+export const ProtectedRoute = ({
+  allowedRoles,
+  requiredLevel,
+}: {
+  allowedRoles: string[];
+  requiredLevel?: 'secondary' | 'tertiary';
+}) => {
   const { user, isLoading, isAuthenticated } = useAuth();
   const location = useLocation();
 
@@ -59,6 +65,15 @@ export const ProtectedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => 
       admin: '/admin/dashboard',
     };
     return <Navigate to={dashboardMap[user.role as keyof typeof dashboardMap] || '/'} replace />;
+  }
+
+  // Level gate: secondary students cannot access /student/* and vice versa
+  if (requiredLevel && user.role === 'student') {
+    const userLevel = (user as any).level;
+    if (userLevel && userLevel !== requiredLevel) {
+      const correctDashboard = userLevel === 'secondary' ? '/secondary/dashboard' : '/student/dashboard';
+      return <Navigate to={correctDashboard} replace />;
+    }
   }
 
   return <Outlet />;

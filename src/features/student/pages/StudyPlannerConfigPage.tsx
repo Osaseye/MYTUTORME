@@ -4,13 +4,15 @@ import { Calendar, Target, BrainCircuit, Sparkles, ChevronRight, Loader2 } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useStudyPlanGenerator } from '../hooks/useStudyPlanGenerator';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
 
 export const StudyPlannerConfigPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/secondary/') ? '/secondary' : '/student';
   const { user } = useAuthStore();
   const [subject, setSubject] = useState('');
   const [targetExam, setTargetExam] = useState('');
@@ -33,14 +35,14 @@ export const StudyPlannerConfigPage = () => {
     });
 
     if (planId) {
-      navigate(`/student/exam-prep/planner/${planId}`);
+      navigate(`${basePath}/exam-prep/planner/${planId}`);
     }
   };
 
   return (
     <div className="bg-slate-50 dark:bg-slate-950 px-4 sm:px-6 lg:px-8 w-full block pt-8 pb-12">
       <div className="max-w-3xl mx-auto space-y-6 md:space-y-8 w-full">
-            <Link to="/student/exam-prep" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 mb-2 transition-colors">
+            <Link to={`${basePath}/exam-prep`} className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 mb-2 transition-colors">
                &larr; Back to Exam Hub
             </Link>
 
@@ -147,7 +149,7 @@ export const StudyPlannerConfigPage = () => {
            <div className="mt-6 text-center">
               {(!user?.plan || user.plan === 'free') ? (
                   <p className="text-sm text-slate-500">
-                    <b>Free Plan Limit:</b> Max 2 Active Plans. <Link to="/student/settings" className="text-primary font-medium hover:underline">Upgrade to Pro</Link> for unlimited plans!
+                    <b>Free Plan Limit:</b> Max 2 Active Plans. <Link to={`${basePath}/settings`} className="text-primary font-medium hover:underline">Upgrade to Pro</Link> for unlimited plans!
                   </p>
               ) : (
                   <p className="text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 py-2 px-4 rounded-lg inline-block">

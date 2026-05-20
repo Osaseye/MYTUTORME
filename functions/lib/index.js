@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.processPendingDowngrades = exports.scheduleDowngrade = exports.verifyCoursePayment = exports.initializeCoursePayment = exports.requestPayout = exports.cancelSubscription = exports.paymentWebhook = exports.verifySubscription = exports.initializeSubscription = exports.gradeTheoryAnswers = exports.generateFlashcardDeck = exports.generateStudyPlan = exports.generateMockExam = exports.generateCourseContent = void 0;
+exports.sendVerificationEmail = exports.processPendingDowngrades = exports.scheduleDowngrade = exports.verifyCoursePayment = exports.initializeCoursePayment = exports.requestPayout = exports.cancelSubscription = exports.paymentWebhook = exports.verifySubscription = exports.initializeSubscription = exports.gradeTheoryAnswers = exports.generateFlashcardDeck = exports.generateStudyPlan = exports.generateMockExam = exports.generateCourseContent = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const axios_1 = __importDefault(require("axios"));
@@ -48,6 +48,7 @@ const email_1 = require("./lib/email");
 const SubscriptionSuccessEmail_1 = require("./emails/templates/SubscriptionSuccessEmail");
 const CourseReceiptEmail_1 = require("./emails/templates/CourseReceiptEmail");
 const SubscriptionCancelledEmail_1 = require("./emails/templates/SubscriptionCancelledEmail");
+const EmailVerificationEmail_1 = require("./emails/templates/EmailVerificationEmail");
 admin.initializeApp();
 const db = admin.firestore();
 const dotenv = __importStar(require("dotenv"));
@@ -660,4 +661,49 @@ __exportStar(require("./triggers/course"), exports);
 __exportStar(require("./endpoints/course"), exports);
 __exportStar(require("./endpoints/ai"), exports);
 __exportStar(require("./endpoints/ai-generation"), exports);
+/**
+ * Callable function to send a branded email verification link.
+ * Enforces a 60-second rate limit per user via Firestore.
+ */
+exports.sendVerificationEmail = functions.https.onCall(async (request) => {
+    var _a, _b, _c;
+    const data = request.data || request;
+    const { uid, email, name } = data;
+    if (!uid || !email) {
+        throw new functions.https.HttpsError("invalid-argument", "Missing uid or email.");
+    }
+    // Rate-limit: one email per 60 seconds per user
+    const userRef = db.collection("users").doc(uid);
+    const userSnap = await userRef.get();
+    if (userSnap.exists) {
+        const lastSent = (_a = userSnap.data()) === null || _a === void 0 ? void 0 : _a.lastVerificationEmailSent;
+        if (lastSent && Date.now() - lastSent < 60000) {
+            throw new functions.https.HttpsError("resource-exhausted", "Please wait before requesting another verification email.");
+        }
+    }
+    // Generate the Firebase action link, then re-map it to our custom-branded action page.
+    // This bypasses Firebase's generic verification UI entirely — the user lands on
+    // /auth/action?mode=verifyEmail&oobCode=...&apiKey=... which is our own styled page.
+    const firebaseLink = await admin
+        .auth()
+        .generateEmailVerificationLink(email, { url: "https://mytutorme.org/verify-email" });
+    const parsedUrl = new URL(firebaseLink);
+    const oobCode = (_b = parsedUrl.searchParams.get("oobCode")) !== null && _b !== void 0 ? _b : "";
+    const apiKey = (_c = parsedUrl.searchParams.get("apiKey")) !== null && _c !== void 0 ? _c : "";
+    const verificationLink = `https://mytutorme.org/auth/action?mode=verifyEmail` +
+        `&oobCode=${encodeURIComponent(oobCode)}` +
+        `&apiKey=${encodeURIComponent(apiKey)}` +
+        `&lang=en`;
+    await (0, email_1.sendEmail)({
+        to: email,
+        subject: "Verify your email address – MyTutorMe",
+        react: react_1.default.createElement(EmailVerificationEmail_1.EmailVerificationEmail, {
+            name: name || "there",
+            verificationLink,
+        }),
+    });
+    // Record timestamp for rate-limiting
+    await userRef.set({ lastVerificationEmailSent: Date.now() }, { merge: true });
+    return { success: true };
+});
 //# sourceMappingURL=index.js.map

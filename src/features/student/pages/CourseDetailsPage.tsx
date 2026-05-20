@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -62,6 +62,8 @@ interface Course {
 
 export const CourseDetailsPage = () => {
   const { courseId } = useParams<{ courseId: string }>();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/secondary/') ? '/secondary' : '/student';
   const { user } = useAuthStore();
   
   const [course, setCourse] = useState<Course | null>(null);
@@ -278,9 +280,9 @@ export const CourseDetailsPage = () => {
     <div className="min-h-screen bg-white dark:bg-slate-950 pb-20">
       <nav className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-slate-900/50 px-4 py-3">
         <ol className="flex items-center text-sm text-gray-500 dark:text-gray-400 container mx-auto max-w-7xl">
-          <li><Link to="/student" className="hover:text-primary transition-colors">Home</Link></li>
+          <li><Link to={`${basePath}`} className="hover:text-primary transition-colors">Home</Link></li>
           <li><span className="mx-2">/</span></li>
-          <li><Link to="/student/courses" className="hover:text-primary transition-colors">My Courses</Link></li>
+          <li><Link to={`${basePath}/courses`} className="hover:text-primary transition-colors">My Courses</Link></li>
           <li><span className="mx-2">/</span></li>
           <li className="font-medium text-slate-900 dark:text-white line-clamp-1">{course.title}</li>
         </ol>
@@ -428,7 +430,7 @@ export const CourseDetailsPage = () => {
                                  </div>
                                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Congratulations!</h3>
                                  <p className="text-slate-500 dark:text-gray-400 max-w-md mx-auto mb-6">You have completed all course requirements and earned your certificate of achievement.</p>
-                                 <Link to={`/student/certificates/${courseCertificate.id}`}>
+                                 <Link to={`${basePath}/certificates/${courseCertificate.id}`}>
                                     <Button className="bg-primary hover:bg-green-700 text-white shadow-lg">View Certificate</Button>
                                  </Link>
                              </>
@@ -439,7 +441,7 @@ export const CourseDetailsPage = () => {
                                  </div>
                                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">My Certificate</h3>
                                  <p className="text-slate-500 dark:text-gray-400 max-w-md mx-auto mb-6">Your certificate will be available here once you complete 100% of the course content.</p>
-                                 <Link to="/student/certificates/cert-123">
+                                 <Link to={`${basePath}/certificates/cert-123`}>
                                     <Button variant="outline">Preview Certificate</Button>
                                  </Link>
                              </>

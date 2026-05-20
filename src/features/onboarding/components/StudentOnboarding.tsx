@@ -20,6 +20,8 @@ interface StudentFormData {
   institution: string;
   courseOfStudy: string;
   classLevel: string;
+  currentClass: 'SS1' | 'SS2' | 'SS3' | '';
+  targetExams: string[];
   gradingSystem: '4.0' | '5.0';
   cgpa: string;
   target_cgpa: string;
@@ -51,6 +53,8 @@ export const StudentOnboarding = () => {
           institution: parsed.institution ?? '',
           courseOfStudy: parsed.courseOfStudy ?? '',
           classLevel: parsed.classLevel ?? '',
+          currentClass: ['SS1','SS2','SS3'].includes(parsed.currentClass) ? parsed.currentClass : '',
+          targetExams: Array.isArray(parsed.targetExams) ? parsed.targetExams : [],
           gradingSystem: parsed.gradingSystem === '4.0' ? '4.0' : '5.0',
           cgpa: parsed.cgpa ?? '',
           target_cgpa: parsed.target_cgpa ?? '',
@@ -69,6 +73,8 @@ export const StudentOnboarding = () => {
       institution: '',
       courseOfStudy: '',
       classLevel: '',
+      currentClass: '',
+      targetExams: [],
       gradingSystem: '5.0',
       cgpa: '',
       target_cgpa: '',
@@ -155,6 +161,8 @@ export const StudentOnboarding = () => {
           painPoint: '',
           subjects: [],
           classLevel: '',
+          currentClass: '',
+          targetExams: [],
         };
       }
       return { ...prev, [field]: value };
@@ -182,7 +190,7 @@ export const StudentOnboarding = () => {
 
     setIsSubmitting(true);
     try {
-      await updateDoc(doc(db, 'users', user.uid), {
+      const firestoreData: Record<string, unknown> = {
         isOnboardingComplete: true,
         displayName: formData.fullName || user.displayName,
         username: formData.username,
@@ -191,12 +199,20 @@ export const StudentOnboarding = () => {
         courseOfStudy: formData.courseOfStudy,
         classLevel: formData.classLevel,
         gradingSystem: formData.gradingSystem,
-        currentCGPA: parseFloat(formData.cgpa) || 0,
-        targetCGPA: parseFloat(formData.target_cgpa) || 0,
         painPoint: formData.painPoint,
         interests: formData.subjects,
         plan: 'free',
-      });
+      };
+      if (formData.educationLevel === 'secondary') {
+        // Normalize classLevel to currentClass ('SS 1' → 'SS1', etc.)
+        const classMap: Record<string, 'SS1' | 'SS2' | 'SS3'> = { 'SS 1': 'SS1', 'SS 2': 'SS2', 'SS 3': 'SS3' };
+        firestoreData.currentClass = classMap[formData.classLevel] ?? formData.currentClass ?? null;
+        firestoreData.targetExams = formData.targetExams;
+      } else {
+        firestoreData.currentCGPA = parseFloat(formData.cgpa) || 0;
+        firestoreData.targetCGPA = parseFloat(formData.target_cgpa) || 0;
+      }
+      await updateDoc(doc(db, 'users', user.uid), firestoreData);
 
       useAuthStore.getState().setUser({
         ...user,
@@ -216,7 +232,7 @@ export const StudentOnboarding = () => {
           email: user.email,
           userId: user.uid,
           provider: paymentProvider || 'flutterwave',
-          redirectUrl: `${window.location.origin}/student/dashboard`,
+          redirectUrl: `${window.location.origin}/${formData.educationLevel === 'secondary' ? 'secondary' : 'student'}/dashboard`,
         });
 
         const data: any = result.data;
@@ -227,10 +243,11 @@ export const StudentOnboarding = () => {
         toast.error('Error initializing payment URL.');
       }
 
+      const defaultDest = formData.educationLevel === 'secondary' ? '/secondary/dashboard' : '/student/dashboard';
       if (returnTo) {
         navigate(returnTo);
       } else {
-        navigate('/student/dashboard');
+        navigate(defaultDest);
       }
     } catch (error) {
       console.error('Error completing onboarding:', error);
@@ -334,6 +351,40 @@ export const StudentOnboarding = () => {
               ))}
             </select>
           </div>
+
+          {formData.educationLevel === 'secondary' && (
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">Target exams</label>
+              <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">Select all the exams you are preparing for</p>
+              <div className="flex flex-wrap gap-2">
+                {['WAEC', 'NECO', 'JAMB', 'Pre-UTME'].map((exam) => {
+                  const active = formData.targetExams.includes(exam);
+                  return (
+                    <button
+                      key={exam}
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          targetExams: prev.targetExams.includes(exam)
+                            ? prev.targetExams.filter((e) => e !== exam)
+                            : [...prev.targetExams, exam],
+                        }));
+                      }}
+                      className={cn(
+                        'rounded-full border px-4 py-2 text-sm font-semibold transition-colors',
+                        active
+                          ? 'border-primary bg-primary text-white'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-primary/40 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300',
+                      )}
+                    >
+                      {exam}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       );
     }

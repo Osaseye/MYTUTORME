@@ -722,14 +722,21 @@ export const sendVerificationEmail = functions.https.onCall(async (request: any)
     }
   }
 
-  // Generate the Firebase email-verification link.
-  // Firebase verifies the email, then redirects to our /verify-email page.
-  const actionCodeSettings = {
-    url: "https://mytutorme.org/verify-email",
-  };
-  const verificationLink = await admin
+  // Generate the Firebase action link, then re-map it to our custom-branded action page.
+  // This bypasses Firebase's generic verification UI entirely — the user lands on
+  // /auth/action?mode=verifyEmail&oobCode=...&apiKey=... which is our own styled page.
+  const firebaseLink = await admin
     .auth()
-    .generateEmailVerificationLink(email, actionCodeSettings);
+    .generateEmailVerificationLink(email, { url: "https://mytutorme.org/verify-email" });
+
+  const parsedUrl = new URL(firebaseLink);
+  const oobCode = parsedUrl.searchParams.get("oobCode") ?? "";
+  const apiKey = parsedUrl.searchParams.get("apiKey") ?? "";
+  const verificationLink =
+    `https://mytutorme.org/auth/action?mode=verifyEmail` +
+    `&oobCode=${encodeURIComponent(oobCode)}` +
+    `&apiKey=${encodeURIComponent(apiKey)}` +
+    `&lang=en`;
 
   await sendEmail({
     to: email,

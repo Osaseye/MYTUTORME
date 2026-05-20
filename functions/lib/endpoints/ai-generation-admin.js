@@ -365,6 +365,7 @@ STEP 3 — WRITE THE STUDY GUIDE covering every topic you identified in Step 1. 
 - Concrete examples where relevant
 
 Formatting: Use ## for modules/chapters, ### for subsections. Use bullet lists and markdown tables where appropriate.
+For ANY ASCII art, block diagrams, circuit diagrams, architecture diagrams, or text-based visual representations: wrap them in \`\`\`diagram ... \`\`\` fences (NOT plain \`\`\` or \`\`\`code fences). Use \`\`\`assembly or \`\`\`python etc. ONLY for real executable code.
 
 CRITICAL RULES:
 - You MUST reach and cover the LAST topic in the document. Do not stop early.
@@ -425,6 +426,8 @@ First, generate a "studyMaterial" object containing:
 - "title": A formal title for the study guide.
 - "content": A concise but thorough markdown summary of core concepts (aim for under 1500 words). Cover all key topics from the notes.
   Use headings, bullet lists, tables for comparisons, and code blocks only where genuinely needed.
+  For ASCII art, block diagrams, or any text-based visual representation use \`\`\`diagram ... \`\`\` fences.
+  Use language-specific fences (\`\`\`python, \`\`\`assembly, etc.) ONLY for real executable code.
 
 Second, generate the "sections" array for the exam.
 Each question must contain:

@@ -1,0 +1,183 @@
+import { useEffect, useState } from 'react';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { applyActionCode } from 'firebase/auth';
+import { doc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
+import { useAuthStore } from '@/features/auth/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, XCircle, Loader2, ArrowRight } from 'lucide-react';
+
+type PageState = 'loading' | 'success' | 'error';
+
+export const AuthActionPage = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user, setUser } = useAuthStore();
+
+  const mode = searchParams.get('mode');
+  const oobCode = searchParams.get('oobCode');
+
+  const [state, setState] = useState<PageState>('loading');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    if (mode !== 'verifyEmail' || !oobCode) {
+      setErrorMessage('Invalid or missing verification link. Please request a new one.');
+      setState('error');
+      return;
+    }
+
+    const verify = async () => {
+      try {
+        await applyActionCode(auth, oobCode);
+
+        // Sync verified status to Firestore for the logged-in user (best-effort)
+        if (auth.currentUser) {
+          try {
+            await updateDoc(doc(db, 'users', auth.currentUser.uid), { emailVerified: true });
+          } catch (_e) {
+            // non-critical — onAuthStateChanged will sync on next login
+          }
+        }
+
+        // Sync Zustand state immediately if user is already loaded
+        if (user) {
+          setUser({ ...user, emailVerified: true });
+        }
+
+        setState('success');
+      } catch (err: any) {
+        const code: string = err?.code ?? '';
+        if (code === 'auth/invalid-action-code' || code === 'auth/expired-action-code') {
+          setErrorMessage(
+            'This link has expired or already been used. Return to the app and request a new verification email.',
+          );
+        } else if (code === 'auth/user-disabled') {
+          setErrorMessage('Your account has been suspended. Please contact support.');
+        } else {
+          setErrorMessage('Something went wrong. Please try again or contact support.');
+        }
+        setState('error');
+      }
+    };
+
+    verify();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleContinue = () => {
+    if (!user) {
+      navigate('/login', { replace: true });
+      return;
+    }
+    const destination = user.isOnboardingComplete
+      ? `/${user.role}/dashboard`
+      : user.role === 'teacher'
+      ? '/onboarding/teacher'
+      : '/onboarding/student';
+    navigate(destination, { replace: true });
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0B1120] flex flex-col items-center justify-center p-4">
+
+      {/* App logo with glow */}
+      <div className="relative mb-10 flex flex-col items-center">
+        <div className="absolute inset-0 blur-3xl bg-emerald-500/25 rounded-full scale-[2]" />
+        <img src="/icon.png" alt="MyTutorMe" className="relative w-20 h-20 drop-shadow-2xl" />
+        <span className="relative mt-3 text-lg font-extrabold font-display text-white tracking-tight">
+          MyTutorMe
+        </span>
+      </div>
+
+      {/* Card */}
+      <div className="w-full max-w-md bg-slate-900/80 backdrop-blur-sm rounded-3xl border border-slate-800 shadow-2xl p-8 text-center">
+
+        {/* ── LOADING ── */}
+        {state === 'loading' && (
+          <div className="py-6">
+            <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
+              <Loader2 className="w-9 h-9 text-emerald-400 animate-spin" />
+            </div>
+            <h1 className="text-2xl font-extrabold font-display text-white mb-2">
+              Verifying your email…
+            </h1>
+            <p className="text-slate-400 text-sm">Just a moment while we confirm your address.</p>
+          </div>
+        )}
+
+        {/* ── SUCCESS ── */}
+        {state === 'success' && (
+          <>
+            {/* Animated success mark */}
+            <div className="relative w-20 h-20 mx-auto mb-6">
+              <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping" />
+              <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500/30 to-lime-500/20 border border-emerald-500/40 flex items-center justify-center">
+                <CheckCircle2 className="w-9 h-9 text-emerald-400" strokeWidth={1.75} />
+              </div>
+            </div>
+
+            <h1 className="text-3xl font-extrabold font-display text-white mb-3">
+              You're verified!
+            </h1>
+            <p className="text-slate-400 mb-2 leading-relaxed">
+              Your <span className="text-emerald-400 font-semibold">MyTutorMe</span> account is now
+              active and ready to use.
+            </p>
+            <p className="text-slate-500 text-sm mb-8">
+              Start learning, exploring courses, and reaching your academic goals.
+            </p>
+
+            <Button
+              onClick={handleContinue}
+              className="w-full h-12 text-base font-semibold bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl gap-2 transition-all"
+            >
+              Continue to your account
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </>
+        )}
+
+        {/* ── ERROR ── */}
+        {state === 'error' && (
+          <>
+            <div className="w-20 h-20 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
+              <XCircle className="w-9 h-9 text-red-400" strokeWidth={1.75} />
+            </div>
+
+            <h1 className="text-2xl font-extrabold font-display text-white mb-3">
+              Link invalid or expired
+            </h1>
+            <p className="text-slate-400 text-sm leading-relaxed mb-8">{errorMessage}</p>
+
+            <div className="flex flex-col gap-3">
+              <Button
+                onClick={() => navigate('/verify-email', { replace: true })}
+                className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold"
+              >
+                Request a new link
+              </Button>
+              <Button
+                onClick={() => navigate('/login', { replace: true })}
+                variant="outline"
+                className="w-full h-11 rounded-xl border-slate-700 text-slate-300 hover:bg-slate-800"
+              >
+                Back to sign in
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="mt-8 flex items-center gap-4 text-xs text-slate-600">
+        <Link to="/privacy" className="hover:text-slate-400 transition-colors">Privacy</Link>
+        <span>·</span>
+        <Link to="/terms" className="hover:text-slate-400 transition-colors">Terms</Link>
+        <span>·</span>
+        <a href="mailto:support@mytutorme.org" className="hover:text-slate-400 transition-colors">
+          Support
+        </a>
+      </div>
+    </div>
+  );
+};

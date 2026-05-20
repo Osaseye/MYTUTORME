@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
@@ -19,6 +19,8 @@ const normalizeType = (type: string) => {
 export const GeneratedCourseDetailsPage = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/secondary/') ? '/secondary' : '/student';
   const { user } = useAuthStore();
 
   const [course, setCourse] = useState<any>(null);
@@ -120,7 +122,7 @@ export const GeneratedCourseDetailsPage = () => {
 
   const handleContinueExam = () => {
     if (!resumeQuizId) return;
-    navigate(`/student/exam-prep/active/${resumeQuizId}`);
+    navigate(`${basePath}/exam-prep/active/${resumeQuizId}`);
   };
 
   const startExam = async () => {
@@ -180,7 +182,7 @@ export const GeneratedCourseDetailsPage = () => {
       });
 
       toast.success(`Starting ${examMode} mode exam...`, { id: loadingToastId });
-      navigate(`/student/exam-prep/active/${quizRef.id}`);
+      navigate(`${basePath}/exam-prep/active/${quizRef.id}`);
     } catch (error) {
       console.error('Failed to prepare generated course exam session:', error);
       toast.error('Could not start exam session. Please try again.', { id: loadingToastId });
@@ -234,7 +236,7 @@ export const GeneratedCourseDetailsPage = () => {
 
       <div className="border-b border-slate-200/70 dark:border-slate-800/70 bg-white/80 dark:bg-slate-900/65 backdrop-blur-md sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/student/courses" className="text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 inline-flex items-center gap-2 font-medium">
+          <Link to={`${basePath}/courses`} className="text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 inline-flex items-center gap-2 font-medium">
             <ArrowLeft className="w-4 h-4" /> Back to My Courses
           </Link>
           <div className="flex items-center gap-2">

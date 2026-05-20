@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { ArrowLeft, BrainCircuit, ChevronLeft, ChevronRight, Lightbulb, CheckCircle2, RotateCcw, Share2 } from 'lucide-react';
@@ -19,6 +19,8 @@ interface Flashcard {
 export const FlashcardPlayerPage = () => {
   const { deckId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/secondary/') ? '/secondary' : '/student';
    const { user } = useAuth();
   const [deck, setDeck] = useState<any>(null);
   const [cards, setCards] = useState<Flashcard[]>([]);
@@ -81,7 +83,7 @@ export const FlashcardPlayerPage = () => {
 
    const handleShareDeck = async () => {
       if (!deckId) return;
-      const shareUrl = `${window.location.origin}/student/exam-prep/flashcards/${deckId}${user?.uid ? `?ref=${user.uid}` : ''}`;
+      const shareUrl = `${window.location.origin}${basePath}/exam-prep/flashcards/${deckId}${user?.uid ? `?ref=${user.uid}` : ''}`;
 
       try {
          if (navigator.share) {
@@ -116,7 +118,7 @@ export const FlashcardPlayerPage = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/student/exam-prep')}
+            onClick={() => navigate(`${basePath}/exam-prep`)}
             className="gap-1.5 shrink-0 text-slate-600 dark:text-slate-400"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -166,7 +168,7 @@ export const FlashcardPlayerPage = () => {
               <Button variant="outline" onClick={handleRestart} className="gap-2">
                 <RotateCcw className="w-4 h-4" /> Restart Deck
               </Button>
-              <Button className="gap-2 bg-primary hover:bg-primary/90" onClick={() => navigate('/student/exam-prep')}>
+              <Button className="gap-2 bg-primary hover:bg-primary/90" onClick={() => navigate(`${basePath}/exam-prep`)}>
                 Finish Session
               </Button>
             </div>

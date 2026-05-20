@@ -50,6 +50,9 @@ export interface StudentProfile extends User {
   painPoint?: string;
   interests?: string[];
   studyStreak?: number;
+  // Secondary school specific
+  currentClass?: 'SS1' | 'SS2' | 'SS3';
+  targetExams?: string[]; // e.g. ['WAEC', 'NECO', 'JAMB']
 }
 
 export interface TeacherProfile extends User {

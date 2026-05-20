@@ -12,8 +12,10 @@ import { RoleSelectionPage } from '@/features/auth/pages/RoleSelectionPage';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
 import { VerifyEmailPage } from '@/features/auth/pages/VerifyEmailPage';
+import { AuthActionPage } from '@/features/auth/pages/AuthActionPage';
 import { OnboardingLayout, StudentOnboarding, TeacherOnboarding } from '@/features/onboarding';
 import { StudentLayout, StudentDashboard, AiTutorPage, MyCoursesPage, CourseDetailsPage, GeneratedCourseDetailsPage, AssignmentHelperPage, GpaTrackerPage, CertificatePage, MyCertificatesPage, SettingsPage, ExamPrepPage, ExamConfigPage, ExamResultsPage, ExamTakingPage, FlashcardConfigPage, FlashcardPlayerPage, CommunityPage, StudyPlannerConfigPage, StudyPlannerViewPage } from '@/features/student';
+import { SecondaryLayout, SecondaryDashboard, SecondarySubjectTrackerPage, SecondaryExamPrepPage, SecondaryExamConfigPage, SecondaryAiTutorPage, SecondaryAssignmentHelperPage, SecondaryCommunityPage, SecondaryCoursesPage, SecondaryCourseDetailsPage, SecondaryGeneratedCourseDetailsPage, SecondarySettingsPage, SecondaryCertificatesPage, SecondaryCourseCertificatePage, SecondaryExamTakingPage, SecondaryExamResultsPage, SecondaryFlashcardConfigPage, SecondaryFlashcardPlayerPage, SecondaryStudyPlannerConfigPage, SecondaryStudyPlannerViewPage } from '@/features/secondary';
 import { TeacherLayout, TeacherDashboard, TeacherCoursesPage, TeacherCourseDetailsPage, CourseCreationPage, ResourcesPage, EarningsPage, CommunityPage as TeacherCommunityPage, TeacherSettingsPage, StudentsPage, TeacherPendingPage } from '@/features/teacher';
 import { AdminLayout, AdminDashboard, AdminLoginPage, UserManagementPage, CourseModerationPage, AdminCourseDetailsPage, FinancialsPage, SettingsPage as AdminSettingsPage, AdminSupportPage, AdminGeneratorPage } from '@/features/admin';
 import { SupportPage } from '@/pages/SupportPage';
@@ -35,7 +37,13 @@ export const AppRoutes = () => {
 
   useEffect(() => {
     if (isPWA && location.pathname === "/") {
-      user ? navigate("/student/dashboard") : navigate("/login");
+      if (!user) {
+        navigate("/login");
+      } else if (user.role === 'student' && (user as any).level === 'secondary') {
+        navigate("/secondary/dashboard");
+      } else {
+        navigate("/student/dashboard");
+      }
     }
   }, [isPWA, user, location.pathname, navigate]);
 
@@ -47,7 +55,9 @@ export const AppRoutes = () => {
         <Route path="/" element={<LandingPage />} />
         <Route path="/dashboard" element={
           user ? (
-            <Navigate to={`/${user.role}/dashboard`} replace />
+            user.role === 'student' && (user as any).level === 'secondary'
+              ? <Navigate to="/secondary/dashboard" replace />
+              : <Navigate to={`/${user.role}/dashboard`} replace />
           ) : (
             <Navigate to="/login" replace />
           )
@@ -56,6 +66,7 @@ export const AppRoutes = () => {
         <Route path={paths.verifyCertificate} element={<VerifyCertificatePage />} />
         <Route path="/feedback" element={<FeedbackPage />} />
         <Route path={paths.auth.verifyEmail} element={<VerifyEmailPage />} />
+        <Route path={paths.auth.authAction} element={<AuthActionPage />} />
         <Route path={paths.privacy} element={<PrivacyPolicyPage />} />
         <Route path={paths.terms} element={<TermsPage />} />
         <Route path="/public/exam/:quizId" element={<PublicExamPage />} />
@@ -104,6 +115,32 @@ export const AppRoutes = () => {
           <Route path="/student/exam-prep/planner/:planId" element={<StudyPlannerViewPage />} />
           <Route path={paths.student.settings} element={<SettingsPage />} />
           <Route path={paths.student.notifications} element={<NotificationsPage userRole="student" />} />
+        </Route>
+      </Route>
+
+      {/* Secondary School Protected Routes */}
+      <Route element={<ProtectedRoute allowedRoles={['student'] as ('student' | 'teacher' | 'admin')[]} requiredLevel="secondary" />}>
+        <Route element={<SecondaryLayout />}>
+          <Route path="/secondary/dashboard" element={<SecondaryDashboard />} />
+          <Route path="/secondary/subjects" element={<SecondarySubjectTrackerPage />} />
+          <Route path="/secondary/ai-tutor" element={<SecondaryAiTutorPage />} />
+          <Route path="/secondary/assignment-helper" element={<SecondaryAssignmentHelperPage />} />
+          <Route path="/secondary/community" element={<SecondaryCommunityPage />} />
+          <Route path="/secondary/courses" element={<SecondaryCoursesPage />} />
+          <Route path="/secondary/courses/generated/:courseId" element={<SecondaryGeneratedCourseDetailsPage />} />
+          <Route path="/secondary/courses/:courseId" element={<SecondaryCourseDetailsPage />} />
+          <Route path="/secondary/exam-prep" element={<SecondaryExamPrepPage />} />
+          <Route path="/secondary/exam-prep/config" element={<SecondaryExamConfigPage />} />
+          <Route path="/secondary/exam-prep/active/:quizId" element={<SecondaryExamTakingPage />} />
+          <Route path="/secondary/exam-prep/results/:attemptId" element={<SecondaryExamResultsPage />} />
+          <Route path="/secondary/exam-prep/flashcards" element={<SecondaryFlashcardConfigPage />} />
+          <Route path="/secondary/exam-prep/flashcards/:deckId" element={<SecondaryFlashcardPlayerPage />} />
+          <Route path="/secondary/exam-prep/planner-config" element={<SecondaryStudyPlannerConfigPage />} />
+          <Route path="/secondary/exam-prep/planner/:planId" element={<SecondaryStudyPlannerViewPage />} />
+          <Route path="/secondary/certificates" element={<SecondaryCertificatesPage />} />
+          <Route path="/secondary/certificates/:id" element={<SecondaryCourseCertificatePage />} />
+          <Route path="/secondary/settings" element={<SecondarySettingsPage />} />
+          <Route path="/secondary/notifications" element={<NotificationsPage userRole="student" />} />
         </Route>
       </Route>
 

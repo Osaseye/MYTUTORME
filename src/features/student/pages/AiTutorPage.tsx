@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Send, 
   Sparkles, 
@@ -96,6 +96,8 @@ const FilePreview = ({ file, onRemove }: { file: File, onRemove: () => void }) =
 };
 export const AiTutorPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const basePath = location.pathname.startsWith('/secondary/') ? '/secondary' : '/student';
     const [showHistory, setShowHistory] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [inputValue, setInputValue] = useState('');
@@ -164,7 +166,7 @@ export const AiTutorPage = () => {
               description: 'Please upgrade your plan in Settings to unlock unlimited AI queries.',
               action: {
                 label: 'Upgrade',
-                onClick: () => navigate('/student/settings'),
+                onClick: () => navigate(`${basePath}/settings`),
               },
             });
             return;

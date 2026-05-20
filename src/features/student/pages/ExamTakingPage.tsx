@@ -19,7 +19,7 @@ import {
   ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { db, storage } from '@/lib/firebase';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { 
@@ -39,6 +39,8 @@ import remarkGfm from 'remark-gfm';
 export const ExamTakingPage = () => {
   const { quizId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/secondary/') ? '/secondary' : '/student';
   const { user } = useAuth();
   const { startTour } = useTourStore();
 
@@ -94,7 +96,7 @@ export const ExamTakingPage = () => {
         const quizSnap = await getDoc(doc(db, 'quizzes', quizId));
         if (!quizSnap.exists()) {
           toast.error("Quiz not found");
-          navigate('/student/exam-prep');
+          navigate(`${basePath}/exam-prep`);
           return;
         }
 
@@ -281,7 +283,7 @@ export const ExamTakingPage = () => {
       }
 
       toast.success("Exam submitted successfully!");
-      navigate(`/student/exam-prep/results/${attemptDocRef.id}`);
+      navigate(`${basePath}/exam-prep/results/${attemptDocRef.id}`);
 
     } catch (err) {
       console.error("Error submitting exam:", err);

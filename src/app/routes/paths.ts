@@ -9,6 +9,7 @@ export const paths = {
     forgotPassword: '/forgot-password',
     resetPassword: '/reset-password',
     verifyEmail: '/verify-email',
+    authAction: '/auth/action',
   },
   onboarding: {
     student: '/onboarding/student',

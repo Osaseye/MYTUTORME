@@ -11,7 +11,7 @@ import {
   PlayCircle,
   BookOpen
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
@@ -60,6 +60,8 @@ interface Enrollment {
 
 export const MyCoursesPage = () => {
     const { user } = useAuthStore();
+    const location = useLocation();
+    const basePath = location.pathname.startsWith('/secondary/') ? '/secondary' : '/student';
     const startTour = (...args: any[]) => {};
     const [courses, setCourses] = useState<Course[]>([]);
     const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -219,7 +221,7 @@ export const MyCoursesPage = () => {
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                             {enrollments.map((enr) => (
-                                <Link to={`/student/courses/${enr.courseId}`} key={enr.id}>
+                                <Link to={`${basePath}/courses/${enr.courseId}`} key={enr.id}>
                                     <div className="group bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-md transition-all cursor-pointer flex flex-col h-full">
                                         <div className="aspect-[16/9] sm:h-44 bg-slate-200 dark:bg-slate-800 relative overflow-hidden">
                                             {enr.course?.thumbnailUrl ? (
@@ -345,7 +347,7 @@ export const MyCoursesPage = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                                     {filteredCourses.map(course => {
                                         const isGenerated = isAdminGeneratedCourse(course);
-                                        const destinationPath = isGenerated ? `/student/courses/generated/${course.id}` : `/student/courses/${course.id}`;
+                                        const destinationPath = isGenerated ? `${basePath}/courses/generated/${course.id}` : `${basePath}/courses/${course.id}`;
                                         const displayTitle = course.title || (course as any).courseTitle || (course as any).mockExam?.title || course.subject || `Course ${course.id?.slice(0, 8)}`;
 
                                         return (

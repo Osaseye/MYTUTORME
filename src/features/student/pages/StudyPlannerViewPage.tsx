@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ArrowLeft, CheckCircle2, Circle, Trophy, Share2 } from 'lucide-react';
@@ -11,6 +11,8 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 export const StudyPlannerViewPage = () => {
     const { planId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+    const basePath = location.pathname.startsWith('/secondary/') ? '/secondary' : '/student';
     const { user } = useAuth();
     const [planDoc, setPlanDoc] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -25,7 +27,7 @@ export const StudyPlannerViewPage = () => {
                     setPlanDoc({ id: snapshot.id, ...snapshot.data() });
                 } else {
                     toast.error('Study plan not found.');
-                    navigate('/student/exam-prep');
+                    navigate(`${basePath}/exam-prep`);
                 }
             } catch (err) {
                 console.error("Error fetching plan", err);
@@ -85,7 +87,7 @@ export const StudyPlannerViewPage = () => {
 
     const handleSharePlan = async () => {
         if (!planId || !planDoc) return;
-        const shareUrl = `${window.location.origin}/student/exam-prep/planner/${planId}`;
+        const shareUrl = `${window.location.origin}${basePath}/exam-prep/planner/${planId}`;
 
         try {
             if (isOwner && !planDoc.isShared) {
@@ -135,7 +137,7 @@ export const StudyPlannerViewPage = () => {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" onClick={() => navigate('/student/exam-prep')}>
+                        <Button variant="ghost" size="icon" onClick={() => navigate(`${basePath}/exam-prep`)}>
                             <ArrowLeft className="w-5 h-5" />
                         </Button>
                         <div>

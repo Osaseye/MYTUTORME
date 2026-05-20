@@ -612,7 +612,7 @@ export const processAssignmentHelp = functions.https.onCall(async (request) => {
         throw new functions.https.HttpsError("unauthenticated", "Must be logged in to use Assignment Helper.");
     }
     
-    const { question, fileData, mode } = data;
+    const { question, fileData, mode, humanizeLevel, subjectContext, crunchHours } = data;
     if (!question && !fileData) {
         throw new functions.https.HttpsError("invalid-argument", "Must provide a question or file data.");
     }
@@ -630,37 +630,149 @@ export const processAssignmentHelp = functions.https.onCall(async (request) => {
     await recordUsageTransaction(context.auth.uid, isPremium, maxQueries, 200, 'assignmentHelp');
 
     try {
-        let SYSTEM_INSTRUCTION = `You are an expert AI Assignment Helper. Your goal is to guide students to the answer, rather than just giving it to them outright.
-        - Break down the problem into smaller, understandable steps.
-        - Explain the underlying concepts briefly.
-        - Use clear formatting with valid markdown. Use tables where appropriate.
-        - For math equations, use LaTeX wrapped in $ for inline and $$ for blocks.
-        - Be concise and avoid over-explaining simple concepts. Focus on the core of the problem.
-        - Ask questions at the end of sections to gauge understanding if appropriate.`;
+        // Build optional context injections
+        const subjectLine = subjectContext ? `\nSubject/Course context: ${subjectContext}.` : '';
+        const crunchLine = crunchHours ? `\nIMPORTANT: The student only has ${crunchHours} hour(s) left. Prioritise speed — give a fast, focused, minimal-but-solid output. Cut any non-essential elaboration.` : '';
+        const contextSuffix = subjectLine + crunchLine;
 
-        if (mode === 'plagiarism-safe') {
-            SYSTEM_INSTRUCTION = `You are a Plagiarism-Safe AI Tutor. Your strict rule is to help students *think*, not cheat.
-            - You MUST NOT write complete essays, code blocks solving the whole assignment, or full paragraphs of submission-ready text.
+        let SYSTEM_INSTRUCTION = '';
+
+        if (mode === 'breakdown') {
+            SYSTEM_INSTRUCTION = `You are an expert Assignment Breakdown Specialist. A student has shared their assignment question or topic. Break it down into a clear, actionable plan.${contextSuffix}
+            Return your response in valid markdown using this exact structure:
+            ## 📋 Assignment Overview
+            A 2-sentence summary of what this assignment is asking.
+            ## 🗂️ Suggested Sections
+            A table with columns: Section | Description | Suggested Word Count
+            ## 🔍 Key Topics to Research
+            Bullet list of the most important concepts/topics to investigate.
+            ## 📚 How to Approach This
+            3-5 numbered steps guiding the student on how to actually start and complete this.
+            ## ⏱️ Suggested Timeline
+            A simple plan: e.g., Day 1 — research, Day 2 — outline, Day 3 — draft, Day 4 — review.
+            Do not write any part of the essay for the student. Guide their thinking only.`;
+
+        } else if (mode === 'expand') {
+            SYSTEM_INSTRUCTION = `You are an expert Academic Writing Coach. A student has provided bullet points or an outline and wants each point expanded into full academic paragraphs.${contextSuffix}
+            Rules:
+            - Expand each bullet point into a well-structured paragraph (topic sentence, 2-3 supporting sentences, closing sentence).
+            - Preserve 100% of the student's own ideas — do not introduce facts or arguments they did not hint at.
+            - Use formal academic tone unless the student's content indicates otherwise.
+            - Add [CITATION NEEDED] placeholder after any factual claim that needs a reference.
+            - Output in valid markdown with each section clearly headed.`;
+
+        } else if (mode === 'humanize') {
+            const strength = humanizeLevel || 'moderate';
+            const strengthGuide = strength === 'subtle'
+                ? 'Make light edits only: vary a few sentence lengths, replace 3-5 obvious AI phrases, add one natural transition. Preserve most of the original text.'
+                : strength === 'strong'
+                ? 'Fully rewrite for maximum human feel: short punchy sentences mixed with longer ones, informal transitions, contractions where natural, remove all AI verbal tics (delve, tapestry, nuanced, pivotal, it is worth noting, furthermore, in conclusion etc.), add personality and slight imperfection. Preserve all meaning and key points.'
+                : 'Moderately rewrite: vary sentence lengths noticeably, replace AI verbal tics, add natural transitions, introduce slight informality without losing academic suitability. Preserve all meaning.';
+            SYSTEM_INSTRUCTION = `You are an expert text humanizer. Your task is to rewrite AI-generated text so it reads as naturally human-written.${contextSuffix}
+            Humanization strength: ${strength.toUpperCase()}. ${strengthGuide}
+            Rules that apply at all strengths:
+            - NEVER change the meaning, facts, or arguments.
+            - NEVER add new information the original text did not contain.
+            - Remove or replace these overused AI phrases: "delve", "tapestry", "nuanced", "pivotal", "embark", "realm", "cutting-edge", "it is worth noting", "it is important to note", "in today's rapidly changing world", "in conclusion", "furthermore", "moreover".
+            - Vary sentence structure: mix short punchy sentences with longer complex ones.
+            - Output only the rewritten text. No commentary, no preamble, no explanation.`;
+
+        } else if (mode === 'citations') {
+            SYSTEM_INSTRUCTION = `You are an expert Academic Citation Generator.${contextSuffix}
+            - Extract the source info (URL, book title, author, year, website name) from the user's input.
+            - Generate the citation in all three formats: APA, MLA, and Harvard.
+            - Format using Markdown with bold headers: **APA Format**, **MLA Format**, **Harvard Format**.
+            - If the user provides multiple sources, handle each one separately with a numbered heading.
+            - If information is missing (e.g. no author found), use "n.d." or "Anonymous" per the relevant style guide convention.
+            - No conversational filler — just the formatted citations.`;
+
+        } else if (mode === 'summarize') {
+            SYSTEM_INSTRUCTION = `You are an expert academic summarizer.${contextSuffix}
+            Given a piece of text, produce a clear and concise summary.
+            Return your response in this structure:
+            ## 🎯 Core Argument
+            1-2 sentences capturing the central claim or purpose of the text.
+            ## 🔑 Key Points
+            Bullet list of 4-6 most important supporting points or findings.
+            ## 💡 Key Takeaway
+            One sentence — the single most important thing to remember from this text.
+            Be objective. Do not add your own interpretation beyond what is in the text.`;
+
+        } else if (mode === 'eli5') {
+            SYSTEM_INSTRUCTION = `You are a world-class explainer who specialises in making complex academic or technical content understandable to anyone.${contextSuffix}
+            A student has pasted something they do not understand. Explain it clearly.
+            Return your response in this structure:
+            ## 🧠 The Simple Explanation
+            Explain the concept as if talking to a curious 15-year-old. Use plain language, no jargon.
+            ## 📌 The Key Points (in plain English)
+            Bullet list of the 3-5 things they absolutely need to understand.
+            ## 🌍 Real-World Example
+            Give 1-2 relatable, concrete examples that make this click. Prefer examples relevant to everyday student life or Nigerian context where possible.
+            ## ❓ What This Means For Your Studies
+            1-2 sentences on why understanding this matters academically.`;
+
+        } else if (mode === 'quality-score') {
+            SYSTEM_INSTRUCTION = `You are an expert academic writing assessor.${contextSuffix}
+            A student has submitted their written work. Score it across four dimensions, each out of 10.
+            You MUST return your response as valid JSON only — no markdown fences, no preamble, no text outside the JSON object.
+            Return exactly this structure:
+            {
+              "clarityScore": <0-10>,
+              "grammarScore": <0-10>,
+              "argumentScore": <0-10>,
+              "referencingScore": <0-10>,
+              "overallScore": <0-10 weighted average>,
+              "grade": "<A+ | A | B | C | D | F>",
+              "strengths": ["<strength 1>", "<strength 2>"],
+              "improvements": ["<specific improvement 1>", "<specific improvement 2>", "<specific improvement 3>"],
+              "summary": "<2-3 sentence overall assessment>"
+            }
+            Scoring guide:
+            - clarityScore: Is the writing clear, well-structured, and easy to follow?
+            - grammarScore: Grammar, spelling, punctuation, sentence construction.
+            - argumentScore: Are claims supported? Is the argument logical and convincing?
+            - referencingScore: Are sources cited? Are citations present and correctly formatted?`;
+
+        } else if (mode === 'ai-check') {
+            SYSTEM_INSTRUCTION = `You are an expert AI content detection system trained to identify AI-generated text through structural and linguistic analysis.${contextSuffix}
+            Analyze the submitted text across four dimensions. Score each 0-25 where HIGHER = MORE AI-like.
+            
+            Dimension 1 — Pattern Fingerprinting (0-25):
+            Search for known AI verbal patterns: overuse of "delve", "tapestry", "nuanced", "pivotal", "embark", "realm", "cutting-edge", "it is worth noting", "it is important to note/understand", "in today's rapidly changing world", "in conclusion", "furthermore", "moreover", mechanical paragraph transitions, filler affirmations.
+            
+            Dimension 2 — Structural Uniformity (0-25):
+            Does every paragraph follow the exact same length and structure (topic sentence + 3 points + mini-conclusion)? Is the essay suspiciously "perfect" with no tangents, no fragments, no natural deviations? Perfect 5-paragraph structure with no variation?
+            
+            Dimension 3 — Vocabulary & Voice (0-25):
+            Is the vocabulary unusually elevated for what appears to be the writer's level? Are there zero contractions, colloquialisms, or personal voice markers? Is the register never broken — no informality, no hedged personal opinion that feels genuinely human?
+            
+            Dimension 4 — Rhythm & Burstiness (0-25):
+            Is sentence length variation suspiciously low (AI produces steady predictable rhythm)? No "energy peaks" — engaging paragraphs followed by flatter ones? Consistent complexity with no signs of a writer running out of steam or rushing?
+            
+            You MUST return valid JSON only — no markdown fences, no text outside the JSON.
+            Return exactly this structure:
+            {
+              "patternScore": <0-25>,
+              "structureScore": <0-25>,
+              "vocabularyScore": <0-25>,
+              "burstnessScore": <0-25>,
+              "totalScore": <0-100, sum of above>,
+              "riskLevel": "<human | likely-human | mixed | likely-ai | ai-generated>",
+              "confidence": "<low | medium | high>",
+              "flaggedPhrases": ["<exact phrase 1>", "<exact phrase 2>"],
+              "analysis": "<2-3 sentence explanation of the scoring decision>",
+              "suggestions": ["<actionable suggestion 1>", "<actionable suggestion 2>"]
+            }
+            Risk level guide: 0-20 = human, 21-40 = likely-human, 41-60 = mixed, 61-80 = likely-ai, 81-100 = ai-generated.
+            Only flag phrases that literally appear in the submitted text.`;
+
+        } else {
+            // Fallback: original plagiarism-safe outline helper (legacy mode key support)
+            SYSTEM_INSTRUCTION = `You are a Plagiarism-Safe AI Tutor. Your strict rule is to help students *think*, not cheat.${contextSuffix}
+            - You MUST NOT write complete essays or full paragraphs of submission-ready text.
             - Return ONLY ideas, outlines, structures, concepts, and guiding hints.
             - Use bullet points and headers extensively.
-            - Provide structured outlines with bullet points that the student can write from.
-            - Actively refuse to "write my essay" or "do my homework directly", instead offering a structured breakdown of how they should approach it.
             - Output should be in valid markdown.`;
-        } else if (mode === 'citations') {
-            SYSTEM_INSTRUCTION = `You are an expert Citation Generator.
-            - Extract the source URL, book title, or reference info from the user's prompt.
-            - Instantly return the citation formatted perfectly in both APA and MLA formatting.
-            - Format the response beautifully using Markdown with clear headers for "**APA Format**" and "**MLA Format**".
-            - Give no extra conversational fluff, just the citations.`;
-        } else if (mode === 'submission-check') {
-            SYSTEM_INSTRUCTION = `You are an expert Assignment Submission Reviewer.
-            - The student has pasted their assignment work and the question/brief.
-            - Review their work and flag:
-              1. Missing sections based on the question/brief (if provided).
-              2. Weak arguments or unsupported claims.
-              3. Formatting issues (no references, no introduction, lack of structure, etc.).
-            - Output a bulleted "Checklist of what to fix before submitting".
-            - Be concise, direct, and constructive. Use valid markdown.`;
         }
 
         const parts: any[] = [];
@@ -673,12 +785,24 @@ export const processAssignmentHelp = functions.https.onCall(async (request) => {
             if (fileData.storagePath) {
                 try {
                     const [fileBuf] = await admin.storage().bucket().file(fileData.storagePath).download();
-                    parts.push({
-                        inlineData: {
-                            data: fileBuf.toString('base64'),
-                            mimeType: fileData.mimeType
+                    const mime: string = fileData.mimeType || '';
+                    const isDocx = mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                        || mime === 'application/msword'
+                        || fileData.storagePath.match(/\.(docx|doc)$/i);
+                    if (isDocx) {
+                        const mammoth = require('mammoth');
+                        const docxResult = await mammoth.extractRawText({ buffer: fileBuf });
+                        if (docxResult.value) {
+                            parts.push({ text: `\n\n[Document content]:\n${docxResult.value}` });
                         }
-                    });
+                    } else {
+                        parts.push({
+                            inlineData: {
+                                data: fileBuf.toString('base64'),
+                                mimeType: mime || 'application/octet-stream'
+                            }
+                        });
+                    }
                 } catch (err) {
                     console.error('Error downloading isolated file from storage:', err);
                 }
